@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.22'''
-__sub_version__ = '''20041121151606'''
+__sub_version__ = '''20041122033829'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -136,7 +136,6 @@ def isinloop(s):
 #----------------------------------------------------------transition---
 # TODO add support for string state names... (+ check consistency... (?))
 # TODO add doc paramiter to transitions...
-# TODO add transition mode: manual/automatic
 # modes:
 AUTO = 0
 MANUAL = 1
@@ -239,7 +238,7 @@ class FiniteStateMachine(state.State):
 	_stop_exception = None
 	_stop_reason = None
 
-	# this is the super safe version of init.... (incase w mix the
+	# this is the super safe version of init.... (incase we mix the
 	# incompatible classes....)
 	def __init__(self, *p, **n):
 		'''
@@ -329,6 +328,7 @@ class FiniteStateMachine(state.State):
 			self.__next_state__ = tostate
 		else:
 			self._changestate(tostate)
+	##!!!
 	def _changestate(self, tostate):
 		'''
 		'''
@@ -348,6 +348,7 @@ class FiniteStateMachine(state.State):
 		# run the post init method...
 		if hasattr(self, '__onafterstatechange__'):
 			self.__onafterstatechange__()
+		##!!! this is bad !!!##
 		if hasattr(self, '__onenterstate__'):
 			self.__onenterstate__()
 
@@ -386,6 +387,7 @@ class _StoredState(stored._StoredClass):
 # TODO error state handler...
 # TODO "Sub-FSMs"
 # TODO revise magic method names and function...
+# XXX __onenterstate__ is bad in case of auto state change... (???)
 class State(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	

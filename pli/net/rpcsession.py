@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.71'''
-__sub_version__ = '''20041027054900'''
+__version__ = '''0.1.75'''
+__sub_version__ = '''20041202163413'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -29,6 +29,7 @@ class SessionError(Exception):
 #-----------------------------------------------------------------------
 #-------------------------------------------------------------Session---
 # use this for ACL and basic session event handlers...
+# TODO persistent session objects...
 # TODO revise security settings!!!
 # TODO revise mix-in criteria...
 class Session(object):
@@ -50,6 +51,7 @@ class Session(object):
 	interface.private('__private_attrs__')
 	interface.private('__public_attrs__')
 	interface.private('__selector_class__')
+	interface.private('__timeout__')
 	interface.private('_onSessionOpen')
 	interface.private('_onSessionClose')
 	interface.private('onSessionOpen')
@@ -66,6 +68,7 @@ class Session(object):
 						  '__private_attrs__',
 						  '__public_attrs__',
 						  '__selector_class__',
+						  '__timeout__',
 						  '_onSessionOpen',
 						  '_onSessionClose',
 						  'onSessionOpen',
@@ -228,6 +231,11 @@ class RPCSessionManager(object):
 	# close), if None timeout checks will be disabled.
 	__timeout__ = 1800.0
 
+	# this will enable the session to set its own timeout...
+	__session_timeout__ = False
+	# this if True will enable persistent session objects...
+	__persistent_sessions__ = False
+
 	def __init__(self):
 		'''
 		'''
@@ -236,6 +244,7 @@ class RPCSessionManager(object):
 		if hasattr(self, '__sid_len__') and self.__sid_len__ < 8:
 			print >> sys.stderr, "WARNING: it is recommended that the SID be longer than 8 chars."
 	# System methods (external):
+	##!!! TEST !!!##
 	def new_session(self, obj_id, password='', *p, **n):
 		'''
 		this will create a new session.
@@ -270,7 +279,16 @@ class RPCSessionManager(object):
 				# add to list of active sessions...
 				self.__active_sessions__[sid] = (obj_id, obj)
 				# set the time...
-				if self.__timeout__ != None:
+##				if self.__timeout__ != None:
+				##!!! TEST !!!##
+				# set the timeout if the timeouts are enabled (in the
+				# manager) and if persistent sessions are enabled and
+				# the session timout is either not present or is not None
+				if self.__timeout__ != None \
+						and (self.__persistent_sessions__ \
+								and (not hasattr(obj, '__timeout__') or obj.__timeout__ != None) \
+								or True) \
+						or False:
 					obj._last_accessed = time.time()
 				# fire _onSessionOpen event
 				if hasattr(obj, '_onSessionOpen'):
@@ -288,19 +306,28 @@ class RPCSessionManager(object):
 		if hasattr(obj, '_onSessionClose'):
 			obj._onSessionClose(self)
 		del self.__active_sessions__[sid]
+	##!!! TEST !!!##
 	def isalive(self, sid):
 		'''
 		this will test if a session exists.
 
 		NOTE: this does not extend the life of the session object.
 		'''
-		if sid not in self.__active_sessions__ or \
-				self.__timeout__ != None and \
-				(time.time() - self.__active_sessions__[sid][1]._last_accessed) > self.__timeout__:
-			self.close_session(sid)
-			return False
-		return True
+##		if sid not in self.__active_sessions__ or \
+##				self.__timeout__ != None and \
+##				(time.time() - self.__active_sessions__[sid][1]._last_accessed) > self.__timeout__:
+		##!!! TEST !!!##
+		if sid in self.__active_sessions__:
+			obj = self.__active_sessions__[sid][1]
+			if self.__timeout__ != None \
+					and hasattr(obj, '_last_accessed') \
+					and (time.time() - obj._last_accessed) > self.__timeout__:
+				self.close_session(sid)
+				return False
+			return True
+		return False
 	# System methods (internal):
+	##!!! TEST !!!##
 	def dispatch(self, method, *pargs, **nargs):
 		'''
 		'''
@@ -323,7 +350,16 @@ class RPCSessionManager(object):
 			if hasattr(self, '__session_proxy__') and self.__session_proxy__ != None:
 				session_obj = self.__session_proxy__(session_obj)
 			# set access time...
-			if self.__timeout__ != None:
+##			if self.__timeout__ != None:
+			##!!! TEST !!!##
+			# set the timeout if the timeouts are enabled (in the
+			# manager) and if persistent sessions are enabled and
+			# the session timout is either not present or is not None
+			if self.__timeout__ != None \
+					and (self.__persistent_sessions__ \
+						and (not hasattr(obj, '__timeout__') or obj.__timeout__ != None) \
+						or True) \
+					or False:
 				session_obj._last_accessed = time.time()
 			# check if we are using a global method...
 			if path[-1] in self.__global_methods__:

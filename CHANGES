@@ -1,5 +1,8 @@
-# this file was generated on [200411211521]
+# this file was generated on [200412021637]
 pli changes:
+
+version 0.0.128 (200412021636):
+- added persistent sessions an session based timeouts to pli.net.rpcsession (still needs more testing...)
 
 version 0.0.127 (200411211520):
 - added transition mode to pli.pattern.fsm...
