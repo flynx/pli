@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040913020855'''
+__sub_version__ = '''20040916024825'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -50,12 +50,12 @@ proxy = %(method_name)s'''
 
 
 #--------------------------------------------------------proxymethods---
-def proxymethods(names, source_attr):
+def proxymethods(names, depth=1):
 	'''
 	this will generate a direct proxy for each name in names.
 	'''
 	for name in names:
-		proxymethod(name, source_attr, depth=2)
+		proxymethod(name, depth+1)
 
 
 

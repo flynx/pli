@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.19'''
-__sub_version__ = '''20040914013450'''
+__sub_version__ = '''20040914014112'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -297,6 +297,9 @@ class Interface(object):
 					  NOTE: this can be called when the object is not 
 					        fully initialized, thus no assumptions about
 							object state should be made.
+							for instance this will happen for 
+							pli.interface.objects.InterfaceObject if both 
+							the handler and the default value are defined.
 					  NOTE: it is not recommended for this to have side 
 					        effects as the handler call is not garaneed 
 							to precede an attribute write.
