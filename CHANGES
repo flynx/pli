@@ -1,5 +1,8 @@
-# this file was generated on [200408251956]
+# this file was generated on [200408252221]
 pli changes:
+
+version 0.0.73 (200408252219):
+- added unix file format filtering to the cvs_commit script.... (NOTE: this might introduce some bugs!)
 
 version 0.0.73 (200408250410):
 - added pli.apps.pluginloader module...
