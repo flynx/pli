@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.17'''
-__sub_version__ = '''20040829205156'''
+__sub_version__ = '''20040830025721'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -15,8 +15,12 @@ classes.
 
 #-----------------------------------------------------------------------
 
-import pli.pattern.mixin.mapping as mapping
+import inspect
+import types
+
+import pli.functional as func
 import pli.logictypes as logictypes
+import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
@@ -78,10 +82,7 @@ class _Interface(type, mapping.Mapping):
 		if not hasattr(cls, '__format__'):
 			raise InterfaceError, 'interface %s does not have a format defined.' % cls
 		format = cls.__format__
-##		if format != None and name in format:
-##			return format[name]
 		try:
-##			for c in cls.__mro__[1:]:
 			for c in cls.__mro__:
 				if hasattr(c, '__format__') \
 						and c.__format__ != None \
@@ -152,9 +153,13 @@ class _Interface(type, mapping.Mapping):
 	def __isconsistent__(cls, errors=None):
 		'''
 		'''
+		allowed_props = cls.__attribute_properties__
 		for name in cls:
 			try:
 				props = cls.getattrproperty(name)
+				for n in props:
+					if n not in allowed_props:
+						raise InterfaceError, 'unknown option "%s".' % prop
 			except Exception, e:
 				if errors != None:
 					errors += [e]
@@ -172,6 +177,7 @@ class _Interface(type, mapping.Mapping):
 
 		NOTE: if a property is not defined for the attr None will be returned (this is the same as if its value was none).
 		'''
+		##!! REVISE !!##
 		allowed_props = cls.__attribute_properties__ + (None,)
 		if prop not in allowed_props:
 			raise InterfaceError, 'unknown option "%s".' % prop
@@ -343,7 +349,7 @@ def checkvalue(obj, name, value, interface=None):
 			format = i.getattrproperty(name)
 			break
 		# find first '*'...
-		if star != None and '*' in i:
+		if star == None and '*' in i:
 			star = i.getattrproperty('*')
 	# if no explicit definition is found...
 	if type(format) is not dict:
@@ -575,6 +581,75 @@ def getdoc(obj, name=None, interface=None):
 
 
 #-----------------------------------------------------------------------
+# this is the utility section....
+##import inspect
+##import types
+##import pli.functional as func
+#--------------------------------------------------_arecallablesalike---
+# TODO find a better name....
+def _arecallablesalike(c0, c1):
+	'''
+	'''
+	if type(c0) in (types.MethodType, types.FunctionType):
+		argspec0 = inspect.getargspec(c0)
+	else:
+		argspec0 = inspect.getargspec(c0.__call__)
+	if type(c1) in (types.MethodType, types.FunctionType):
+		argspec1 = inspect.getargspec(c1)
+	else:
+		argspec1 = inspect.getargspec(c1.__call__)
+	return argspec0 == argspec1
+
+
+#-----------------------------------------------------------likevalue---
+##!!! revise !!!##
+def likevalue(obj, method_writable=False):
+	'''
+	this will create an interface property dict that describes the argument.
+
+	NOTE: this is usefull as it will create a predicate that will check 
+	      function/method signature.
+	'''
+	res = {}
+	# type or predicate...
+	if callable(obj):
+		# function signature...
+		res['predicate'] = func.curry(_arecallablesalike, obj)
+		if not method_writable:
+			res['writable'] = False
+	else:
+		res['type'] = type(obj)
+	# doc...
+	if hasattr(obj, '__doc__'):
+		res['doc'] = obj.__doc__
+	return res
+
+
+#-----------------------------------------------------createinterface---
+##!!! revise !!!##
+def createinterface(obj, name=None, doc=None, methods_writable=False):
+	'''
+	this will generate an interface from an example object.
+	'''
+	if name == None:
+		try:
+			name = 'I' + hasattr(obj, '__name__') and obj.__name__ or obj.__class__.__name__
+		except:
+			name = 'IUnnamed'
+	format = {}
+	names = dir(obj)
+	for n in names:
+		format[n] = likevalue(getattr(obj, n), method_writable=methods_writable)
+	class I(Interface):
+		if doc != None:
+			__doc__ = doc
+		__format__ = format
+	I.__name__ = name
+	return I
+	
+
+
+#-----------------------------------------------------------------------
 #-------------------------------------------------ObjectWithInterface---
 class ObjectWithInterface(object):
 	'''
@@ -621,7 +696,7 @@ class ObjectWithInterface(object):
 		super(ObjectWithInterface, self).__delattr__(name)
 
 
-#------------------------------------------------------InterfaceProxy---
+#------------------------------------------------InterfaceObjectProxy---
 # TODO move this to pli.pattern.proxy (???)
 class InterfaceProxy(object):
 	'''
@@ -657,72 +732,22 @@ class InterfaceProxy(object):
 		raise InterfaceError, 'can\'t delete attribute "%s".' % name
 
 
-#=======================================================================
-# this is the utility section....
-#-----------------------------------------------------------------------
+###-------------------------------------------------InterfaceClassProxy---
+##class InterfaceClassProxy(type, InterfaceObjectProxy):
+##	'''
+##	'''
+##	__implemments__ = None
+##
+##	__source__ = None
+##
+##	def __init__(cls, name, bases, ns):
+##		type.__init__(cls, name, bases, ns)
 
-import inspect
-import types
-import pli.functional as func
-
-
-#--------------------------------------------------_arecallablesalike---
-def _arecallablesalike(c0, c1):
-	'''
-	'''
-	if type(c0) in (types.MethodType, types.FunctionType):
-		argspec0 = inspect.getargspec(c0)
-	else:
-		argspec0 = inspect.getargspec(c0.__call__)
-	if type(c1) in (types.MethodType, types.FunctionType):
-		argspec1 = inspect.getargspec(c1)
-	else:
-		argspec1 = inspect.getargspec(c1.__call__)
-	return argspec0 == argspec1
-
-
-#-----------------------------------------------------------likevalue---
-def likevalue(obj):
-	'''
-	this will create an interface property dict that describes the argument.
-
-	NOTE: this is usefull as it will create a predicate that will check 
-	      function/method signature.
-	'''
-	res = {}
-	# type or predicate...
-	if callable(obj):
-		# function signature...
-		res['predicate'] = func.curry(_arecallablesalike, obj)
-	else:
-		res['type'] = type(obj)
-	# doc...
-	if hasattr(obj, '__doc__'):
-		res['doc'] = obj.__doc__
-	return res
-
-
-#-----------------------------------------------------createinterface---
-def createinterface(obj, name=None, doc=None):
-	'''
-	this will generate an interface from an example object.
-	'''
-	if name == None:
-		try:
-			name = 'I' + hasattr(obj, '__name__') and obj.__name__ or obj.__class__.__name__
-		except:
-			name = 'IUnnamed'
-	format = {}
-	names = dir(obj)
-	for n in names:
-		format[n] = likevalue(getattr(obj, n))
-	class I(Interface):
-		if doc != None:
-			__doc__ = doc
-		__format__ = format
-	I.__name__ = name
-	return I
-	
+# TODO write a transparent metaclass interface generator/checker....
+#      e.g. afetr the class is defined it is used as an interface
+#      "example"....
+#      possibley: its objects will obey this interface... (is this
+#                 logical???)
 
 
 #=======================================================================
