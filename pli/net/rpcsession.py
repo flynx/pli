@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.75'''
-__sub_version__ = '''20041202163413'''
+__sub_version__ = '''20041203111525'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -230,7 +230,6 @@ class RPCSessionManager(object):
 	# this sets the session global timeout (idle time before session
 	# close), if None timeout checks will be disabled.
 	__timeout__ = 1800.0
-
 	# this will enable the session to set its own timeout...
 	__session_timeout__ = False
 	# this if True will enable persistent session objects...
@@ -323,8 +322,8 @@ class RPCSessionManager(object):
 					and hasattr(obj, '_last_accessed') \
 					and (time.time() - obj._last_accessed) > self.__timeout__:
 				self.close_session(sid)
-				return False
-			return True
+			else:
+				return True
 		return False
 	# System methods (internal):
 	##!!! TEST !!!##
