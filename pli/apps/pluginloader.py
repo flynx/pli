@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.02'''
-__sub_version__ = '''20040825044853'''
+__sub_version__ = '''20040825140133'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -60,7 +60,7 @@ class Plugins(object):
 
 		if hasattr(self, '__autoload__') and self.__autoload__:
 			self.load(path, prefix, ignore, frame_depth=2)
-	# XXX correct the prefix guessing!!!
+	# XXX revize the prefix guessing...
 	def load(self, path=None, prefix=None, ignore=None, frame_depth=1):
 		'''
 
@@ -72,33 +72,38 @@ class Plugins(object):
 		disabled = self.disabled
 
 		if path == None:
-			# by default get path relative to caller.... 
+			# by default get path relative to the module this was
+			# called from.... (????)
 			#   (e.g. import all that is on callres level...)
-			f = sys._getframe(frame_depth).f_code.co_filename
-			path = os.path.dirname(f)
-			##!!!
+			i = 0
+			while True:
+				f_locals = sys._getframe(frame_depth+i).f_locals
+				if '__file__' in f_locals:
+					break
+				i += 1
+##			f_locals = sys._getframe(frame_depth).f_locals
+			path = os.path.dirname(f_locals['__file__'])
 			if prefix == None:
 				# the prefix is same as caller...
-				for n, v in sys.modules.iteritems():
-					if hasattr(v, '__file__') and v.__file__ == f and v.__name__ != None:
-						prefix = v.__name__
-						break
+				 n = f_locals['__name__']
+				 if n != '__main__':
+					 prefix = n
 		elif type(path) == types.ModuleType:
 			mod = path
 			# get path...
 			path = os.path.dirname(mod.__file__)
-			if prefix == None:
+			if prefix == None and mod.__name__ != '__main__':
 				# get prefix...
 				prefix = mod.__name__
 		elif exttypes.isstring(path):
 			self.path = path
-			##!!!
 			if prefix == None:
+				# normalize the path...
+				f = os.path.normpath(path)
 				# guess the prefix 
 				# see if it is in sys.modules...
-				f = path
 				for n, v in sys.modules.iteritems():
-					if hasattr(v, '__file__') and v.__file__ == f and v.__name__ != None:
+					if hasattr(v, '__file__') and v.__file__.startswith(f) and v.__name__ != None:
 						prefix = v.__name__
 						break
 				# Q: is there anythong else we could do here???
