@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.07'''
-__sub_version__ = '''20041029004526'''
+__sub_version__ = '''20041116002755'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -54,8 +54,53 @@ MINIMUM = _Compare(-1)
 
 
 #-----------------------------------------------------------------------
+# this is to define basic pattern combination mathematics.
+# Ex:
+# 	Pab = Pa | Pb		-- Pab is a pattern that will match either Pa
+# 						   or Pb...
+#
+# Operations:
+# 	|
+# 	&
+# 	+
+# 	rep
+# 	not
+# 	
+#
+class Pattern(object):
+	'''
+	'''
+	# cmp
+	def __eq__(self, other):
+		'''
+		'''
+		pass
+	def __ne__(self, other):
+		'''
+		'''
+		pass
+	def __gt__(self, other):
+		'''
+		'''
+		pass
+	def __ge__(self, other):
+		'''
+		'''
+		pass
+	def __lt__(self, other):
+		'''
+		'''
+		pass
+	def __le__(self, other):
+		'''
+		'''
+		pass
+	# op
+	##!!!
+
+
 #--------------------------------------------------------------oftype---
-class oftype(object):
+class oftype(Pattern):
 	'''
 	this will create an object that can be used as a predicate to test type, 
 	and it will copare True to objects of that type.

@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.17'''
-__sub_version__ = '''20040802180146'''
+__version__ = '''0.3.19'''
+__sub_version__ = '''20041118120308'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -521,6 +521,8 @@ class State(FiniteStateMachine):
 ##		'''
 ##		pass
 	# Q: does this need to be __gatattr__ or __getattribute__ ????
+	# NOTE: this might make the attr access quite slow...
+	# Q: is there a faster way??? (via MRO manipulation or something...)
 	def __getattr__(self, name):
 		'''
 		this will proxy the attr access to the original startup class....
@@ -531,6 +533,22 @@ class State(FiniteStateMachine):
 			return getattr(self.__startup_class__, name)
 		except AttributeError:
 			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+
+
+#--------------------------------------------------------InitialState---
+class InitialState(State):
+	'''
+	'''
+	__is_initial_state__ = True
+	__ignore_registration__ = True
+
+
+#-------------------------------------------------------TerminalState---
+class TerminalState(State):
+	'''
+	'''
+	__is_terminal_state__ = True
+	__ignore_registration__ = True
 
 
 
