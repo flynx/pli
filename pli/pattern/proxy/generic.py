@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.08'''
-__sub_version__ = '''20041021182125'''
+__sub_version__ = '''20050111050358'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -246,7 +246,9 @@ class GetattrRecursiveProxyMixin(AbstractProxy):
 		except:
 			pass
 		if wrapper == None:
-			return self.__class__(obj)
+			wrapper = self.__class__
+			if hasattr(wrapper, '__proxy__'):
+				wrapper = wrapper.__proxy__
 		return wrapper(obj)
 		
 
@@ -282,8 +284,50 @@ class GetattributeRecursiveProxyMixin(AbstractProxy):
 		except:
 			pass
 		if wrapper == None:
-			return ogetattribute(self, '__class__')(obj)
+			##!!! rewrite as this will work with anything but the InheritAndOverrideProxy !!!##
+			wrapper = ogetattribute(self, '__class__')
+			if hasattr(wrapper, '__proxy__'):
+				wrapper = wrapper.__proxy__
 		return wrapper(obj)
+
+
+###-------------------------------------------MappingRecursiveProxyMixin---
+####!!! NOT TESTED !!!##
+##class MappingRecursiveProxyMixin(AbstractProxy):
+##	'''
+##	proxy mixin. this provides recursion e.g. will wrap the attrs using 
+##	the __wrapper__.
+##	this overloads __getattribute__.
+##
+##	NOTE: if __wrapper__ is None this will use self.__class__ as a wrapper.
+##	'''
+##	# this will define the callable used to wrap the attributes
+##	# returned by __getattribute__.
+##	__wrapper__ = None
+##	# this defines the attributes that are resolved to the proxy itself
+##	# (not the target object)...
+##	# NOTE: this is here for TranparentInheritAndOverrideProxy
+##	#       compatibility...
+##	# NOTE: the attrs defined here will not get wrapped.
+##	__proxy_public_attrs__ = ()
+##	
+##	def __getitem__(self, name):
+##		'''
+##		'''
+##		ogetattribute = object.__getattribute__
+##		obj = super(MappingRecursiveProxyMixin, self).__getitem__(name)
+##		wrapper = None
+##		try:
+##			wrapper = ogetattribute(self, '__wrapper__')
+##		except:
+##			pass
+##		if wrapper == None:
+##			##!!! rewrite as this will work with anything but the InheritAndOverrideProxy !!!##
+##			cls = ogetattribute(self, '__class__')
+##			if hasattr(cls, '__proxy__'):
+##				cls = cls.__proxy__
+##			return cls(obj)
+##		return wrapper(obj)
 
 
 
@@ -322,13 +366,14 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 	__proxy_count__ = 0
 	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
 	# if None the proxy caching will be disabled
-	__proxy_cache__ = _InheritAndOverrideProxy_cache
+##	__proxy_cache__ = _InheritAndOverrideProxy_cache
 
 	def __new__(cls, source, *p, **n):
 		'''
 		'''
 		osetattr = object.__setattr__
 		cls_name = cls.__name__
+		proxy = cls
 		try:
 			# process proxy cache...
 			_obj = cls._getcached(source)
@@ -339,6 +384,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
 			# get the new class....
 			cls = object.__getattribute__(_obj, '__class__')
+			cls.__proxy__ = proxy
 			# name the new class... 
 			# NOTE: the name may not be unique!
 			cls.__name__ = cls_name + '_' + str(cls.__proxy_count__)
@@ -406,7 +452,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy,
 	'''
 	__proxy_target_attr_name__ = 'proxy_target'
 	__proxy_count__ = 0
-	__proxy_cache__ = _TranparentInheritAndOverrideProxy_cache
+##	__proxy_cache__ = _TranparentInheritAndOverrideProxy_cache
 	# this defines the attributes that are resolved to the proxy itself
 	# (not the target object)...
 	__proxy_public_attrs__ = (
@@ -423,6 +469,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy,
 _RecursiveInheritNOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 class RecursiveInheritNOverrideProxy(GetattributeRecursiveProxyMixin,
+										GetattrRecursiveProxyMixin,
 										InheritAndOverrideProxy, 
 										ProxyWithReprMixin):
 	'''
@@ -431,7 +478,7 @@ class RecursiveInheritNOverrideProxy(GetattributeRecursiveProxyMixin,
 	'''
 	__wrapper__ = None
 	__proxy_count__ = 0
-	__proxy_cache__ = _RecursiveInheritNOverrideProxy_cache
+##	__proxy_cache__ = _RecursiveInheritNOverrideProxy_cache
 
 	__proxy_public_attrs__ = (
 				'__proxy_call__',
@@ -456,6 +503,13 @@ if __name__ == '__main__':
 			print 'O object (__call__)! (', self.__class__, hex(id(self)), ').'
 		def meth(self, arg):
 			print 'O object (meth)! (', self.__class__, hex(id(self)), ').'
+		def __getattr__(self, name):
+			'''
+			'''
+			if name == 'zzz':
+				return O()
+			else:
+				return super(O, self).__getattr__(name)
 	# create an instance of the above...
 	o = O()
 	# now the fun starts..
@@ -507,21 +561,41 @@ if __name__ == '__main__':
 		def __call__(self, *p, **n):
 			print 'Proxy:\n\t',
 			self.proxy_target(*p, **n)
+##		def __getattribute__(self, name):
+##			'''
+##			'''
+##			print 'Proxy.__getattribute__(', name, ')'
+##			return super(RProxy, self).__getattribute__(name)
+##		def __getattr__(self, name):
+##			'''
+##			'''
+##			print 'Proxy.__getattr__(', name, ')'
+##			return super(RProxy, self).__getattr__(name)
 	# here we will create a tree of objects....
 	o = O()
 	o.o = O()
 	o.o.o = O()
+	o.o.c = 'mmm'
 	# now create a proxy...
 	p = RProxy(o)
 	# print a nice repr...
 	print 'o is', o
 	print 'p is', p
+	print
 	# do a direct call...
 	o()
 	# call the proxy...
 	p()
 	p.o()
 	p.o.o()
+	print
+	print o.o.c
+	print p.o.c
+	print p.o.zzz
+	o.o.zzz()
+	p.o.zzz()
+	p.o.zzz.zzz()
+	print
 	p.o.o.__call__()
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.12'''
-__sub_version__ = '''20040212114724'''
+__sub_version__ = '''20050110052820'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -64,9 +64,9 @@ General ACL Protocol:
 #-----------------------------------------------------------------------
 
 import __builtin__
-_hasattr = __builtin__.hasattr
-_getattr = __builtin__.getattr
-_setattr = __builtin__.setattr
+_hasattr = hasattr
+_getattr = getattr
+_setattr = setattr
 ##_delattr = __builtin__.delattr
 import sys
 

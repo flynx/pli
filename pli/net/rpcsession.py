@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.75'''
-__sub_version__ = '''20041203111525'''
+__version__ = '''0.1.77'''
+__sub_version__ = '''20050110052652'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -158,6 +158,7 @@ class Session(object):
 # TODO split this into diferent functionality primitives...
 # 		- *global method call* functionality.
 # 		- session
+# 		_ key/pass
 # 		- ...
 # TODO global method install/unistall (may be session speciffic...)
 # TODO define a help protocol:
@@ -201,7 +202,7 @@ class RPCSessionManager(object):
 	__sid_chars__ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
 					'abcdefghijklmnopqrstuvwxyz' \
 					'0123456789' \
-					'./_-&%@#'
+					'._-@#'
 	# this sets the legth of the sid...
 	__sid_len__ = 27
 	# Global method data:
@@ -243,7 +244,6 @@ class RPCSessionManager(object):
 		if hasattr(self, '__sid_len__') and self.__sid_len__ < 8:
 			print >> sys.stderr, "WARNING: it is recommended that the SID be longer than 8 chars."
 	# System methods (external):
-	##!!! TEST !!!##
 	def new_session(self, obj_id, password='', *p, **n):
 		'''
 		this will create a new session.
@@ -305,7 +305,6 @@ class RPCSessionManager(object):
 		if hasattr(obj, '_onSessionClose'):
 			obj._onSessionClose(self)
 		del self.__active_sessions__[sid]
-	##!!! TEST !!!##
 	def isalive(self, sid):
 		'''
 		this will test if a session exists.
@@ -326,7 +325,6 @@ class RPCSessionManager(object):
 				return True
 		return False
 	# System methods (internal):
-	##!!! TEST !!!##
 	def dispatch(self, method, *pargs, **nargs):
 		'''
 		'''
@@ -342,7 +340,8 @@ class RPCSessionManager(object):
 			# check session object age...
 			if not self.isalive(sid):
 				raise SessionError, 'no such session.'
-			path = method.split('.')
+			# get a nice path...
+			path = self._getpath(method)
 			# get the session...
 			session_obj = self.__active_sessions__[sid][1]
 			# proxy...
@@ -370,6 +369,12 @@ class RPCSessionManager(object):
 			# dispatch the call to the actual object...
 			return self._getobject(sid, session_obj, path)(*pargs[1:], **nargs)
 	# Utility Methods:
+	def _getpath(self, path):
+		'''
+		'''
+		if type(path) in (list, tuple):
+			return path
+		return path.split('.')
 	def _callglobal(self, sid, path, meth, *p, **n):
 		'''
 		this will call the global method and handel security...
