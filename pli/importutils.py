@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.17'''
-__sub_version__ = '''20040326131151'''
+__sub_version__ = '''20040501162854'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 from __future__ import generators
 
 import os
+import sys
 import imp
 
 
@@ -29,16 +30,21 @@ class ImportDependencyError(Exception):
 #-----------------------------------------------------------------------
 #--------------------------------------------------------_load_module---
 # NOTE: this is a potential log/aspect point...
-def _load_module(package_dir, mod_name):
+def _load_module(package_dir, mod_name, name_prefix=None):
 	'''
 	'''
 	mod_dat = ()
+	legal_name = name_prefix in (None, '') and mod_name or name_prefix + '.' + mod_name
 	# import...
 	try:
-		# restrict the path the import path to avoid
-		# uncontrolled imports...
+		# restrict the import path to avoid uncontrolled imports...
 		mod_dat = imp.find_module(mod_name, [package_dir])
-		module = imp.load_module(mod_name, *mod_dat)
+		# check if the module is loaded...
+		if legal_name in sys.modules:
+			return mod_name, sys.modules[mod_name]
+		# load the module...
+##		module = imp.load_module(mod_name, *mod_dat)
+		module = imp.load_module(legal_name, *mod_dat)
 		# cleanup...
 		if len(mod_dat) > 1 and mod_dat[0] != None:
 			mod_dat[0].close()
@@ -138,7 +144,8 @@ def getpackagedepends(package_dir, mod_name, dependency_file='depends.txt', forb
 # TODO make this return more specific error data (e.g. name, exception,
 #      traceback...).
 def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
-						disabled_packages=None, notimportable=None, ignore_modules=()):
+						disabled_packages=None, notimportable=None, \
+						ignore_modules=(), name_prefix=None):
 	'''\
 
 	This is an import iterator. 
@@ -159,7 +166,7 @@ def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
 		raise TypeError, 'err_names must either be of list type or None (got type "%s").' % type(err_names)
 	# start the work...
 	for mod_name in packageiter(package_dir, disable_file, disabled_packages, notimportable, ignore_modules):
-		mod_name, module = _load_module(package_dir, mod_name)
+		mod_name, module = _load_module(package_dir, mod_name, name_prefix)
 		if module != None:
 			yield mod_name, module 
 		elif err_names != None:
@@ -171,7 +178,8 @@ def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
 # TODO make this a generic dependency checker (objutils ???)
 def importdependspackagesiter(package_dir, disable_file='disabled.txt',\
 								dependency_file='depends.txt', err_names=None,\
-								disabled_packages=None, notimportable=None, ignore_modules=()):
+								disabled_packages=None, notimportable=None, \
+								ignore_modules=(), name_prefix=None):
 	'''\
 	
 	This will import the modules in order of dependency.
@@ -181,7 +189,7 @@ def importdependspackagesiter(package_dir, disable_file='disabled.txt',\
 		'''
 		'''
 		if name not in loaded_packages:
-			name, mod = _load_module(path, name) 
+			name, mod = _load_module(path, name, name_prefix) 
 			if mod == None and err_names != None:
 				err_names += [name]
 			else:
