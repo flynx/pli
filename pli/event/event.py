@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.15'''
-__sub_version__ = '''20040425231848'''
+__sub_version__ = '''20040426035753'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -74,7 +74,6 @@ def bind(event, func, HOOK_DEBUG=False):
 
 
 #--------------------------------------------------------------unbind---
-##!!! add class support...
 def unbind(event, func):
 	'''
 	unregister func as the event callback.

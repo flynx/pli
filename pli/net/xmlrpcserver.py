@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.07'''
-__sub_version__ = '''20040328194423'''
+__sub_version__ = '''20040430192015'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -70,9 +70,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				print '-' * 72
 				print data
 				print '=' * 72
-			params, method = xmlrpclib.loads(data)
-			# generate response
 			try:
+				# parse the request...
+				params, method = xmlrpclib.loads(data)
+				# generate response
 				response = self.call(method, params)
 				if type(response) != type(()):
 					response = (response,)
