@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.05'''
-__sub_version__ = '''20040729122720'''
+__version__ = '''0.3.12'''
+__sub_version__ = '''20040730031350'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -199,6 +199,13 @@ class onFiniteStateMachineStop(event.InstanceEvent):
 # TODO write more docs...
 # TODO error state handler...
 # TODO "Sub-FSMs"
+#
+# TODO name resolution through the fsm.... (as a default to the startup
+#      state...)
+#      this should look like the FSM subclass is mixed-in (or a
+#      superclass of every state) to the originil FSM, yet not touching
+#      the original...
+#
 class FiniteStateMachine(state.State):
 	'''
 	this is the base FSM class.
@@ -236,6 +243,10 @@ class FiniteStateMachine(state.State):
 		super(FiniteStateMachine, self).__init__(*p, **n)
 		# init all states...
 		self.initstates()
+		# store a ref to the original startup class....
+		# NOTE: this is an instance attribute! (might pose a problem on
+		#       serializatio....)
+		self._startup_cls = self.__class__
 		# change state to the initial state if one defined...
 		if hasattr(self, '__initial_state__') and self.__initial_state__ != None:
 			self.changestate(self.__initial_state__)
@@ -496,6 +507,17 @@ class State(FiniteStateMachine):
 ##		resolve the situation.
 ##		'''
 ##		pass
+
+	def __getattr__(self, name):
+		'''
+		this will proxy the attr access to the original startup class....
+		'''
+		##!!! check for looping searching !!!##
+		# get the name in the startup class...
+		try:
+			return getattr(self._startup_cls, name)
+		except AttributeError:
+			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
 
 
 
