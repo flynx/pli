@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040421001657'''
+__sub_version__ = '''20040425230002'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -35,14 +35,11 @@ class ClassicEvent(event.ClassEvent):
 		'''
 		# setup default data...
 		self._args = (p, n)
-##		for name, val in n.iteritems():
-##			setattr(self, name, val)
 	def __callhook__(cls, hook, evt, *p, **n):
 		'''
 		this will create an event object and pass it to the handler.
 		'''
 		return hook(evt(*p, **n))
-	__callhook__ = classmethod(__callhook__)
 
 
 

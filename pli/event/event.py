@@ -2,8 +2,8 @@
 
 #-----------------------------------------------------------------------
 
-__version__ = '''0.3.11'''
-__sub_version__ = '''20040413045359'''
+__version__ = '''0.3.15'''
+__sub_version__ = '''20040425231848'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -30,6 +30,12 @@ Basic concepts:
 		or the event is set).
 
 '''
+
+
+
+#-----------------------------------------------------------------------
+
+import pli.objutils as objutils
 
 
 
@@ -68,6 +74,7 @@ def bind(event, func, HOOK_DEBUG=False):
 
 
 #--------------------------------------------------------------unbind---
+##!!! add class support...
 def unbind(event, func):
 	'''
 	unregister func as the event callback.
@@ -272,6 +279,7 @@ class InstanceEvent(AbstractEvent):
 		'''
 		if hasattr(self, '__strict_source__') and self.__strict_source__:
 			raise NotImplementedError, 'an event must have a source.'
+	source = objutils.classinstancemethod(source)
 	def fire(self, *pargs, **nargs):
 		'''
 		this will check the predicate if present and fire the event.
@@ -353,6 +361,7 @@ class InstanceEvent(AbstractEvent):
 			self.__eventhooks__ += (hook_func,)
 		else:
 			self.__eventhooks__ += (hook_func,)
+	installhook = objutils.classinstancemethod(installhook)
 	def uninstallhook(self, hook_func):
 		'''
 		this will uninstall an event hook/handler.
@@ -363,6 +372,7 @@ class InstanceEvent(AbstractEvent):
 			self.__eventhooks__ = tuple(tmp)
 		if self.__eventhooks__ == ():
 			self.clear()
+	uninstallhook = objutils.classinstancemethod(uninstallhook)
 	def clear(self):
 		'''
 		this will drop all handlers for this event.

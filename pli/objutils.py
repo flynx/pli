@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.12'''
-__sub_version__ = '''20040328143634'''
+__version__ = '''0.0.14'''
+__sub_version__ = '''20040426031133'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -9,6 +9,38 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 from __future__ import generators
 import types
+import new
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------classinstancemethod---
+##!! revise !!##
+class classinstancemethod(object):
+	'''
+
+	a universal class/instance/direct method constructor/dispatcher.
+	'''
+	def __init__(self, func, inst_func=None, direct_func=None):
+		'''
+		'''
+		self.func = func
+		self.inst_func = inst_func != None and inst_func or func
+		self.direct_func = direct_func != None and direct_func or func
+	def __call__(self, *p, **n):
+		'''
+		'''
+		# we are called directly...
+		return self.direct_func(*p, **n)
+	def __get__(self, obj, cls=None):
+		'''
+		'''
+		if obj == None:
+			# we are called from a class...
+			return new.instancemethod(self.func, cls, type(cls))
+		else:
+			# we are called from an instance...
+			return new.instancemethod(self.inst_func, obj, cls)
+		
 
 
 #-----------------------------------------------------------------------
