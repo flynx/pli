@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040322155235'''
+__sub_version__ = '''20040709022614'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -32,7 +32,6 @@ class _StoredClass(type):
 		'''
 		super(_StoredClass, cls).__init__(name, bases, ns)
 		store_attr_name = cls.__class_store_attr_name__
-##		if '__auto_register_type__' in ns and ns['__auto_register_type__']:
 		if ('__ignore_registration__' not in ns or not ns['__ignore_registration__']) and \
 				hasattr(cls, '__auto_register_type__') and cls.__auto_register_type__:
 			if not hasattr(cls, store_attr_name) or getattr(cls, store_attr_name) == None:
