@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.14'''
-__sub_version__ = '''20040321214647'''
+__sub_version__ = '''20040326123356'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -13,7 +13,10 @@ import os
 import imp
 
 
-##!!! REVISE !!!##
+#-----------------------------------------------------------------------
+
+PY_SUFFIXES = imp.get_suffixes() 
+
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------ImportDependencyError---
@@ -45,6 +48,23 @@ def _load_module(package_dir, mod_name):
 		if len(mod_dat) > 1 and mod_dat[0] != None:
 			mod_dat[0].close()
 		return mod_name, None
+
+
+#--------------------------------------------------ispythonimportable---
+def ispythonimportable(package_dir, name, check_files=False):
+	'''
+	'''
+	mod_path = os.path.join(package_dir, name)
+	# is directory -> contains __init__.py?
+	if os.path.isdir(mod_path) and \
+			True in [ os.path.exists(os.path.join(mod_path, '__init__' + ext[0])) \
+					  for ext in PY_SUFFIXES ]:
+		return True
+	else:
+		# is file -> is .py[cod]
+		return True in [ os.path.exists(os.path.join(mod_path, ext[0])) \
+						 for ext in PY_SUFFIXES ]
+	return False
 
 
 #---------------------------------------------------------packageiter---
@@ -79,7 +99,9 @@ def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None
 				if disabled_packages != None:
 					disabled_packages += [mod_name]
 				continue
-			yield mod_name
+			if ispythonimportable(package_dir, mod_name):
+				yield mod_name
+##			yield mod_name
 
 
 #---------------------------------------------------getpackagedepends---
