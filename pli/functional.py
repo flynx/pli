@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.5.14'''
-__sub_version__ = '''20050124064633'''
+__sub_version__ = '''20050331025621'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -102,7 +102,7 @@ class RCurry(AbstractCurry):
 
 #---------------------------------------------------------LCurryProxy---
 ##!!! TEST !!!##
-##class LCurryProxy(AbstractCurry, proxy.TranparentInheritAndOverrideProxy):
+##class LCurryProxy(AbstractCurry, proxy.TransparentInheritAndOverrideProxy):
 ##	'''
 ##	'''
 ##	def __init__(self, target, *p, **n):
@@ -126,7 +126,7 @@ class RCurry(AbstractCurry):
 
 #---------------------------------------------------------RCurryProxy---
 ##!!! TEST !!!##
-##class RCurryProxy(AbstractCurry, proxy.TranparentInheritAndOverrideProxy):
+##class RCurryProxy(AbstractCurry, proxy.TransparentInheritAndOverrideProxy):
 ##	'''
 ##	'''
 ##	def __init__(self, target, *p, **n):

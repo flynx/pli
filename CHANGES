@@ -1,5 +1,11 @@
-# this file was generated on [200503291732]
+# this file was generated on [200503310624]
 pli changes:
+
+version 0.0.138 (200503310620):
+- added support for proxy objects (module pli.pattern.proxy.generic) to be safely pickled and unpickled (needs more testing).
+- added two functions to pli.pattern.proxy.generic, the _reduceproxyobject and _reconstructproxyobject which enable to breakup a proxy object and safely restore it respectively... these are used for the pickle protocol (see above) (needs nor testing).
+- defined a simple proxy (pli.pattern.proxy.generic) pickle protocol extension... actually one configuration option (WARNING: this might change in the near future re).
+- several bug-fixes...
 
 version 0.0.132 (200412311609):
 - added pli.event.decorator module.

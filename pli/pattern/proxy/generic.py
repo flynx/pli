@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.14'''
-__sub_version__ = '''20050313182543'''
+__version__ = '''0.1.19'''
+__sub_version__ = '''20050331061318'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -72,6 +72,66 @@ def getproxytarget(obj):
 		raise
 
 
+#-----------------------------------------------------------------------
+# TODO spread this to the proxies that define those...
+__proxy_unpicklable_attrs__ = (
+		'__doc__',
+		'__metaclass__',
+		'__module__',
+
+		'__proxy_count__',
+		'__proxy_target_attr_name__',
+		'__proxy_base__',
+		'__wrapper__',
+
+		'__proxy_class__',
+		'__proxy_call__',
+		'__proxy_cache__',
+		)
+
+
+#--------------------------------------------------_reduceproxyobject---
+# TODO make this more versitile, e.g. add a protocol to make this work
+#      on any proxy (something similar yet parallel to CPython's pickle
+#      protocol).
+##!!! REVISE !!!##
+def _reduceproxyobject(obj):
+	'''
+	'''
+	if not isproxy(obj):
+		raise TypeError, 'obj is not a proxy.'
+	ogetattribute = object.__getattribute__
+	# get proxy private data...
+	proxy_cls = ogetattribute(obj, '__class__')
+	##!!! REVISE !!!##
+	proxy_data = dict(proxy_cls.__dict__)
+	# clean the proxy data... (remove attrs that are not needed)
+	attrs = getattr(proxy_cls, '__proxy_unpicklable_attrs__', __proxy_unpicklable_attrs__) \
+				+ (proxy_cls.__proxy_target_attr_name__,)
+	for a in attrs:
+		if a in proxy_data:
+			del proxy_data[a]
+	# get object...
+	return proxy_data, getproxytarget(obj)
+
+
+#---------------------------------------------_reconstructproxyobject---
+##!!! REVISE !!!##
+def _reconstructproxyobject(proxy_data, target):
+	'''
+	'''
+	ogetattribute = object.__getattribute__
+	# build basic proxy...
+	res = proxy_data['__proxy__'](target)
+	proxy_cls = ogetattribute(res, '__class__')
+	##!!! REVISE !!!##
+	# now update the proxy private NS...
+	for n, v in proxy_data.items():
+		if not hasattr(proxy_cls, n):
+			setattr(proxy_cls, n, v)
+	return res
+
+
 
 #-----------------------------------------------------------------------
 #-------------------------------------------------------------isproxy---
@@ -102,6 +162,12 @@ class AbstractProxy(object):
 	'''
 	# this defines the attr name used to store the proxied object.
 	__proxy_target_attr_name__ = 'proxy_target'
+
+	# XXX does this belong here???
+	def __reduce__(self):
+		'''
+		'''
+		return (_reconstructproxyobject, _reduceproxyobject(self))
 
 
 
@@ -283,7 +349,7 @@ class GetattributeRecursiveProxyMixin(AbstractProxy):
 	__wrapper__ = None
 	# this defines the attributes that are resolved to the proxy itself
 	# (not the target object)...
-	# NOTE: this is here for TranparentInheritAndOverrideProxy
+	# NOTE: this is here for TransparentInheritAndOverrideProxy
 	#       compatibility...
 	# NOTE: the attrs defined here will not get wrapped.
 	__proxy_public_attrs__ = ()
@@ -323,7 +389,7 @@ class GetattributeRecursiveProxyMixin(AbstractProxy):
 ##	__wrapper__ = None
 ##	# this defines the attributes that are resolved to the proxy itself
 ##	# (not the target object)...
-##	# NOTE: this is here for TranparentInheritAndOverrideProxy
+##	# NOTE: this is here for TransparentInheritAndOverrideProxy
 ##	#       compatibility...
 ##	# NOTE: the attrs defined here will not get wrapped.
 ##	__proxy_public_attrs__ = ()
@@ -377,6 +443,11 @@ _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 # NOTE: the problem that might accur here is when we assign to
 #       self.__class__.something
 # TODO test module support (e.g. proxieng a module)...
+# TODO think of ways to make this better... things like:
+# 		- auto metaclass creation.
+# 		- more libiral __new__ and __init__
+# TODO make this support recursion and/or layaring... e.g. make
+#      proxying a proxy possible...
 # XXX there is a problem with the targets __new__ and __init__
 #     methods...
 #     they can get called on proxy init...
@@ -400,11 +471,17 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 
 	NOTE: this is not compatible with objects that do something in 
 	      the meta-classes' __init__ or __new__ methods...
+		  those will require the rewrite of these methods in the 
+		  metaclass; this can be defined in the __proxy_metaclass__
+		  class variable.
 
 	Attributes:
-		__proxy__
+		__proxy__			- the class used to create the proxy.
 		__proxy_base__		- the special baseclass of the proxy.
 	'''
+	# this will define the metaclass used to create the proxy object
+	# class...
+	__proxy_metaclass__ = _InheritAndOverrideProxyMetaclass
 	# this defines the attribute name where the proxy target is
 	# stored...
 	__proxy_target_attr_name__ = 'proxy_target'
@@ -430,7 +507,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 ##			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
 			_obj = object.__new__(new.classobj('DynamicProxyBase',
 												(cls, source.__class__),
-												{'__metaclass__': _InheritAndOverrideProxyMetaclass}))
+												{'__metaclass__': cls.__proxy_metaclass__}))
 ##			class DynamicProxyBase(cls, source.__class__):
 ##				__metaclass__ = _InheritAndOverrideProxyMetaclass
 ##			_obj = object.__new__(DynamicProxyBase)
@@ -486,17 +563,17 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 ##		return target
 
 
-#-----------------------------------TranparentInheritAndOverrideProxy---
+#-----------------------------------TransparentInheritAndOverrideProxy---
 # this is the Proxy cache...
-_TranparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
+_TransparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # TODO test if we need any other magic methods???
-class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, 
+class TransparentInheritAndOverrideProxy(InheritAndOverrideProxy, 
 											GetattributeProxyMixin, 
 											ComparibleProxyMixin, 
 											ProxyWithReprMixin):
 	'''
-	this is a tranparent variant of InheritAndOverrideProxy. its' behavior 
+	this is a transparent variant of InheritAndOverrideProxy. its' behavior 
 	is in no way diferent from the proxied object.
 
 	NOTE: due to the fact that this explicitly proxies the __getattribute__ 
@@ -505,7 +582,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy,
 	'''
 	__proxy_target_attr_name__ = 'proxy_target'
 	__proxy_count__ = 0
-##	__proxy_cache__ = _TranparentInheritAndOverrideProxy_cache
+##	__proxy_cache__ = _TransparentInheritAndOverrideProxy_cache
 	# this defines the attributes that are resolved to the proxy itself
 	# (not the target object)...
 	__proxy_public_attrs__ = (
@@ -568,7 +645,7 @@ if __name__ == '__main__':
 	o = O()
 	# now the fun starts..
 	# we define a proxy that will intercept calls to the target object.
-	class Proxy(TranparentInheritAndOverrideProxy):
+	class Proxy(TransparentInheritAndOverrideProxy):
 		def __call__(self, *p, **n):
 			print 'Proxy:\n\t',
 			self.proxy_target(*p, **n)
@@ -651,6 +728,20 @@ if __name__ == '__main__':
 	p.o.zzz.zzz()
 	print
 	p.o.o.__call__()
+
+	# test picklability...
+	pp = _reduceproxyobject(p)
+	print pp
+	ppp = _reconstructproxyobject(*pp)
+	print ppp
+
+	ppp.o.o.__call__()
+
+	import pickle
+
+	ppp = pickle.loads(pickle.dumps(p))
+
+	ppp.o.o.__call__()
 
 
 
