@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.01'''
-__sub_version__ = '''20040829020230'''
+__sub_version__ = '''20040829135749'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -305,7 +305,6 @@ def getinterfaces(obj):
 	this will return a tuuple containing the supported by the object interfaces.
 	'''
 	if not hasattr(obj, '__implemments__') or obj.__implemments__ is None:
-##		print '!!!!', obj, obj.__implemments__
 		return ()
 	# get objects interface...
 	if type(obj.__implemments__) in (list, tuple):
@@ -463,14 +462,66 @@ def iscompatible(obj, name, interface=None):
 def checkessentials(obj, interface=None):
 	'''
 	'''
-	pass
+	if interface != None:
+		format = (interface,)
+	else:
+		format = getinterfaces(obj)
+	res = {}
+	for i in format:
+		for n in i:
+			if n not in res:
+				v = i.getattrproperty(n, 'essential')
+				if v not in (None, False):
+					res[n] = v
+	for n in res:
+		if not hasattr(obj, n):
+			raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
+		checkattr(obj, n)
+	return True
 
 
 #---------------------------------------------------------checkobject---
 def checkobject(obj, interface=None):
 	'''
 	'''
-	pass
+	##!!!
+
+
+
+#-----------------------------------------------------------------------
+#--------------------------------------------------------------getdoc---
+##!! revise 
+def getdoc(obj, name=None, interface=None):
+	'''
+	this will return a dict containing the attr name and the coresponding
+	doc defined in the interface.
+	if name is not present this will return all the docs for each attr defined...
+	'''
+	if interface != None:
+		format = (interface,)
+	else:
+		format = getinterfaces(obj)
+	# if name is present...
+	if name != None:
+		for i in format:
+			if name in i:
+				return {name: i.getattrproperty(name, 'doc')}
+		raise InterfaceError, 'attribute "%s" is not defined in the interface for %s.' % (name, obj)
+	# if name is not present...
+	res = {}
+	# this is bad as getattrproperty is called for each attr in each
+	# interface... (see below for a more eficient variant...)
+	#for i in format[::-1]:
+	#	res.update(dict([ (n, i.getattrproperty(n, 'doc')) for n in i ]))
+	# NOTE: this is faster in the above variant... (complexity is less
+	#       for cases where there are overlaping interfaces...)
+	#       though this might be slightly slower due to the nested
+	#       loops...
+	for i in format:
+		for n in i:
+			if n not in res:
+				res[n] = i.getattrproperty(n, 'doc')
+	return res
 
 
 
@@ -479,10 +530,50 @@ def checkobject(obj, interface=None):
 class ObjectWithInterface(object):
 	'''
 	'''
-	pass
+	# this defines the objects' interface.
+	# NOTE: if this is None interface support will be disabled.
+	__implemments__ = None
+
+	##!!!
+	def __new__(cls, *p, **n):
+		'''
+		'''
+		obj = object.__new__(cls, *p, **n)
+		interface = obj.__implemments__
+		if interface != None:
+			obj.__dict__.update(dict([ (n, v['default']) \
+									for n, v \
+										in type(interface) is tuple \
+											and logictypes.DictUnion(*[ i.__format__ for i in interface ]).iteritems() \
+											or interface.__format__.iteritems() \
+										if 'default' in v and n != '*' ]))
+		return obj
+	def __getattribute__(self, name):
+		'''
+		'''
+		if name == '__implemments__' \
+				or object.__getattribute__(self, '__implemments__') == None \
+				or isreadable(self, name):
+			return super(ObjectWithInterface, self).__getattribute__(name)
+		raise InterfaceError, 'can\'t read attribute "%s".' % name
+	def __setattr__(self, name, value):
+		'''
+		'''
+		if object.__getattribute__(self, '__implemments__') == None \
+				or (iswritable(self, name) and isvaluecompatible(self, name, value)):
+			return super(ObjectWithInterface, self).__setattr__(name, value)
+		raise InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
+	def __delattr__(self, name):
+		'''
+		'''
+		if object.__getattribute__(self, '__implemments__') != None \
+				and not isdeletable(self, name):
+			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
+		super(ObjectWithInterface, self).__delattr__(name)
 
 
 #------------------------------------------------------InterfaceProxy---
+# TODO move this to pli.pattern.proxy (???)
 class InterfaceProxy(object):
 	'''
 	'''
@@ -516,17 +607,6 @@ class InterfaceProxy(object):
 		if self.__implemments__ != None and isessential(self, name):
 			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
 		delattr(self.__source__, name)
-
-
-
-#-----------------------------------------------------------------------
-#------------------------------------------------InheritanceInterface---
-##!! experimental !!##
-class InheritanceInterface(Interface):
-	'''
-	the object of this class is to comply to the interface (to be used as a mix-in).
-	'''
-	pass
 
 
 
@@ -579,6 +659,8 @@ if __name__ == '__main__':
 
 	print checkattr(a, 'ccc')
 	print checkvalue(a, 'ccc', 0)
+
+	print getdoc(a, 'ccc')
 
 
 #=======================================================================
