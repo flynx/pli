@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040531024534'''
+__sub_version__ = '''20040608182626'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -10,6 +10,42 @@ usage of standard python types.
 '''
 
 #-----------------------------------------------------------------------
+
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------------------_Comare---
+class _Comare(object):
+	'''
+	'''
+	def __init__(self, eq):
+		self._eq = eq
+	def __cmp__(self, other):
+		return self._eq
+	def __eq__(self, other):
+		return self._eq == 0
+	def __ne__(self, other):
+		return self._eq != 0
+	def __gt__(self, other):
+		return self._eq > 0
+	def __ge__(self, other):
+		return self._eq >= 0
+	def __lt__(self, other):
+		return self._eq < 0
+	def __le__(self, other):
+		return self._eq <= 0
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this will compare to any value as equel (almost oposite to None)
+ANY = _Comare(0)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is bigger than any value...
+MAXIMUM = _Comare(1)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is smaller than any value...
+MINIMUM = _Comare(-1)
 
 
 
