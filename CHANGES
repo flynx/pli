@@ -1,5 +1,8 @@
-# this file was generated on [200409080150]
+# this file was generated on [200409091503]
 pli changes:
+
+version 0.0.84 (200409091457):
+- moved the dispatch module to the pli.dispatch package.... (old.py)
 
 version 0.0.83 (200409060449):
 - did a full rewrite of the pli.pattern.proxy.generic
