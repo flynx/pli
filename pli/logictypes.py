@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.03'''
-__sub_version__ = '''20040902191059'''
+__version__ = '''0.1.07'''
+__sub_version__ = '''20041029004526'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -18,8 +18,8 @@ import pli.pattern.mixin.mapping as mapping
 # TODO create a logic proxy, with adapters....
 #      UNION(*p), INTERSECTION(*n), ...
 #
-#-------------------------------------------------------------_Comare---
-class _Comare(object):
+#------------------------------------------------------------_Compare---
+class _Compare(object):
 	'''
 	'''
 	def __init__(self, eq):
@@ -41,15 +41,68 @@ class _Comare(object):
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this will compare to any value as equel (almost oposite to None)
-ANY = _Comare(0)
+Any = ANY = _Compare(0)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is bigger than any value...
-MAXIMUM = _Comare(1)
+MAXIMUM = _Compare(1)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is smaller than any value...
-MINIMUM = _Comare(-1)
+MINIMUM = _Compare(-1)
+
+
+
+#-----------------------------------------------------------------------
+#--------------------------------------------------------------oftype---
+class oftype(object):
+	'''
+	this will create an object that can be used as a predicate to test type, 
+	and it will copare True to objects of that type.
+	'''
+	def __init__(self, *types, **n):
+		'''
+		'''
+		self._types = types
+		if 'doc' in n:
+			self.__doc__ = n['doc']
+	def __call__(self, other):
+		'''
+		test if the the other object object is of type.
+		'''
+		return isinstance(other, self._types) is True
+	__eq__ = __call__
+	def __ne__(self, other):
+		return not isinstance(other, self._types) is True
+	def __gt__(self, other):
+		return False
+	def __ge__(self, other):
+		return True
+	def __lt__(self, other):
+		return False
+	def __le__(self, other):
+		return True
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# simple type predicates...
+isint = oftype(int)
+isfloat = oftype(float)
+iscomplex = oftype(complex)
+
+isstr = oftype(str)
+isunicode = oftype(unicode)
+
+islist = oftype(list)
+istuple = oftype(tuple)
+isdict = oftype(dict)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# general type groups predicates...
+isnumber = oftype(int, float, complex) 
+isstring = oftype(str, unicode)
+issequence = oftype(list, tuple)
+
+isiterabletype = oftype(str, unicode, list, tuple, dict)
 
 
 
@@ -65,8 +118,8 @@ def dictcopyunite(*members):
 
 
 #-----------------------------------------------------------DictUnion---
-# TODO use pli.pattern.mixin.mapping
-class DictUnion(mapping.MappingWithMethods):
+##class DictUnion(mapping.MappingWithMethods):
+class DictUnion(mapping.Mapping):
 	'''
 	this is a dict like object, that acts as a union of its members but
 	without modifieng its members in any way.
