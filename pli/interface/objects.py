@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.05'''
-__sub_version__ = '''20040910153526'''
+__sub_version__ = '''20040914012645'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -30,7 +30,8 @@ class ObjectWithInterface(object):
 		ogetattribute = object.__getattribute__
 		_interface = obj.__implemments__
 		if _interface != None:
-			ogetattribute(obj, '__dict__').update(dict([ (n, v['default']) \
+##			ogetattribute(obj, '__dict__').update(dict([ (n, v['default']) \
+			ogetattribute(obj, '__dict__').update(dict([ (n, interface.getvalue(obj, n, v['default'])) \
 									for n, v \
 										in type(_interface) is tuple \
 											and logictypes.DictUnion(*[ i.__format__ for i in _interface ]).iteritems() \
@@ -52,7 +53,8 @@ class ObjectWithInterface(object):
 ##			return super(InterfaceProxy, self).__setattr__(name, value)
 		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
-			return super(ObjectWithInterface, self).__setattr__(name, value)
+##			return super(ObjectWithInterface, self).__setattr__(name, value)
+			return super(ObjectWithInterface, self).__setattr__(name, interface.getvalue(self, name, value))
 		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
@@ -90,7 +92,9 @@ class InterfaceProxy(object):
 			return super(InterfaceProxy, self).__setattr__(name, value)
 		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
-			return setattr(self.__source__, name, value)
+##			return setattr(self.__source__, name, value)
+			source = self.__source__
+			return setattr(source, name, interface.getvalue(source, name, value))
 		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
@@ -119,6 +123,7 @@ class InterfaceProxy(object):
 #                 logical???)
 
 
+#=======================================================================
 if __name__ == '__main__':
 
 	class O(ObjectWithInterface):
@@ -142,6 +147,7 @@ if __name__ == '__main__':
 	print hasattr(O, '__implemments__')
 
 	o.f()
+
 
 
 #=======================================================================

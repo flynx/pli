@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.19'''
-__sub_version__ = '''20040911191857'''
+__sub_version__ = '''20040914013450'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -291,9 +291,15 @@ class Interface(object):
 		doc			- this is the attr documentation
 	
 		handler		- this is the alternative attribute handler.
-					  this will take the option value and its old value
-					  as arguments and its' return will replace the 
-					  original value.
+					  this will take the object, attr name and option 
+					  value as arguments and its' return will replace 
+					  the original value.
+					  NOTE: this can be called when the object is not 
+					        fully initialized, thus no assumptions about
+							object state should be made.
+					  NOTE: it is not recommended for this to have side 
+					        effects as the handler call is not garaneed 
+							to precede an attribute write.
 	
 		readable	- this if False will prevent the attr from being
 					  read.
@@ -425,6 +431,22 @@ def checkattr(obj, name, interface=None):
 
 #-----------------------------------------------------------------------
 # attribute level functions...
+#------------------------------------------------------------_setattr---
+def getvalue(obj, name, value, interface=None):
+	'''
+	this will create an attribute value...
+	'''
+	if interface != None:
+		format = interface
+	else:
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	handler = format.get(name, {}).get('handler', False)
+	if handler != False:
+		return handler(obj, name, value)
+	return value
+	
+
+
 #---------------------------------------------------------isessential---
 def isessential(obj, name, interface=None):
 	'''
