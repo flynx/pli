@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.07'''
-__sub_version__ = '''20040523185316'''
+__sub_version__ = '''20040614185220'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -143,6 +143,7 @@ class State(object):
 			# its state on notify registration.
 			if call[1] in (call[2].__class__, None) and (call[3] == None or call[3](self)):
 				call[0](self, fromstate, tostate)
+	# TODO move this to a seporate class.... (???)
 	def notify_on(self, obj, fromstate=None, tostate=None, ignore_self_state=1, callback=None, predicate=None):
 		'''
 		register for notification.

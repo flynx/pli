@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.37'''
-__sub_version__ = '''20040608170307'''
+__version__ = '''0.0.45'''
+__sub_version__ = '''20040708155454'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -9,6 +9,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 from __future__ import generators
 import time
+import re
 
 
 #-----------------------------------------------------------------------
@@ -125,6 +126,23 @@ class AttrTypeBaseStore(BaseStore):
 	'''
 	mix-in/class. this provides access to stored object types through atributes.
 	'''
+	# this if set will check the attr name compliance with the python
+	# variable name syntax...
+	__check_name_format__ = True
+	# this will define a pattern against which the attribute name is to
+	# be checked...
+	__name_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
+
+	# NOTE: if this is both an AttributeBaseStore and na
+	#       AttrTypeBaseStore the name will get checked twice, and I
+	#       see no beautifull way out of this....
+	def __setitem__(self, key, value):
+		'''
+		'''
+		if hasattr(self, '__check_name_format__') and self.__check_name_format__ and \
+				re.match(self.__name_format__, key) is None:
+			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
+		super(AttrTypeBaseStore, self).__setitem__(key, value)
 	def __getattr__(self, name):
 		'''
 		'''
@@ -194,6 +212,23 @@ class AttributeBaseStore(BaseStore):
 	'''
 	mix-in/class. this provides access to stored objects through store attributes.
 	'''
+	# this if set will check the attr name compliance with the python
+	# variable name syntax...
+	__check_name_format__ = True
+	# this will define a pattern against which the attribute name is to
+	# be checked...
+	__name_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
+
+	# NOTE: if this is both an AttributeBaseStore and na
+	#       AttrTypeBaseStore the name will get checked twice, and I
+	#       see no beautifull way out of this....
+	def __setitem__(self, key, value):
+		'''
+		'''
+		if hasattr(self, '__check_name_format__') and self.__check_name_format__ and \
+				re.match(self.__name_format__, key) is None:
+			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
+		super(AttributeBaseStore, self).__setitem__(key, value)
 	def __getattr__(self, name):
 		'''
 		'''

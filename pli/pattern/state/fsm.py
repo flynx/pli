@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.46'''
-__sub_version__ = '''20040529231610'''
+__version__ = '''0.3.02'''
+__sub_version__ = '''20040708145622'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -19,7 +19,6 @@ import pli.event as event
 ##import pli.event.instanceevent as instanceevent
 
 import state
-
 
 
 #-----------------------------------------------------------------------
@@ -136,7 +135,7 @@ def isinloop(s):
 
 #----------------------------------------------------------transition---
 # TODO add support for string state names... (+ check consistency... (?))
-# TODO add transition predicate...
+# TODO add doc paramiter to transitions...
 def transition(s1, s2, condition=None):
 	'''
 	create a transition from s1 to s2.
@@ -198,6 +197,8 @@ class onFiniteStateMachineStop(event.InstanceEvent):
 #       tested)
 # TODO test for safety of parallel execution of two fsm instances...
 # TODO write more docs...
+# TODO error state handler...
+# TODO "Sub-FSMs"
 class FiniteStateMachine(state.State):
 	'''
 	this is the base FSM class.
@@ -357,6 +358,9 @@ class _StoredState(stored._StoredClass):
 
 #---------------------------------------------------------------State---
 # TODO write more docs...
+# TODO add doc paramiter to transitions...
+# TODO error state handler...
+# TODO "Sub-FSMs"
 class State(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
@@ -398,6 +402,18 @@ class State(FiniteStateMachine):
 	__is_initial_state__ = False
 	# if this is set the state will be registered as terminal/end state
 	__is_terminal_state__ = False
+
+##	##!!! not yet implemmented section....
+##	# Error Handling setop options:
+##	# this will enable/disable the error case exit mechanism...
+##	__error_exit_enabled__ = False
+##	# if this is set, the value will be used a an error case exit from
+##	# this state...
+##	__error_state__ = None
+##	# if this is true, this state will be used as the default error
+##	# exit for the fsm...
+##	# NOTE: there may be only one default error exit.
+##	__is_default_error_state__ = False
 
 	# StoredClass options:
 	# do not register this class... (not inherited)
