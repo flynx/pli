@@ -1,0 +1,9 @@
+# this file was generated on [200408192331]
+pli changes:
+
+version 0.0.68 (200408191647):
+- added the pli.pattern.mixin package
+- added the pli.pattern.mixin.mapping module
+
+version 0.0.67 (200408191635):
+this is the first changes script test...
