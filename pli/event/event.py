@@ -2,8 +2,8 @@
 
 #-----------------------------------------------------------------------
 
-__version__ = '''0.3.07'''
-__sub_version__ = '''20040331014946'''
+__version__ = '''0.3.11'''
+__sub_version__ = '''20040413042136'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -197,7 +197,14 @@ class InstanceEvent(AbstractEvent):
 								  handlers).
 								  NOTE: this will call the unsourse method
 								        if it is enabled.
-								 
+		__callhook__(hook, evt, *p, **n)
+								: an optional hook wrapper. this is called
+								  once per hook, and should call the hook 
+								  passing it its arguments.
+								  NOTE: if this is changed during event 
+								        execution, the current event run will
+										not be affected (e.g. the new wrapper 
+										will only be used on next event fire).
 		
 	NOTE: these event do not behave as do traditional events, e.g. the 
 	      handler is not passed the event object containing the event data.
@@ -235,9 +242,6 @@ class InstanceEvent(AbstractEvent):
 	# raised)
 	# default: False
 	__unique_handler_bind__ = False
-##	# if this is true each handler is to be run in a separate thread. 
-##	# default: False
-##	__assync_handler__ = False
 
 ##	__suppress_exceptions__ = True
 
@@ -254,6 +258,11 @@ class InstanceEvent(AbstractEvent):
 				and hasattr(self, '__strict_source__') and self.__strict_source__:
 			raise TypeError, 'an event must have a source.'
 		super(InstanceEvent, self).__init__(*p, **n)
+##	def __callhook__(self, hook, evt, *p, **n):
+##		'''
+##		this if present will be used to call each hook (e.g. hook wrapper).
+##		'''
+##		hook(evt, *p, **n)
 	def source(self):
 		'''
 		this method will register the callback that will fire the event.
@@ -294,22 +303,33 @@ class InstanceEvent(AbstractEvent):
 							 ]).keys() 
 			else:
 				hooks = (self_evthooks != None and self_evthooks or ()) + (evthooks != None and evthooks or ())
-			for hook in hooks:
-				try:
-##					# might be good to return an event object...
-##					hook(self, *pargs, **nargs)
-					if hasattr(self, '__assync_handler__') and self.__assync_handler__:
-						##!!!
-						raise NotImplementedError, 'assync event mode is not yet enabled.'
-					else:
-						# sync mode...
+			# check if we have a hook wrapper....
+			if hasattr(self, '__callhook__') and callable(self.__callhook__):
+				# call wrapped hooks...
+##				raise NotImplementedError, 'assync event mode is not yet enabled.'
+				wrapper = self.__callhook__
+				for hook in hooks:
+					try:
+						# wrap the hook...
+						wrapper(hook, self, *pargs, **nargs)
+					except:
+						# raise the exception if either  the hook or the
+						# event are in debug mode...
+						if hasattr(hook, '__suppress_exceptions__') and hook.__suppress_exceptions__ == False or \
+								hasattr(self, '__suppress_exceptions__') and self.__suppress_exceptions__ == False:
+							raise
+			else:
+				# call bare hooks...
+				for hook in hooks:
+					try:
+						# call the hook...
 						hook(self, *pargs, **nargs)
-				except:
-					# raise the exception if either  the hook or the
-					# event are in debug mode...
-					if hasattr(hook, '__suppress_exceptions__') and hook.__suppress_exceptions__ == False or \
-							hasattr(self, '__suppress_exceptions__') and self.__suppress_exceptions__ == False:
-						raise
+					except:
+						# raise the exception if either  the hook or the
+						# event are in debug mode...
+						if hasattr(hook, '__suppress_exceptions__') and hook.__suppress_exceptions__ == False or \
+								hasattr(self, '__suppress_exceptions__') and self.__suppress_exceptions__ == False:
+							raise
 	def installhook(self, hook_func):
 		'''
 		this will install an event hook/handler.
