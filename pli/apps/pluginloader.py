@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.02'''
-__sub_version__ = '''20040825174127'''
+__sub_version__ = '''20040825195643'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -15,7 +15,6 @@ import sys
 import types
 
 import pli.importutils as importutils
-##import pli.apps.pluginloader.events as event
 import pli.event as event
 import pli.misc.extendedtypes as exttypes
 
@@ -32,6 +31,9 @@ class onPluginLoad(event.Event):
 
 
 #-----------------------------------------------------------------------
+# TODO a more basic version with method callbacks intead of events...
+# TODO more docs...
+# TODO cleanup code...
 #-------------------------------------------------------------Plugins---
 class Plugins(object):
 	'''
