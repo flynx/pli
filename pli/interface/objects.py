@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20041008135202'''
+__sub_version__ = '''20041011171247'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -52,7 +52,7 @@ class ObjectWithInterface(object):
 		'''
 		'''
 ##		if name in ('__implemments__',):
-##			return super(InterfaceProxy, self).__setattr__(name, value)
+##			return super(ObjectWithInterface, self).__setattr__(name, value)
 		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 ##			return super(ObjectWithInterface, self).__setattr__(name, value)
@@ -67,9 +67,9 @@ class ObjectWithInterface(object):
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
 
 
-#------------------------------------------------------InterfaceProxy---
+#--------------------------------------------------InterfaceWithProxy---
 # TODO move this to pli.pattern.proxy (???)
-class InterfaceProxy(object):
+class InterfaceWithProxy(object):
 	'''
 	'''
 	__implemments__ = None
@@ -91,7 +91,7 @@ class InterfaceProxy(object):
 		'''
 		'''
 		if name in ('__source__', '__implemments__'):
-			return super(InterfaceProxy, self).__setattr__(name, value)
+			return super(InterfaceWithProxy, self).__setattr__(name, value)
 		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 ##			return setattr(self.__source__, name, value)
@@ -105,6 +105,21 @@ class InterfaceProxy(object):
 				interface.isdeletable(self, name):
 			delattr(self.__source__, name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
+
+
+#------------------------------------------------------InterfaceProxy---
+class InterfaceProxy(InterfaceWithProxy):
+	'''
+	'''
+	def __init__(self, source, interface=None):
+		'''
+		'''
+##		super(InterfaceProxy, self).__init__(source)
+		self.__source__ = source
+		if interface != None:
+			self.__implemments__ = interface
+		elif hasattr(source, '__implemments__'):
+			self.__implemments__ = source.__implemments__
 
 
 ###-------------------------------------------------InterfaceClassProxy---

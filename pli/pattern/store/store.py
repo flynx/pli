@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.49'''
-__sub_version__ = '''20040910153023'''
+__sub_version__ = '''20041014151353'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -119,10 +119,35 @@ class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
 		'''
 		'''
 		self._store_types[self.__typenameformat___ % otype.__name__] = otype
+	##!!! REMOVE THIS !!!##
 	def get_types(self):
 		'''
 		'''
+		print '''WARNING: the pli.pattern.store.BaseStore.get_types method will be shortly removed!
+		 use the itertypenames, itertypes methods instead!'''
 		return self._store_types.keys()
+	def gettypenames(self):
+		'''
+		this will return a list of type names supported by the store.
+		'''
+		return self._store_types.keys()
+	def gettypes(self):
+		'''
+		this will return the types supported by the store.
+		'''
+		return self._store_types.values()
+	def itertypenames(self):
+		'''
+		this will iterate through the type names supported by the store.
+		'''
+		for n in self._store_types.iterkeys():
+			yield n
+	def itertypes(self):
+		'''
+		this will iterate through the types supported by the store.
+		'''
+		for n in self._store_types.itervalues():
+			yield n
 
 
 

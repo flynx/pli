@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20040909150327'''
+__sub_version__ = '''20041009203657'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -25,6 +25,7 @@ Programming Language :: Python
 
 #-----------------------------------------------------------------------
 from distutils.core import setup
+import os.path as os_path
 
 try:
 	import version
@@ -42,6 +43,11 @@ except ImportError:
 	else:
 		__pkg_version__ = '0.0.00'
 
+license = 'BSD Licence.'
+##license_file = 'LICENSE'
+##if os_path.exists(license_file):
+##	license = open(license_file, 'r').read()
+
 
 #-----------------------------------------------------------------------
 setup(
@@ -52,7 +58,7 @@ setup(
 	  author = 'Alex A. Naanou',
 	  author_email = 'alex_nanou@users.sourceforge.net',
 	  url = 'http://pli.sourceforge.net/',
-	  license = 'BSD License',
+	  license = license,
 	  platforms = ['any'],
 	  classifiers = filter(None, __classifiers__.split("\n")),
 

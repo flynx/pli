@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040909160639'''
+__sub_version__ = '''20041015011041'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -58,6 +58,10 @@ class BasicDispatch(AbstractDispatch):
 		'''
 		'''
 		del self.__targets__
+	def getrules(self):
+		'''
+		'''
+		return self.__targets__
 
 
 #-------------------------------------------------------BasicDispatch---

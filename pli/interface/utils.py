@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20041008141741'''
+__sub_version__ = '''20041009204038'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -22,6 +22,7 @@ isaccessible = acl.isaccessible
 
 # XXX this is here for compatibility resons only!! (remove!)
 isglobalmethodallowed = acl.isglobalmethodallowed
+
 
 #-----------------------------------------------------------------------
 # attribute oriented...

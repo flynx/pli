@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.23'''
-__sub_version__ = '''20041009053823'''
+__sub_version__ = '''20041014143847'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -330,6 +330,7 @@ class _Interface(_BasicInterface):
 
 
 #-----------------------------------------------------------Interface---
+# Q: how wil the user based ACL be added??
 class Interface(object):
 	'''
 	this is the basic interface class.
@@ -791,12 +792,12 @@ def inherit(*classes, **options):
 	NOTE: if there are no parent interfaces, a new and empty interface will be created.
 
 	supported options:
-		name		- the name of the new interface (default: 'Unnamed')
+		iname		- the name of the new interface (default: 'Unnamed')
 	
 	other options:
 		depth		- do not use this unless you know what you are doing.
 	'''
-	name = options.pop('name', 'Unnamed')
+	name = options.pop('iname', 'Unnamed')
 	depth = options.pop('depth', 1)
 	# create a class...
 	inter = _Interface(name, classes, {})
@@ -827,17 +828,39 @@ def add(name, **options):
 	if type(interface) is tuple:
 		raise InterfaceError, 'can\'t add name %s to an interface combination. '\
 					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
-	if force:
-		if name not in interface:
+##	if not interface.__interface_writable__:
+##		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
+	if name not in interface:
+		if force:
 			interface.__format__[name] = {}
-	elif not interface.__interface_writable__:
-		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
+		else:
+			interface[name] = {}
 	interface[name].update(options)
+
+
+#----------------------------------------------------------------hide---
+##!!! revise !!!##
+def hide(name, **options):
+	'''
+	this will hide an attribute from an interface (e.g. it will not be visible).
+
+	WARNING: if the attr is defined in the current interface, then this will erase its data.
+	'''
+	depth = options.pop('depth', 1)
+	f_locals = sys._getframe(depth).f_locals
+	if '__implemments__' not in f_locals:
+		raise InterfaceError, 'can\'t hide name %s, no interface is defined.' % name
+	interface = f_locals['__implemments__']
+	if type(interface) is tuple:
+		raise InterfaceError, 'can\'t hide name %s from an interface combination. '\
+					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
+	interface[name] = None
 
 
 #------------------------------------------------------------addusing---
 def addusing(name, template, depth=1):
 	'''
+	this will add a name to the current interface using anothor name as a tmplate.
 	'''
 	add(name, LIKE=template, depth=depth+1)
 
@@ -845,6 +868,7 @@ def addusing(name, template, depth=1):
 #-------------------------------------------------------------private---
 def private(name, depth=1):
 	'''
+	this will add name as private to the current interface (e.g. not readable and not writable).
 	'''
 	add(name, readable=False, writable=False, depth=depth+1)
 
@@ -852,6 +876,7 @@ def private(name, depth=1):
 #-----------------------------------------------------------essential---
 def essential(name, depth=1):
 	'''
+	this will add an essential name to the current interface.
 	'''
 	add(name, essential, depth=depth+1)
 

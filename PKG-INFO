@@ -1,11 +1,11 @@
 Metadata-Version: 1.0
 Name: pli
-Version: 0.0.102
+Version: 0.0.106
 Summary: PLI: a utility library for the Python language.
 Home-page: http://pli.sourceforge.net/
 Author: Alex A. Naanou
 Author-email: alex_nanou@users.sourceforge.net
-License: BSD License
+License: BSD Licence.
 Description: PLI: a utility library for the Python language.
         
         It defines a set of generic patters, aspects, utilities and tools. the
