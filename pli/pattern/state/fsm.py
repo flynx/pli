@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.27'''
-__sub_version__ = '''20041209140057'''
+__sub_version__ = '''20041209151350'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -555,6 +555,21 @@ class BasicState(FiniteStateMachine):
 #-------------------------------------------------StateWithAttrPriority---
 class StateWithAttrPriority(BasicState):
 	'''
+	this will add adds the ability to resolve names to the startup class (e.g. 
+	the class that was defined as FSM base, or in other words, the desendant of 
+	the FSM used to create the FSM instance).
+
+	the resolution order is as folows:
+		1. local object state.
+		2. names defined in __startupfirstattrs__ in startup class.
+		3. current class
+		4. startup class
+
+	NOTE: after a name is found no further searching is done.
+	NOTE: in steps 2-4 class data is searched (as local data is stored in the 
+	      current object.).
+
+	for further information see the BasicState class.
 	'''
 	__ignore_registration__ = True
 	__startupfirstattrs__ = (
@@ -562,12 +577,22 @@ class StateWithAttrPriority(BasicState):
 				'__implemments__',
 			)
 
-	# TODO either combine the folowing or find a better scheme to do
-	#      things...
+	# XXX this will make attr resolution quite slow... (find a better
+	#     way.... if possible)
 	def __getattribute__(self, name):
 		'''
+		the resolution order is as folows:
+			1. local object state.
+			2. names defined in __startupfirstattrs__ the in startup class.
+			3. current class.
+			4. startup class.
 		'''
 		getattribute = super(StateWithAttrPriority, self).__getattribute__
+		# first check the local state...
+		__dict__ = getattribute('__dict__')
+		if name in __dict__:
+			return __dict__[name]
+		# check the class data...
 		try:
 			if name in getattribute('__startupfirstattrs__'):
 				try:
@@ -575,16 +600,16 @@ class StateWithAttrPriority(BasicState):
 					return getattr(getattribute('__startup_class__'), name)
 				except AttributeError:
 ##					pass
-					# get local...
+					# get current...
 					return getattribute(name)
 			else:
 				try:
-					# get local...
+					# get current...
 					return getattribute(name)
 				except AttributeError:
 					# get startup...
 					return getattr(getattribute('__startup_class__'), name)
-##			# get local...
+##			# get current...
 ##			return getattribute(name)
 		except AttributeError:
 			# fail...
