@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.01'''
-__sub_version__ = '''20040905000830'''
+__version__ = '''0.1.03'''
+__sub_version__ = '''20040905003529'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -125,7 +125,6 @@ class BasicMappingProxy(AbstractMapping):
 	
 
 #---------------------------------------------------ComparableMapping---
-##!!! REVIZE/REWRITE !!!##
 class ComparableMapping(BasicMapping):
 	'''
 	this defines the basic comparability interface for the basic mapping.
@@ -139,7 +138,6 @@ class ComparableMapping(BasicMapping):
 ##			return cmp(dict([ (k, self[k]) for k in self ]), dict([ (k, other[k]) for k in other ]))
 ##		return -1
 
-	# 2rd generation methods:
 	def __eq__(self, other):
 		'''
 		'''

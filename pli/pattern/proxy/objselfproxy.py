@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20040514193254'''
+__sub_version__ = '''20040905160012'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -68,6 +68,17 @@ class StaticObjectSelfProxy(object):
 			wrapper_class = self.__class__
 			wrapped = self
 		return new.instancemethod(meth.im_func, wrapped, wrapper_class)
+
+	utils.proxymethods(
+			[
+				'__eq__',
+				'__ne__',
+				'__gt__',
+				'__lt__',
+				'__ge__',
+				'__le__',
+			],
+			'__proxied_object__')
 
 
 #---------------------------------------PedanticStaticObjectSelfProxy---

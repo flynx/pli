@@ -1,5 +1,8 @@
-# this file was generated on [200409050023]
+# this file was generated on [200409060451]
 pli changes:
+
+version 0.0.83 (200409060449):
+- did a full rewrite of the pli.pattern.proxy.generic
 
 version 0.0.82 (200409050022):
 - fixed ComparableMapping in pli.pattern.mixin.mapping.... (now it actually works! :) ) ...though there is no __cmp__ method...
