@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.15'''
-__sub_version__ = '''20040716155854'''
+__sub_version__ = '''20041226145605'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -91,6 +91,21 @@ def isbound(event, func):
 	'''
 	if isevent(event):
 		return func in event.__eventhooks__
+	else:
+		raise EventError, 'object %s is not an event.' % event
+
+
+#--------------------------------------------------------------isused---
+def isused(event):
+	'''
+	return True if there is at least one handler bound to the event, 
+	else return False.
+
+	NOTE: this will not test the whole posible event tree, just the 
+	      first __eventhooks__ to be found.
+	'''
+	if isevent(event):
+		return event.__eventhooks__ not in (None, ())
 	else:
 		raise EventError, 'object %s is not an event.' % event
 

@@ -1,5 +1,8 @@
-# this file was generated on [200412131424]
+# this file was generated on [200412261743]
 pli changes:
+
+version 0.0.131 (200412261457):
+- add pli.event.event.isused function...
 
 version 0.0.128 (200412021636):
 - added persistent sessions an session based timeouts to pli.net.rpcsession (still needs more testing...)
