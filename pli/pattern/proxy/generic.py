@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.14'''
-__sub_version__ = '''20050125001252'''
+__sub_version__ = '''20050313182543'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -400,6 +400,10 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 
 	NOTE: this is not compatible with objects that do something in 
 	      the meta-classes' __init__ or __new__ methods...
+
+	Attributes:
+		__proxy__
+		__proxy_base__		- the special baseclass of the proxy.
 	'''
 	# this defines the attribute name where the proxy target is
 	# stored...
@@ -433,6 +437,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 			# get the new class....
 			cls = object.__getattribute__(_obj, '__class__')
 			cls.__proxy__ = proxy
+			cls.__proxy_base__ = cls
 			# name the new class... 
 			# NOTE: the name may not be unique!
 			cls.__name__ = cls_name + '_' + str(cls.__proxy_count__)
@@ -506,6 +511,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy,
 	__proxy_public_attrs__ = (
 				'__proxy_call__',
 				'__proxy_class__',
+				'__proxy_base__',
 			)
 
 	# directly proxy __setattr__ to the target...

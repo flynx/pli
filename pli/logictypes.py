@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.07'''
-__sub_version__ = '''20041208222823'''
+__sub_version__ = '''20050302201424'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -149,6 +149,34 @@ issequence = oftype(list, tuple)
 
 isiterabletype = oftype(str, unicode, list, tuple, dict)
 
+
+
+###-----------------------------------------------------------------------
+##class isLike(Pattern):
+##	'''
+##	'''
+##	def __init__(self, *types, **n):
+##		'''
+##		'''
+##		self._types = types
+##		if 'doc' in n:
+##			self.__doc__ = n['doc']
+##	def __call__(self, other):
+##		'''
+##		test if the the other object object is of type.
+##		'''
+##		return isinstance(other, self._types) is True
+##	__eq__ = __call__
+##	def __ne__(self, other):
+##		return not isinstance(other, self._types) is True
+##	def __gt__(self, other):
+##		return False
+##	def __ge__(self, other):
+##		return True
+##	def __lt__(self, other):
+##		return False
+##	def __le__(self, other):
+##		return True
 
 
 #-----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.27'''
-__sub_version__ = '''20041212192633'''
+__sub_version__ = '''20050329172912'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -491,7 +491,8 @@ class BasicState(FiniteStateMachine):
 		transitions = self._transitions
 ##		if transitions[tostate] != None and not transitions[tostate](self):
 ##		if transitions[tostate] != None and transitions[tostate][0] != None and not transitions[tostate][0](self):
-		if transitions[tostate][0] != None and not transitions[tostate][0](self):
+		if transitions != None and tostate in transitions \
+				and transitions[tostate][0] != None and not transitions[tostate][0](self):
 			raise TransitionError, 'conditional transition from %s to state %s failed.' % (self, tostate)
 		super(BasicState, self).changestate(tostate)
 		# restart the fsm if __auto_change_state__ is set and we are
