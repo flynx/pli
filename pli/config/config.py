@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040321194229'''
+__sub_version__ = '''20040330145750'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,7 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 import pli.pattern.store.stored as stored
 import pli.pattern.state.fsm as fsm
 import pli.event as event
-import pli.event.instanceevent as instanceevent
+##import pli.event.instanceevent as instanceevent
 ##import pli.dispatch as dispatch
 
 from pli.pattern.state.fsm import transition
@@ -62,7 +62,7 @@ class ConfigError(Exception):
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------Component---
-class Component(instanceevent.Event):
+class Component(event.InstanceEvent):
 	'''
 	'''
 	pass
@@ -70,7 +70,7 @@ class Component(instanceevent.Event):
 
 #----------------------------------------------------------Dependency---
 ##!! REVISE !!##
-class Dependency(instanceevent.Event):
+class Dependency(event.InstanceEvent):
 	'''
 	'''
 	def __init__(self, cfg, dep):

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.46'''
-__sub_version__ = '''20040322143005'''
+__sub_version__ = '''20040330145053'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -15,7 +15,8 @@ This module defines a Finite State Machine framework.
 #-----------------------------------------------------------------------
 
 import pli.pattern.store.stored as stored
-import pli.event.instanceevent as instanceevent
+import pli.event as event
+##import pli.event.instanceevent as instanceevent
 
 import state
 
@@ -149,7 +150,7 @@ def transition(s1, s2, condition=None):
 #-----------------------------------------------------------------------
 #--------------------------------------------------------onEnterState---
 # TODO write more docs...
-class onEnterState(instanceevent.Event):
+class onEnterState(event.InstanceEvent):
 	'''
 	'''
 	__suppress_exceptions__ = False
@@ -163,7 +164,7 @@ class onEnterState(instanceevent.Event):
 
 #---------------------------------------------------------onExitState---
 # TODO write more docs...
-class onExitState(instanceevent.Event):
+class onExitState(event.InstanceEvent):
 	'''
 	'''
 	__suppress_exceptions__ = False
@@ -176,7 +177,7 @@ class onExitState(instanceevent.Event):
 
 
 #--------------------------------------------onFiniteStateMachineStop---
-class onFiniteStateMachineStop(instanceevent.Event):
+class onFiniteStateMachineStop(event.InstanceEvent):
 	'''
 	'''
 	__suppress_exceptions__ = False
