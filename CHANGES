@@ -1,5 +1,8 @@
-# this file was generated on [200408260146]
+# this file was generated on [200408290204]
 pli changes:
+
+version 0.0.78 (200408290203):
+- done a redesign and a full rewrite of the pli.interface... (currently in the testing phase...).
 
 version 0.0.73 (200408252219):
 - added unix file format filtering to the cvs_commit script.... (NOTE: this might introduce some bugs!)
