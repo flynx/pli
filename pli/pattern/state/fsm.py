@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.27'''
-__sub_version__ = '''20041209151350'''
+__sub_version__ = '''20041212192633'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -567,7 +567,7 @@ class StateWithAttrPriority(BasicState):
 
 	NOTE: after a name is found no further searching is done.
 	NOTE: in steps 2-4 class data is searched (as local data is stored in the 
-	      current object.).
+	      current object and is not affected by state change directly).
 
 	for further information see the BasicState class.
 	'''
