@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.15'''
-__sub_version__ = '''20040426035753'''
+__sub_version__ = '''20040501012338'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -65,7 +65,7 @@ def bind(event, func, HOOK_DEBUG=False):
 		if HOOK_DEBUG:
 			try:
 				# NOTE: this does not pickle correctly...
-				func.__suppress_exceptions__ = True
+				func.__suppress_exceptions__ = False
 			except:
 				pass
 		event.installhook(func)
