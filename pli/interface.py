@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.03'''
-__sub_version__ = '''20040720233818'''
+__sub_version__ = '''20040721130329'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -92,6 +92,8 @@ def getdocdict(obj, attr=None):
 #
 # TODO add tests and paranoya!!!
 #
+# Q: does this need to be a class??? ....it might be good to create an
+#    interface object factory...
 #
 ##!! check !!##
 class Interface(object):
@@ -154,7 +156,6 @@ class Interface(object):
 		'''
 		'''
 		raise TypeError, 'can\'t create an interface instance.'
-
 	def checkattr(cls, name, value):
 		'''
 		'''
@@ -170,7 +171,7 @@ class Interface(object):
 		# special options:
 		# LIKE:
 		if 'LIKE' in attr_format: 
-			if type(attr_format['LIKE']) is str:
+			if type(attr_format['LI1KE']) is str:
 				ext_format = format[attr_format['LIKE']].copy()
 			elif type(attr_format['LIKE']) is dict:
 				ext_format = attr_format['LIKE'].copy()
@@ -260,6 +261,40 @@ class ObjectWithInterface(object):
 		if isessential(self, name):
 			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
 		super(ObjectWithInterface, self).__delattr__(name)
+
+
+#------------------------------------------------------InterfaceProxy---
+class InterfaceProxy(object):
+	'''
+	'''
+	__implemments__ = None
+
+	__source__ = None
+
+	def __init__(self, source):
+		'''
+		'''
+		self.__source__ = source
+	def __getattr__(self, name):
+		'''
+		'''
+		if name == '__implemments__' or isreadable(self, name):
+			return getattr(self.__source__, name)
+		raise InterfaceError, 'can\'t read attribute "%s".' % name
+	def __setattr__(self, name, value):
+		'''
+		'''
+		if name in ('__source__', '__implemments__'):
+			super(InterfaceProxy, self).__setattr__(name, value)
+		if iswritable(self, name) and iscompatible(self, name, value):
+			return setattr(self.__source__, name, value)
+		raise InterfaceError, 'can\'t write value "%s" attribute "%s".' % (value, name)
+	def __delattr__(self, name):
+		'''
+		'''
+		if isessential(self, name):
+			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
+		delattr(self.__source__, name)
 
 
 
