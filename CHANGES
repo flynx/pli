@@ -1,5 +1,9 @@
-# this file was generated on [200408291357]
+# this file was generated on [200408291440]
 pli changes:
+
+version 0.0.79 (200408291438):
+- updated pli.logictypes.DictUnion to use the pli.pattern.mixin.mapping module...
+- rewriting the pli.interface using pli.logictypes.DictUnion.
 
 version 0.0.78 (200408290203):
 - done a redesign and a full rewrite of the pli.interface... (currently in the testing phase...).

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.01'''
-__sub_version__ = '''20040829135749'''
+__sub_version__ = '''20040829143248'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -16,6 +16,7 @@ classes.
 #-----------------------------------------------------------------------
 
 import pli.pattern.mixin.mapping as mapping
+import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
@@ -463,16 +464,15 @@ def checkessentials(obj, interface=None):
 	'''
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
 	res = {}
-	for i in format:
-		for n in i:
-			if n not in res:
-				v = i.getattrproperty(n, 'essential')
-				if v not in (None, False):
-					res[n] = v
+	for n in format:
+		if n not in res:
+			v = format[n].get('essential', False)
+			if v not in (None, False):
+				res[n] = v
 	for n in res:
 		if not hasattr(obj, n):
 			raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
@@ -484,7 +484,26 @@ def checkessentials(obj, interface=None):
 def checkobject(obj, interface=None):
 	'''
 	'''
-	##!!!
+	if interface != None:
+		format = interface
+	else:
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	o_attrs = vars(obj).copy()
+	for n in format:
+		# Q: which one of the folowing is faster??
+		if n not in o_attrs:
+##			if isessential(obj, n):
+			if format[n].get('essential', False):
+				raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
+		else:
+			chackattr(obj, n)
+		del o_attrs[n]
+	if len(o_attrs) > 0:
+		if '*' not in format:
+			raise InterfaceError, 'excess attributes %s in object %s.' % (o_attrs.keys(), obj)
+		for n in o_attrs:
+			chackattr(obj, n)
+	return True
 
 
 
@@ -498,14 +517,13 @@ def getdoc(obj, name=None, interface=None):
 	if name is not present this will return all the docs for each attr defined...
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
 	# if name is present...
 	if name != None:
-		for i in format:
-			if name in i:
-				return {name: i.getattrproperty(name, 'doc')}
+		if name in format:
+			return {name: format[n].get('essential', None)}
 		raise InterfaceError, 'attribute "%s" is not defined in the interface for %s.' % (name, obj)
 	# if name is not present...
 	res = {}
@@ -616,6 +634,7 @@ if __name__ == '__main__':
 	class ITest(Interface):
 		__format__ = {\
 				'aaa': {},
+				'ess': {'essential': True},
 				'xxx': {'doc':'ITest'},
 				}
 
@@ -657,10 +676,14 @@ if __name__ == '__main__':
 	
  	a = A()
 
+	a.ess = ''
+
 	print checkattr(a, 'ccc')
 	print checkvalue(a, 'ccc', 0)
 
 	print getdoc(a, 'ccc')
+
+	print checkessentials(a)
 
 
 #=======================================================================

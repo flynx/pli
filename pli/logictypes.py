@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.04'''
-__sub_version__ = '''20040724012609'''
+__version__ = '''0.1.00'''
+__sub_version__ = '''20040829143825'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -11,6 +11,7 @@ usage of standard python types.
 
 #-----------------------------------------------------------------------
 
+import pli.pattren.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
@@ -64,7 +65,8 @@ def dictcopyunite(*members):
 
 
 #-----------------------------------------------------------DictUnion---
-class DictUnion(object):
+# TODO use pli.pattern.mixin.mapping
+class DictUnion(mapping.MappingWithMethods):
 	'''
 	this is a dict like object, that acts as a union of its members but
 	without modifieng its members in any way.
@@ -95,16 +97,16 @@ class DictUnion(object):
 			if name in m:
 				return m[name]
 		raise KeyError, 'key "%s" is not present in any of the members.' % name
-##	def __setitem__(self, name,  value):
-##		'''
-##		'''
-##		# find source...
-##		# set
-##		raise TypeError, 'can\'t add values to a dict union object.'
-##	def __delitem__(self, name):
-##		'''
-##		'''
-##		raise TypeError, 'can\'t delete values from a dict union object.'
+	def __setitem__(self, name,  value):
+		'''
+		'''
+		# find source...
+		# set
+		raise TypeError, 'can\'t add values to a dict union object.'
+	def __delitem__(self, name):
+		'''
+		'''
+		raise TypeError, 'can\'t delete values from a dict union object.'
 	def __contains__(self, name):
 		'''
 		'''
@@ -121,97 +123,6 @@ class DictUnion(object):
 				if n not in seen:
 					seen += [n]
 					yield n
-##	def __len__(self):
-##		'''
-##		'''
-##		pass
-##	def __cmp__(self):
-##		'''
-##		'''
-##		pass
-##	def __eq__(self):
-##		'''
-##		'''
-##		pass
-##	def __ge__(self):
-##		'''
-##		'''
-##		pass
-##	def __gt__(self):
-##		'''
-##		'''
-##		pass
-##	def __le__(self):
-##		'''
-##		'''
-##		pass
-##	def __lt__(self):
-##		'''
-##		'''
-##		pass
-##	def __ne__(self):
-##		'''
-##		'''
-##		pass
-##	def __repr__(self):
-##		'''
-##		'''
-##		pass
-##	def __str__(self):
-##		'''
-##		'''
-##		pass
-##	def __reduce__(self):
-##		'''
-##		'''
-##		pass
-##	def __reduce_ex__(self):
-##		'''
-##		'''
-##		pass
-	def keys(self):
-		'''
-		'''
-		return list(self)
-	def values(self):
-		'''
-		'''
-		return list(self.itervalues())
-	def items(self):
-		'''
-		'''
-		return list(self.iteritems())
-	def iterkeys(self):
-		'''
-		'''
-		return self.__iter__()
-	def itervalues(self):
-		'''
-		'''
-		for k in self:
-			yield self[k]
-	def iteritems(self):
-		'''
-		'''
-		for k in self:
-			yield k, self[k]
-	def get(self, name, dfl=None):
-		'''
-		'''
-		try:
-			return self[name]
-		except KeyError:
-			if dfl == None:
-				raise
-			return dfl
-	def has_key(self, name):
-		'''
-		'''
-		return name in self
-##	def setdefault(self):
-##		'''
-##		'''
-##		pass
 	# the dict union specific interface...
 	##!!! revise...
 	def unite(self, *others):
@@ -270,7 +181,7 @@ class DictUnion(object):
 		'''
 		this will return a dict copy of the DictUnion object.
 		'''
-		return dict(*self.items())
+		return dict(self.items())
 
 
 #-------------------------------------------------------DictTypeUnion---
