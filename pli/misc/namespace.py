@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040527144611'''
+__sub_version__ = '''20040531023546'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -31,6 +31,20 @@ class NameSpace(logictypes.DictUnion):
 		if type(name) not in (str, unicode):
 			raise TypeError, 'a name must be of either str or unicode type (got %s).' % type(name)
 		self._members[0][name] = value
+	def locals(self):
+		'''
+		this will return the locals dict.
+
+		NOTE: this is live; e.g. changing the return will change the locals.
+		'''
+		return self._members[0] 
+	def globals(self):
+		'''
+		this is python compatible globals method.
+
+		NOTE: this is live; e.g. changing the return will change the locals.
+		'''
+		return self._members[-1] 
 
 
 

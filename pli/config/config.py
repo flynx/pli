@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040330145750'''
+__sub_version__ = '''20040530025935'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -51,6 +51,11 @@ from pli.pattern.state.fsm import transition
 # 			- abstract compositional rules (define how the component
 # 			  is to be built-into the system).
 # 			- internal rules (used by sub componenets).
+#
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+##!!! TODO add some kind of default cleanup state...
+# TODO add abbility to aspect/wrap events, stc.
+#
 #
 #-----------------------------------------------------------------------
 #---------------------------------------------------------ConfigError---

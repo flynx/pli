@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.15'''
-__sub_version__ = '''20040514043540'''
+__sub_version__ = '''20040530032430'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -451,7 +451,6 @@ class _ClassEvent(InstanceEvent, type):
 
 
 #----------------------------------------------------------ClassEvent---
-# TODO rename to ClassEvent.... (???)
 class ClassEvent(AbstractEvent):
 	'''
 	base abstract class event.
