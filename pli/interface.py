@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.05'''
-__sub_version__ = '''20040722010732'''
+__version__ = '''0.0.07'''
+__sub_version__ = '''20040722142151'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,6 +11,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 #-----------------------------------------------------------------------
 # TODO add tests and paranoya!!!
+# TODO write more docs...
 #------------------------------------------------------InterfaceError---
 class InterfaceError(Exception):
 	'''
@@ -20,43 +21,54 @@ class InterfaceError(Exception):
 
 
 #-----------------------------------------------------------------------
-# TODO add support for the lack of an interface...
 #---------------------------------------------------------isessential---
-##!! check !!##
-def isessential(obj, name):
+def isessential(obj, name, interface=None):
 	'''
 	'''
-	format = obj.__implemments__.__format__
+	if interface == None \
+			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
+		return False
+	format = (interface != None and interface or obj.__implemments__).__format__
+##	format = obj.__implemments__.__format__
 	return name in format and format[name].get('essential', False) or '*' not in format
 
 
 #----------------------------------------------------------iswritable---
-##!! check !!##
-def iswritable(obj, name):
+def iswritable(obj, name, interface=None):
 	'''
 	'''
-	format = obj.__implemments__.__format__
+	if interface == None \
+			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
+		return True
+	format = (interface != None and interface or obj.__implemments__).__format__
+##	format = obj.__implemments__.__format__
 	return name in format and format[name].get('writable', True) or \
 				('*' in format and format['*'].get('writable', True))
 
 
 #----------------------------------------------------------isreadable---
-##!! check !!##
-def isreadable(obj, name):
+def isreadable(obj, name, interface=None):
 	'''
 	'''
-	format = obj.__implemments__.__format__
+	if interface == None \
+			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
+		return True
+	format = (interface != None and interface or obj.__implemments__).__format__
+##	format = obj.__implemments__.__format__
 	return name in format and format[name].get('readable', True) or \
 				('*' in format and format['*'].get('readable', True))
 
 
 #--------------------------------------------------------iscompatible---
-##!! check !!##
-def iscompatible(obj, name, value):
+def iscompatible(obj, name, value, interface=None):
 	'''
 	'''
+	if interface == None \
+			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
+		return True
+	interface = interface != None and interface or obj.__implemments__
 	try:
-		obj.__implemments__.checkattr(name, value)
+		interface.checkattr(name, value)
 	except InterfaceError:
 		return False
 	return True
@@ -67,7 +79,7 @@ def iscompatible(obj, name, value):
 #-----------------------------------------------------------getdocstr---
 # NOTE: in the following two functions the obj can either be an
 #       interface or an object with interface...
-def getdocstr(obj, attr=None):
+def getdocstr(obj, attr=None, interface=None):
 	'''
 	'''
 	##!!!
@@ -75,7 +87,7 @@ def getdocstr(obj, attr=None):
 
 
 #----------------------------------------------------------getdocdict---
-def getdocdict(obj, attr=None):
+def getdocdict(obj, attr=None, interface=None):
 	'''
 	'''
 	##!!!
@@ -240,7 +252,7 @@ class ObjectWithInterface(object):
 		'''
 		'''
 		obj = object.__new__(cls, *p, **n)
-		if obj.__implemments__ != None
+		if obj.__implemments__ != None:
 			obj.__dict__.update(dict([ (n, v['default']) \
 									for n, v \
 										in obj.__implemments__.__format__.iteritems() \
