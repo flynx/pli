@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.47'''
-__sub_version__ = '''20040225111532'''
+__sub_version__ = '''20040323153531'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -13,7 +13,7 @@ import types
 import pli.functional as func 
 from pli.functional import curry
 ##!!! this might change in the future...
-import pli.misc.objutils as objutils
+import pli.objutils as objutils
 
 import selector
 import store
