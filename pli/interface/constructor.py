@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.01'''
-__sub_version__ = '''20040831004640'''
+__version__ = '''0.0.04'''
+__sub_version__ = '''20040831161913'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -16,22 +16,34 @@ import pli.interface.interface as interface
 
 
 #-----------------------------------------------------------------------
-#--------------------------------------------------_arecallablesalike---
+#-------------------------------------------------callablescompatible---
 # TODO find a better name and place....
-# TODO make this more tolarant to methods (e.g. *hidden* self param)... 
-def _arecallablesalike(c0, c1):
+def callablescompatible(c0, c1, method_aware=False):
 	'''
 	this will compare two callables by signature...
 	'''
-	if type(c0) in (types.MethodType, types.FunctionType):
-		argspec0 = inspect.getargspec(c0)
-	else:
-		argspec0 = inspect.getargspec(c0.__call__)
-	if type(c1) in (types.MethodType, types.FunctionType):
-		argspec1 = inspect.getargspec(c1)
-	else:
-		argspec1 = inspect.getargspec(c1.__call__)
-	return argspec0 == argspec1
+	argspec = [None, None]
+	i = 0
+	for c in (c0, c1):
+		if type(c) is types.MethodType and method_aware == True:
+			argspec[i] = inspect.getargspec(c)
+			# check if bound...
+			if c.im_self != None:
+				argspec[i] = list(argspec[i])
+				# bound --> instance
+				# remove the first argument...
+				argspec[i][0] = argspec[i][0][1:]
+				if len(argspec[i][3]) > len(argspec[i][0]):
+					# this is a rare but just in case.... (for methods
+					# of the form: meth(self=<...>, ...) )
+					argspec[i][3] = argspec[i][3][1:]
+				argspec[i] = tuple(argspec[i])
+		elif type(c) in (types.MethodType, types.FunctionType):
+			argspec[i] = inspect.getargspec(c)
+		else:
+			argspec[i] = inspect.getargspec(c.__call__)
+		i += 1
+	return argspec[0] == argspec[1]
 
 
 
@@ -49,7 +61,7 @@ def likevalue(obj, method_writable=False):
 	# type or predicate...
 	if callable(obj):
 		# function signature...
-		res['predicate'] = func.curry(_arecallablesalike, obj)
+		res['predicate'] = func.curry(callablescompatible, obj, method_aware=True)
 		if not method_writable:
 			res['writable'] = False
 	else:
