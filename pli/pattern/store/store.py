@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.37'''
-__sub_version__ = '''20040214235037'''
+__sub_version__ = '''20040520180808'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -18,6 +18,14 @@ def isstorecompatible(obj):
 	this will test general store interface compatibility...
 	'''
 	return issubclass(type(obj), BaseStore) or type(obj) == type({})
+
+
+#--------------------------------------------------------isstoredtype---
+def isstoredtype(store, name):
+	'''
+	this will return True if the name is a stored type is store.
+	'''
+	return name in store._store_types
 
 
 
