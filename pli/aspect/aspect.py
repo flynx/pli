@@ -1,8 +1,8 @@
 #=======================================================================
 
 
-__version__ = '''0.1.08a'''
-__sub_version__ = '''20040214003402'''
+__version__ = '''0.1.09a'''
+__sub_version__ = '''20040530023818'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -104,7 +104,9 @@ class AspectWrapper(object):
 				res = self.call(obj, *pargs, **nargs)
 			except:
 				if hasattr(self.as_aspect, 'post'):
-					self.as_aspect.post(obj, self.as_obj, res, sys.exc_info()[1], *pargs, **nargs)
+					exc = sys.exc_info()
+##					self.as_aspect.post(obj, self.as_obj, res, exc[1], *pargs, **nargs)
+					self.as_aspect.post(obj, self.as_obj, res, exc[1], exc, *pargs, **nargs)
 				# get exception...
 				raise
 			if hasattr(self.as_aspect, 'post'):
@@ -215,7 +217,7 @@ class Aspect(object):
 ##		'''
 ##		'''
 ##		pass
-##	def post(self, obj, meth, ret, rexcept, *pargs, **nargs):
+##	def post(self, obj, meth, ret, rexcept, except_dat, *pargs, **nargs):
 ##		'''
 ##		'''
 ##		pass

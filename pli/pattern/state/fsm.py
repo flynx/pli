@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.46'''
-__sub_version__ = '''20040330145053'''
+__sub_version__ = '''20040529231610'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -462,6 +462,7 @@ class State(FiniteStateMachine):
 					self.changestate(tostate)
 					return
 				except:
+					##!!!
 					pass
 		if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
 			if hasattr(self, '__resolvestatechange__'):
