@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.03'''
-__sub_version__ = '''20040721130329'''
+__version__ = '''0.0.05'''
+__sub_version__ = '''20040722010732'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -20,6 +20,7 @@ class InterfaceError(Exception):
 
 
 #-----------------------------------------------------------------------
+# TODO add support for the lack of an interface...
 #---------------------------------------------------------isessential---
 ##!! check !!##
 def isessential(obj, name):
@@ -229,14 +230,18 @@ class Interface(object):
 ##!! check !!##
 class ObjectWithInterface(object):
 	'''
+	this is an object with interfece support.
 	'''
+	# this defines the objects' interfece.
+	# NOTE: if this is None interfece support will be disabled.
 	__implemments__ = None
 
 	def __new__(cls, *p, **n):
 		'''
 		'''
 		obj = object.__new__(cls, *p, **n)
-		obj.__dict__.update(dict([ (n, v['default']) \
+		if obj.__implemments__ != None
+			obj.__dict__.update(dict([ (n, v['default']) \
 									for n, v \
 										in obj.__implemments__.__format__.iteritems() \
 										if 'default' in v and n != '*' ]))
@@ -244,21 +249,23 @@ class ObjectWithInterface(object):
 	def __getattribute__(self, name):
 		'''
 		'''
-##		if name == '__implemments__':
-##			return object.__getattribute__(self, name)
-		if name == '__implemments__' or isreadable(self, name):
+		if name == '__implemments__' \
+				or object.__getattribute__(self, '__implemments__') == None \
+				or isreadable(self, name):
 			return super(ObjectWithInterface, self).__getattribute__(name)
 		raise InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
 		'''
 		'''
-		if iswritable(self, name) and iscompatible(self, name, value):
+		if object.__getattribute__(self, '__implemments__') == None \
+				or (iswritable(self, name) and iscompatible(self, name, value)):
 			return super(ObjectWithInterface, self).__setattr__(name, value)
 		raise InterfaceError, 'can\'t write value "%s" attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''
-		if isessential(self, name):
+		if object.__getattribute__(self, '__implemments__') != None \
+				and isessential(self, name):
 			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
 		super(ObjectWithInterface, self).__delattr__(name)
 
@@ -278,7 +285,8 @@ class InterfaceProxy(object):
 	def __getattr__(self, name):
 		'''
 		'''
-		if name == '__implemments__' or isreadable(self, name):
+		if self.__implemments__ == None \
+				or name == '__implemments__' or isreadable(self, name):
 			return getattr(self.__source__, name)
 		raise InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
@@ -286,13 +294,14 @@ class InterfaceProxy(object):
 		'''
 		if name in ('__source__', '__implemments__'):
 			super(InterfaceProxy, self).__setattr__(name, value)
-		if iswritable(self, name) and iscompatible(self, name, value):
+		if self.__implemments__ == None \
+				or (iswritable(self, name) and iscompatible(self, name, value)):
 			return setattr(self.__source__, name, value)
 		raise InterfaceError, 'can\'t write value "%s" attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''
-		if isessential(self, name):
+		if self.__implemments__ != None and isessential(self, name):
 			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
 		delattr(self.__source__, name)
 
