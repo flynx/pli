@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.14'''
-__sub_version__ = '''20040326130605'''
+__version__ = '''0.0.17'''
+__sub_version__ = '''20040326131151'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -69,7 +69,8 @@ def ispythonimportable(package_dir, name):
 
 
 #---------------------------------------------------------packageiter---
-def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None, notimportable=None, ignore_modules=()):
+def packageiter(package_dir, disable_file='disabled.txt', \
+				disabled_packages=None, notimportable=None, ignore_modules=()):
 	'''\
 
 	This will return importable (and enabled) package names (without importing).

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20040314235444'''
+__sub_version__ = '''20040326192833'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -66,6 +66,7 @@ setup(
 				  'pli.event',
 				  'pli.misc',
 				  'pli.net',
+##				  'pli.unit',
 				  'pli.pattern',
 				  'pli.pattern.proxy',
 				  'pli.pattern.state',

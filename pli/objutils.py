@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.12'''
-__sub_version__ = '''20040227011349'''
+__sub_version__ = '''20040328143634'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -56,10 +56,6 @@ class ObjectWithAttrs(object):
 		'''
 		super(ObjectWithAttrs, self).__init__(name)
 		# check essential attrs....
-##		if hasattr(self, '__essential_attrs__') and self.__essential_attrs__ != None and \
-##					False in [ (type(attr) not in (str, unicode) and attr[0] or attr) in attrs \
-##										for attr in self.__essential_attrs__ ]:
-##				raise TypeError, 'essential attribute format mismatch.'
 		if hasattr(self, '__essential_attrs__') and self.__essential_attrs__ != None:
 			essential_attrs = [ (type(attr) not in (str, unicode) and attr[0] or attr) \
 								for attr in self.__essential_attrs__ ]
