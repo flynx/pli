@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.17'''
-__sub_version__ = '''20040317151209'''
+__version__ = '''0.2.39'''
+__sub_version__ = '''20040321151426'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -40,10 +40,6 @@ class TransitionError(FiniteStateMachineError):
 #-----------------------------------------------------------------------
 # TODO consistency checks...
 # TODO more thorough documentation...
-# TODO make manual state changes non-recursive (e.g. first exit of
-#      cotext and then change)...
-#      moght be good to add directivs/options to auto change or select
-#      next state...
 #-----------------------------------------------------------------------
 # predicates based on transitions:
 #-----------------------------------------------------------isinitial---
@@ -134,12 +130,12 @@ def isinloop(s):
 #----------------------------------------------------------transition---
 # TODO add support for string state names... (+ check consistency... (?))
 # TODO add transition predicate...
-def transition(s1, s2, predicate=None):
+def transition(s1, s2, condition=None):
 	'''
 	create a transition from s1 to s2.
 	'''
 	if not isterminal(s1):
-		s1.transition(s2)
+		s1.transition(s2, condition)
 	else:
 		raise FiniteStateMachineError, 'can\'t add transition to a terminal state %s.' % s1
 
@@ -234,12 +230,6 @@ class FiniteStateMachine(state.State):
 			self._running = False
 		else:
 			raise FiniteStateMachineError, 'can\'t start a manual (non-auto-change-state) FSM.'
-	# TODO ignore enter events of initial state and exit events of
-	#      terminal states... (as these will never (?) be used)
-	#      (???)...
-	#      this might also be solved by calling the initial enter event
-	#      just before __runonce__ and the termonal exit event just
-	#      after the __onchangestate__...
 	# TODO automaticly init newly added states per FSM object on their
 	#      (event) addition to the FSM class...
 	#      ...or do a laizy init (as in RPG.action)
@@ -318,14 +308,21 @@ class State(FiniteStateMachine):
 
 	there are three utility methods that can be defined:
 		__runonce__			: this will be run only once per state, this is
-							  done to mainly register callbacks.
+							  done mainly to register callbacks.
 		__onstatechange__	: this is run once per state change, right after
 							  the change is made and just before the onEnter  
 							  event is fired.
 		__onafterstatechange__
 							: this is called after the state is finalized.
-							  that is just after the state onEnter event 
+							  that is, just after the state onEnter event 
 							  processing is done.
+							  NOTE: by default, this will select the first 
+									usable transition and use it to change
+									state.
+		__resolvestatechange__
+							: this is called by the above method if no usable
+							  transition was found and curent state is not 
+							  terminal.
 		NOTE: all of the above methods receive no arguments but the object
 			  reference.
 
@@ -354,21 +351,21 @@ class State(FiniteStateMachine):
 	__auto_register_type__ = True
 
 	# class data:
-	# TODO make this a dict....
-	__next_states__ = None
+	_transitions = None
 
 	# TODO add support for string state names... (+ check consistency... (?))
 	# TODO write a "removetransition" method....
-	# TODO add transition predicate...
-	def transition(cls, tostate, predicate=None):
+	def transition(cls, tostate, condition=None):
 		'''
 		this will create a transition from the current state to the tostate.
 		'''
-		# process self...
-		if not hasattr(cls, '__next_states__') or cls.__next_states__ == None:
-			cls.__next_states__ = [tostate]
+		transitions = cls._transitions
+		if transitions == None:
+			transitions = cls._transitions = {tostate: condition}
+##		elif tostate in transitions:
+##			raise TransitionError, 'a transition from %s to %s already exists.' % (cls, tostate)
 		else:
-			cls.__next_states__ += [tostate]
+			cls._transitions[tostate] = condition
 	transition = classmethod(transition)
 	def changestate(self, tostate):
 		'''
@@ -380,116 +377,50 @@ class State(FiniteStateMachine):
 		fsm = self.__fsm__
 		# check for transitions...
 		if hasattr(fsm, '__strict_transitions__') and fsm.__strict_transitions__ and \
-				(not hasattr(self, '__next_states__') or self.__next_states__ == None or \
-				tostate not in self.__next_states__):
-			raise TransitionError, 'can\'t change state of %s to %s without a transition.' % (self, tostate)
-		# change the state...
+				(not hasattr(self, '_transitions') or self._transitions == None or \
+				tostate not in self._transitions):
+			raise TransitionError, 'can\'t change state of %s to state %s without a transition.' % (self, tostate)
+		# check condition...
+		transitions = self._transitions
+		if transitions[tostate] != None and not transitions[tostate](self):
+			raise TransitionError, 'conditional transition from %s to state %s failed.' % (self, tostate)
 		super(State, self).changestate(tostate)
 	def iternextstates(self):
 		'''
 		this will iterate through the states directly reachable from 
 		self (e.g. to which there are direct transitions).
 		'''
-		if self.__next_states__ == None:
+		if self._transitions == None:
 			return
-		for n in self.__next_states__: 
+		for n in self._transitions: 
 			yield n
 	iternextstates = classmethod(iternextstates)
+	# this method is called after the state is finalized (e.g. after the
+	# __onstatechange__ is called and the onEnter event is processed).
+	def __onafterstatechange__(self):
+		'''
+		this will try to next change state.
+		'''
+		if self._transitions != None:
+			for tostate in self._transitions:
+				try:
+					self.changestate(tostate)
+					return
+				except:
+					pass
+		if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
+			if hasattr(self, '__resolvestatechange__'):
+				# try to save the day and call the resolve method...
+				return self.__resolvestatechange__()
+			raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
 	# this is here for documentation...
-##	def __onafterstatechange__(self):
+##	def __resolvestatechange__(self):
 ##		'''
-##		this method is called after the state is finalized (e.g. after the
-##		__onstatechange__ is called and the onEnter event is processed).
+##		this is called if no transition from current state is found, to 
+##		resolve the situation.
 ##		'''
 ##		pass
 
-
-
-#=======================================================================
-# TODO move these to unit tests...
-# some basic tests...
-if __name__ == '__main__':
-	print 'initializing:'
-	print 'creating an fsm...'
-
-	class FSM(FiniteStateMachine): 
-		pass 
-	
-	print 'creating states...'
-
-	class A(State):
-		__fsm__ = FSM
-		__is_initial_state__ = True
-		def __onafterstatechange__(self):
-			self.changestate(B)
-
-	class B(State):
-		__fsm__ = FSM
-		def __onafterstatechange__(self):
-			print 'testing an illegal transition...'
-			try:
-				self.changestate(A)
-				raise 'Error'
-			except TransitionError, msg:
-				print 'got TransitionError:', msg
-			self.changestate(C)
-
-	class C(State):
-		__fsm__ = FSM
-		__is_terminal_state__ = True
-##		def __onafterstatechange__(self):
-##			self.changestate(B)
-	
-	print 'defining transitions...'
-	transition(A, B)
-	transition(A, C)
-	transition(B, C)
-
-	print 'creating an fsm instance...'
-	fsm = FSM()
-
-	print
-
-	print 'preparing events:'
-	print 'defining handler...'
-	def f(evt):
-		print '   ****', evt.__class__.__name__, ':', evt.state_name
-	print 'binding events...'
-	instanceevent.bind(fsm.onEnterA, f)
-	instanceevent.bind(fsm.onExitA, f)
-	instanceevent.bind(fsm.onEnterB, f)
-	instanceevent.bind(fsm.onExitB, f)
-	instanceevent.bind(fsm.onEnterC, f)
-	instanceevent.bind(fsm.onExitC, f)
-	
-	print
-
-	# start the FSM...
-	if fsm.__auto_change_state__:
-		print 'starting the fsm...'
-		# NOTE: if we did not have (or would not reach) a terminal 
-		#       state this will never exit...
-		fsm.start()
-
-
-	print
-
-	print 'testing an illegal transition...'
-	try:
-		fsm.changestate(FSM.__states__['B'])
-		raise 'Error'
-	except FiniteStateMachineError, msg:
-		print 'got FiniteStateMachineError:', msg
-
-	print 'testing predicates...'
-	print 'A is before B:', isbefore(A, B)
-	print 'A is before C:', isbefore(A, C)
-	print 'B is before A:', isbefore(B, A)
-	print 'B is after A:', isafter(B, A)
-
-	print
-
-	print 'done.'
 
 
 #=======================================================================

@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.2.09'''
-__sub_version__ = '''20040315012826'''
+__sub_version__ = '''20040320140106'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -52,6 +52,23 @@ def fire(event, *p, **n):
 	event.fire(*p, **n)
 
 
+#-------------------------------------------------------------isevent---
+def isevent(obj):
+	'''
+	check if obj is an event (e.g. related to AbstractEvent)
+	'''
+	return isinstance(obj, AbstractEvent) or issubclass(obj, AbstractEvent)
+
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------------AbstractEvent---
+class AbstractEvent(object):
+	'''
+	'''
+	pass
+
+	
 #--------------------------------------------------------------_Event---
 # NOTE: this might change in the future...
 # NOTE: it might be good to pass an event instance to the handler,
@@ -147,7 +164,7 @@ class _Event(type):
 
 
 #---------------------------------------------------------------Event---
-class Event(object):
+class Event(AbstractEvent):
 	'''
 	base abstract event.
 	'''

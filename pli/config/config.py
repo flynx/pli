@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040317115811'''
+__sub_version__ = '''20040321135442'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 import pli.pattern.store.stored as stored
 import pli.pattern.state.fsm as fsm
 import pli.event as event
+import pli.event.instanceevent as instanceevent
 ##import pli.dispatch as dispatch
 
 from pli.pattern.state.fsm import transition
@@ -52,19 +53,80 @@ from pli.pattern.state.fsm import transition
 # 			- internal rules (used by sub componenets).
 #
 #-----------------------------------------------------------------------
-#--------------------------------------------------------------Config---
-# this must take the initial state at startup...
-# Q: can a config contain more than one FSM?????
-# Q: does config need to be an FSM???
-class Config(fsm.FiniteStateMachine):
+#----------------------------------------------------------Dependency---
+##!! REVISE !!##
+class Dependency(instanceevent.Event):
 	'''
 	'''
-	__rules__ = None
+	def __init__(self, cfg, dep):
+		'''
+		'''
+		# register the callback...
+		# event...
+		if hasattr(cfg, dep) and event.isevent(getattr(cfg, dep)):
+			event.bind(getattr(cfg, dep), self.fire())
+		##!!!
+	def __str__(self):
+		'''
+		'''
+		pass
+	def __repr__(self):
+		'''
+		'''
+		pass
+	def __nonzero__(self):
+		'''
+		'''
+		pass
+	def fire(self):
+		'''
+		'''
+		# change state...
+		if self:
+			super(Dependency, self).fire()
+	def getdependency(self):
+		'''
+		'''
+		pass
+
+
+#-------------------------------------------------DependencyInterface---
+class DependencyInterface(object):
+	'''
+	'''
+
+	__dependency_class__ = Dependency
 
 	def __init__(self):
 		'''
 		'''
-		super(Config, self).__init__()
+		self._dependencies = {}
+	# dependency interface:
+	def getdependency(self, name):
+		'''
+		'''
+		# register and create dependency...
+		dep = self._dependencies[name] = self.__dependency_class__(self, name)
+		return dep
+
+
+
+
+#-----------------------------------------------------------------------
+#--------------------------------------------------------------Config---
+# this must take the initial state at startup...
+# Q: can a config contain more than one FSM?????
+# Q: does config need to be an FSM???
+class BasicConfig(fsm.FiniteStateMachine):
+	'''
+	'''
+	__rules__ = None
+
+
+	def __init__(self):
+		'''
+		'''
+		super(BasicConfig, self).__init__()
 		# init rules...
 		rules = self.__rules__ = {}
 		if self.__class__.__rules__ != None:
@@ -78,6 +140,12 @@ class Config(fsm.FiniteStateMachine):
 ##		'''
 ##		super(Config, self).initstates()
 
+
+#--------------------------------------------------------------Config---
+class Config(BasicConfig, DependencyInterface):
+	'''
+	'''
+	pass
 
 
 

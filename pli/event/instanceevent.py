@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.0.07'''
-__sub_version__ = '''20040317151030'''
+__sub_version__ = '''20040320211418'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -18,7 +18,7 @@ from event import bind, unbind, isbound, fire
 #-----------------------------------------------------------------------
 #---------------------------------------------------------------Event---
 ##!! TEST !!##
-class Event(object):
+class Event(event.AbstractEvent):
 	'''
 	base abstract event class.
 	'''
