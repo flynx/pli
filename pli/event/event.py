@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.11'''
-__sub_version__ = '''20040413045006'''
+__sub_version__ = '''20040413045359'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -242,7 +242,9 @@ class InstanceEvent(AbstractEvent):
 	# raised)
 	# default: False
 	__unique_handler_bind__ = False
-
+	# if this is set to False the event ececution will break on first
+	# handler exception...
+	# default: True
 ##	__suppress_exceptions__ = True
 
 	def __init__(self, *p, **n):
@@ -396,7 +398,13 @@ class _ClassEvent(InstanceEvent, type):
 	# this will define a list of methods to be auto-converted to
 	# classmethods....
 	# WARNING: do not change unless you know what you are doing!
-	__interface_methods__ = ('fire', 'source', 'unsource', 'predicate', '__callhook__')
+	__interface_methods__ = (
+							 'fire', 
+							 'source', 
+							 'unsource',
+							 'predicate',
+							 '__callhook__',
+							)
 
 ##	__suppress_exceptions__ = True
 
