@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040527143430'''
+__sub_version__ = '''20040527144611'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -41,8 +41,8 @@ def namespace():
 	this will return a dict union object that represents the current naespace stack.
 	'''
 	getframe = sys._getframe
-	res = logictypes.NameSpace()
-	i = 0
+	res = NameSpace()
+	i = 1
 	try:
 		while True:
 			res.tailunite(getframe(i).f_locals)
