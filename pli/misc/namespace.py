@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040531023546'''
+__sub_version__ = '''20040531024624'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -38,13 +38,14 @@ class NameSpace(logictypes.DictUnion):
 		NOTE: this is live; e.g. changing the return will change the locals.
 		'''
 		return self._members[0] 
+	##!!! fix this...
 	def globals(self):
 		'''
 		this is python compatible globals method.
 
 		NOTE: this is live; e.g. changing the return will change the locals.
 		'''
-		return self._members[-1] 
+		return logictypes.DictUnion(*self._members[1:])
 
 
 

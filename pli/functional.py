@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.5.08'''
-__sub_version__ = '''20040328151509'''
+__version__ = '''0.5.14'''
+__sub_version__ = '''20040608031343'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -141,6 +141,79 @@ def raise_on_false(func, exception=Exception, name=None, msg=''):
 
 #-----------------------------------------------------------------------
 ##!! THE FOLLOWING ARE EXPERIMENTAL !!##
+#-----------------------------------------------------------------seq---
+def seq(f0, *f):
+	'''
+	seq(f0[, f1[, ...]]) -> res
+	seq(name, f0[, f1[, ...]]) -> res
+
+	this will return a function that when called will sequence the functions given,
+	passing its arguments into each one, and returning the list of their results.
+
+	NOTE: in the second form the name is used as name for the resulting function.
+	NOTE: atleast one function must be given.
+	'''
+	if type(f0) is str:
+		if len(f) < 1:
+			raise TypeError, 'need atleast one callable in the sequence (got: 0).'
+
+		func_txt = """def %(function_name)s(*p, **n):
+		'''sequence wrapper of %(functions)s.'''
+		res = []
+		for func in f:
+			res += [func(*p, **n)]
+		return res"""
+		exec (func_txt % {'function_name':f0, 'functions':f}) in locals(), globals()
+		_seq = eval(f0)
+	else:
+		def _seq(*p, **n):
+			'''
+			'''
+			res = []
+			for func in (f0,) + f:
+				res += [func(*p, **n)]
+			return res
+	return _seq
+
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------------------_Comare---
+class _Comare(object):
+	'''
+	'''
+	def __init__(self, eq):
+		self._eq = eq
+	def __cmp__(self, other):
+		return self._eq
+	def __eq__(self, other):
+		return self._eq == 0
+	def __ne__(self, other):
+		return self._eq != 0
+	def __gt__(self, other):
+		return self._eq > 0
+	def __ge__(self, other):
+		return self._eq >= 0
+	def __lt__(self, other):
+		return self._eq < 0
+	def __le__(self, other):
+		return self._eq <= 0
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this will compare to any value as equel (almost oposite to None)
+ANY = _Comare(0)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is bigger than any value...
+MAXIMUM = _Comare(1)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is smaller than any value...
+MINIMUM = _Comare(-1)
+
+
+
+#-----------------------------------------------------------------------
 #--------------------------------------------------------getclasstree---
 def getclasstree(cls, predicate=None):
 	l = []

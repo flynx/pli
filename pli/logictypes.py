@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.03'''
-__sub_version__ = '''20040512161550'''
+__version__ = '''0.0.04'''
+__sub_version__ = '''20040531024534'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -227,6 +227,11 @@ class DictUnion(object):
 		if res == []:
 			raise KeyError, '%s does not contain "%s"' % (self, name)
 		return res
+	def todict(self):
+		'''
+		this will return a dict copy of the DictUnion object.
+		'''
+		return dict(*self.items())
 
 
 #-------------------------------------------------------DictTypeUnion---
