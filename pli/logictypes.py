@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.07'''
-__sub_version__ = '''20041116002755'''
+__sub_version__ = '''20041206003444'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -164,6 +164,7 @@ def dictcopyunite(*members):
 
 #-----------------------------------------------------------DictUnion---
 ##class DictUnion(mapping.MappingWithMethods):
+# TODO split this into several mix-ins....
 class DictUnion(mapping.Mapping):
 	'''
 	this is a dict like object, that acts as a union of its members but
@@ -306,18 +307,55 @@ class DictTypeUnion(DictUnion, dict):
 	pass
 
 
-#-----------------------------------------------------------ListUnion---
-##def ListUnion(list):
-##	'''
-##	'''
-##	pass
-
-
 #-------------------------------------------------------DictIntersect---
 ##class DictIntersect(object):
 ##	'''
 ##	'''
 ##	pass
+
+
+#-----------------------------------------------------------------------
+#---------------------------------------------------------ObjectUnion---
+class BasicObjectUnion(object):
+	'''
+	this represents the union of the attr of several objects.
+	'''
+	def __init__(self, *members):
+		'''
+		'''
+		members = list(members)
+		members.reverse()
+		self._members = tuple(members)
+	##!!!
+	def __getattr__(self, name):
+		'''
+		'''
+		for o in self._members:
+			if hasattr(o, name):
+				return getattr(o, name)
+##			# Q: which is faster, this or the "if hasattr..."???
+##			try:
+##				return getattr(o, name)
+##			except AttributeError:
+##				pass
+		raise AttributeError, name
+##	def __setattr__(self, name, value):
+##		'''
+##		'''
+##		raise TypeError, 'ca\'t write attributes of a ObjectUnion object.'
+##	def __delattr__(self, name, value):
+##		'''
+##		'''
+##		pass
+	def __hasattr__(self, name):
+		'''
+		'''
+		for o in self._members:
+			if hasattr(o, name):
+				return True
+		return False
+	# interface methods...
+	##!!!
 
 
 

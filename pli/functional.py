@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.5.14'''
-__sub_version__ = '''20041101000543'''
+__sub_version__ = '''20041206003344'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -43,14 +43,21 @@ fastcurry = lambda func, arg:\
 				new.instancemethod(func, arg, object)
 
 
+#-------------------------------------------------------AbstractCurry---
+class AbstractCurry(object):
+	'''
+	'''
+	pass
+
+
 #--------------------------------------------------------------LCurry---
-class LCurry(object):
+class LCurry(AbstractCurry):
 	'''
 	this is the left curry class.
 	'''
 	def __new__(cls, func, *args, **kw):
 		obj = object.__new__(cls)
-		if isinstance(func, LCurry) or isinstance(func, RCurry):
+		if isinstance(func, AbstractCurry):
 			obj._curry_func = func._curry_func
 			obj._curry_args = (func._curry_args[0] + args, func._curry_args[1])
 			obj._curry_kw = kw = kw.copy()
@@ -61,7 +68,8 @@ class LCurry(object):
 			obj._curry_kw = kw.copy()
 		return obj
 	def __call__(self, *args, **kw):
-		self._curry_func(*self._curry_args[0] + args + self._curry_args[1], **dict(self._curry_kw.items() + kw.items()))
+		return self._curry_func(*self._curry_args[0] + args + self._curry_args[1], \
+										**dict(self._curry_kw.items() + kw.items()))
 
 
 #---------------------------------------------------------------Curry---
@@ -69,15 +77,15 @@ Curry = LCurry
 
 
 #--------------------------------------------------------------RCurry---
-class RCurry(object):
+class RCurry(AbstractCurry):
 	'''
 	this is the right curry class.
 	'''
 	def __new__(cls, func, *args, **kw):
 		obj = object.__new__(cls)
-		if isinstance(func, LCurry) or isinstance(func, RCurry):
+		if isinstance(func, AbstractCurry):
 			obj._curry_func = func._curry_func
-			obj._curry_args = (func._curry_args[0] ,func._curry_args[1] + args)
+			obj._curry_args = (func._curry_args[0], func._curry_args[1] + args)
 			obj._curry_kw = kw = kw.copy()
 			kw.update(func._curry_kw)
 		else:
@@ -86,7 +94,8 @@ class RCurry(object):
 			obj._curry_kw = kw.copy()
 		return obj
 	def __call__(self, *args, **kw):
-		self._curry_func(*self._curry_args[0] + args + self._curry_args[1], **dict(self._curry_kw.items() + kw.items()))
+		return self._curry_func(*self._curry_args[0] + args + self._curry_args[1], 
+										**dict(self._curry_kw.items() + kw.items()))
 
 
 #--------------------------------------------------------------negate---
