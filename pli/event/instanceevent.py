@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.0.07'''
-__sub_version__ = '''20040320211418'''
+__sub_version__ = '''20040321210208'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -79,8 +79,8 @@ class Event(event.AbstractEvent):
 				except:
 					# raise the exception if either  the hook or the
 					# event are in debug mode...
-					if hasattr(hook, 'EVT_DEBUG') and hook.EVT_DEBUG or \
-							hasattr(self, 'EVT_DEBUG') and self.EVT_DEBUG:
+					if hasattr(hook, '__suppress_exceptions__') and hook.__suppress_exceptions__ or \
+							hasattr(self, '__suppress_exceptions__') and self.__suppress_exceptions__:
 						raise
 	def installhook(self, hook_func):
 		'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.39'''
-__sub_version__ = '''20040321151426'''
+__version__ = '''0.2.43'''
+__sub_version__ = '''20040321210617'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -25,6 +25,12 @@ import state
 #---------------------------------------------FiniteStateMachineError---
 # TODO write more docs...
 class FiniteStateMachineError(Exception):
+	'''
+	'''
+
+
+#----------------------------------------------FiniteStateMachineStop---
+class FiniteStateMachineStop(Exception):
 	'''
 	'''
 
@@ -79,7 +85,7 @@ def isprev(s1, s2):
 # TODO might be good to make a breadth-first version...
 def isbefore(s1, s2, exclude=None):
 	'''
-	terurn True if s2 is reachable from s1.
+	return True if s2 is reachable from s1.
 	'''
 	if exclude == None:
 		exclude = []
@@ -93,7 +99,7 @@ def isbefore(s1, s2, exclude=None):
 #-------------------------------------------------------------isafter---
 def isafter(s1, s2):
 	'''
-	terurn True if s1 is reachable from s2.
+	return True if s1 is reachable from s2.
 	'''
 	return isbefore(s2, s1)
 
@@ -121,7 +127,7 @@ def isonpath(s1, s2, s3, *p):
 #------------------------------------------------------------isinloop---
 def isinloop(s):
 	'''
-	terurn true if s is inside a loop (e.g. s is reachable from s)
+	return true if s is inside a loop (e.g. s is reachable from s)
 	'''
 	return isbefore(s, s)
 
@@ -146,6 +152,8 @@ def transition(s1, s2, condition=None):
 class onEnterState(instanceevent.Event):
 	'''
 	'''
+	__suppress_exceptions__ = False
+
 	def __init__(self, state_name):
 		'''
 		'''
@@ -158,6 +166,8 @@ class onEnterState(instanceevent.Event):
 class onExitState(instanceevent.Event):
 	'''
 	'''
+	__suppress_exceptions__ = False
+
 	def __init__(self, state_name):
 		'''
 		'''
@@ -167,9 +177,9 @@ class onExitState(instanceevent.Event):
 
 #--------------------------------------------------FiniteStateMachine---
 # WARNING: this has not been tested for being thread-safe...
-# NOTE: whole FSMs can not (yet) be reprodused by deep copying... (not
+# NOTE: whole FSMs can not (yet) be reproduced by deep copying... (not
 #       tested)
-# TODO test for safty of parallel execution of two fsm instances...
+# TODO test for safety of parallel execution of two fsm instances...
 # TODO write more docs...
 class FiniteStateMachine(state.State):
 	'''
@@ -181,21 +191,23 @@ class FiniteStateMachine(state.State):
 	FiniteStateMachine will change state to the initial 
 	state on init.
 	'''
-	# class cofiguration:
+	# class configuration:
 	# these will define the state enter/exit event constructors..
 	__state_enter_event__ = onEnterState
 	__state_exit_event__ = onExitState
-	# if this is set, all statechanges without transitions will be
+	# if this is set, all state changes without transitions will be
 	# blocked (e.g. raise an exception)...
 	__strict_transitions__ = True
 	# this will enable automatic state changing...
 	__auto_change_state__ = True
-	# this will define the state to which we will autochange...
+	# this will define the state to which we will auto-change...
 	__next_state__ = None
 
 	# class data:
 	__states__ = None
 	__initial_state__ = None
+	_stop_exception = None
+	_stop_reason = None
 
 	def __init__(self):
 		'''
@@ -218,21 +230,35 @@ class FiniteStateMachine(state.State):
 			if hasattr(self, '_running') and not self._running:
 				raise FiniteStateMachineError, 'the %s FSM is already running.' % self
 			self._running = True
-			while True:
-				# break on terminal state...
-				if isterminal(self):
-					break
-				if self.__next_state__ != None:
-					# change state...
-					tostate = self.__next_state__
-					self.__next_state__ = None
-					self._changestate(tostate)
+			try:
+				while True:
+					# break on terminal state...
+					if isterminal(self):
+						break
+##					# handle stops...
+##					if self._running == False:
+##						if self._stop_exception != None:
+##							raise self._stop_exception, self._stop_reason
+##						return self._stop_reason
+					if self.__next_state__ != None:
+						# change state...
+						tostate = self.__next_state__
+						self.__next_state__ = None
+						self._changestate(tostate)
+			except FiniteStateMachineStop:
+				pass
 			self._running = False
 		else:
 			raise FiniteStateMachineError, 'can\'t start a manual (non-auto-change-state) FSM.'
+##	def stop(self, reason=None, exception=None):
+##		'''
+##		'''
+##		self._stop_exception = exception
+##		self._stop_reason = reason
+##		self._running = False
 	# TODO automaticly init newly added states per FSM object on their
 	#      (event) addition to the FSM class...
-	#      ...or do a laizy init (as in RPG.action)
+	#      ...or do a lazy init (as in RPG.action)
 	#      actually the best thing would be to do both...
 	def initstates(self):
 		'''
@@ -277,7 +303,7 @@ class _StoredState(stored._StoredClass):
 	'''
 	this meta-class will register the state classes with the FSM.
 	'''
-	# _StoredClass cofiguration:
+	# _StoredClass configuration:
 	__class_store_attr_name__ = '__fsm__'
 
 	def storeclass(cls, name, state):
@@ -321,22 +347,22 @@ class State(FiniteStateMachine):
 									state.
 		__resolvestatechange__
 							: this is called by the above method if no usable
-							  transition was found and curent state is not 
+							  transition was found and current state is not 
 							  terminal.
 		NOTE: all of the above methods receive no arguments but the object
 			  reference.
 
-	on state istance creation, two events will get defined and added to the FSM:
+	on state instance creation, two events will get defined and added to the FSM:
 		onEnter<state-name> : this is fired on state change, just after the 
 							  __onstatechange__ method is finished.
-		onExit<state-anme>	: this is fired just befor the state is changed.
+		onExit<state-name>	: this is fired just before the state is changed.
 
-	for more information see: pli.pattren.state.State
+	for more information see: pli.pattern.state.State
 
 	'''
 	__metaclass__ = _StoredState
 
-	# class cofiguration:
+	# class configuration:
 	# this is the class of fsm this state will belong to
 	__fsm__ = None
 	# if this is set the state will be registered as initial/start state

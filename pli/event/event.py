@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.2.09'''
-__sub_version__ = '''20040320140106'''
+__sub_version__ = '''20040321210156'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -20,7 +20,7 @@ def bind(event, func, HOOK_DEBUG=False):
 	if HOOK_DEBUG:
 		try:
 			# NOTE: this does not pickle correctly...
-			func.EVT_DEBUG = True
+			func.__suppress_exceptions__ = True
 		except:
 			pass
 	event.installhook(func)
@@ -91,6 +91,8 @@ class _Event(type):
 	# WARNING: do not change unless you know what you are doing!
 	__interface_methods__ = ('fire', 'source', 'unsource', 'predicate')
 
+##	__suppress_exceptions__ = True
+
 	def __init__(cls, name, bases, ns):
 		'''
 		'''
@@ -138,8 +140,8 @@ class _Event(type):
 				except:
 					# raise the exception if either  the hook or the
 					# event are in debug mode...
-					if hasattr(hook, 'EVT_DEBUG') and hook.EVT_DEBUG or \
-							hasattr(cls, 'EVT_DEBUG') and cls.EVT_DEBUG:
+					if hasattr(hook, '__suppress_exceptions__') and not hook.__suppress_exceptions__ or \
+							hasattr(cls, '__suppress_exceptions__') and not cls.__suppress_exceptions__:
 						raise
 	def installhook(cls, hook_func):
 		'''
