@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20040330162406'''
+__sub_version__ = '''20040819155652'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -71,6 +71,7 @@ setup(
 				  'pli.pattern.proxy',
 				  'pli.pattern.state',
 				  'pli.pattern.store',
+				  'pli.pattern.mixin',
 ##				  'pli.pattern.tree',
 				  'pli.serialize',
 				 ],
