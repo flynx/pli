@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040911205351'''
+__sub_version__ = '''20040913020855'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -221,7 +221,7 @@ class InheritAndOverrideProxy(BasicProxy):
 			osetattr(_obj, '__dict__', source.__dict__)
 		# we fall here in case we either are a class constructor, function or a callable....
 		# WARNING: this is Python implementation specific!!
-		except (TypeError, AttributeError):
+		except (TypeError, AttributeError), e:
 			# function or callable
 			if type(source) in (types.FunctionType, types.LambdaType, types.MethodType, weakref.CallableProxyType):
 				# callable wrapper hook...
@@ -234,6 +234,8 @@ class InheritAndOverrideProxy(BasicProxy):
 				if hasattr(cls, '__proxy_class__') and cls.__proxy_class__ != None:
 					return cls.__proxy_class__(source)
 				return source
+			##!!!!!! is this correct???
+			return source
 		# process proxy cache...
 		if hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
 			cls.__proxy_cache__[source] = _obj
@@ -273,7 +275,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 	# this defines the attributes that are resolved to the proxy itself
 	# (not the target object)...
 	__proxy_public_attrs__ = (
-				'proxy_target',
+##				'proxy_target',
 				'__proxy_call__',
 				'__proxy_class__',
 				'__proxy_target_attr_name__',
@@ -282,7 +284,8 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 	def __getattribute__(self, name):
 		'''
 		'''
-		if name in object.__getattribute__(self, '__proxy_public_attrs__'):
+		ogetattribute = object.__getattribute__
+		if name in ogetattribute(self, '__proxy_public_attrs__') + (ogetattribute(self, '__proxy_target_attr_name__'),):
 			return super(TranparentInheritAndOverrideProxy, self).__getattribute__(name)
 		return self.proxy_target.__getattribute__(name)
 	# directly proxy __setattr__ to the target...
@@ -296,16 +299,28 @@ class RecursiveInheritNOverrideProxy(InheritAndOverrideProxy):
 	'''
 	__wrapper__ = None
 
+	__proxy_public_attrs__ = (
+##				'proxy_target',
+				'__proxy_call__',
+				'__proxy_class__',
+				'__proxy_target_attr_name__',
+			)
 
 	def __getattribute__(self, name):
 		'''
 		'''
 		ogetattribute = object.__getattribute__
+		obj = super(RecursiveInheritNOverrideProxy, self).__getattribute__(name)
+		if name in ogetattribute(self, '__proxy_public_attrs__') + (ogetattribute(self, '__proxy_target_attr_name__'),):
+			return obj
+		wrapper = None
 		try:
 			wrapper = ogetattribute(self, '__wrapper__')
-			return wrapper(super(TranparentInheritAndOverrideProxy, self).__getattribute__(name))
 		except:
-			return ogetattribute(self, '__class__')(super(TranparentInheritAndOverrideProxy, self).__getattribute__(name))
+			pass
+		if wrapper == None:
+			return ogetattribute(self, '__class__')(obj)
+		return wrapper(obj)
 
 
 
@@ -318,7 +333,7 @@ if __name__ == '__main__':
 		def __call__(self):
 			'''
 			'''
-			print 'O object! (', self.__class__, ')',
+			print 'O object! (', self.__class__, hex(id(self)), ')',
 
 	o = O()
 
@@ -357,6 +372,36 @@ if __name__ == '__main__':
 
 	print p is p0, p0 is p1
 
+
+
+
+	class RProxy(RecursiveInheritNOverrideProxy):
+		'''
+		'''
+		def __call__(self, *p, **n):
+			'''
+			'''
+			print 'Proxy:',
+			self.proxy_target(*p, **n)
+			print '.'
+
+	o = O()
+	o.o = O()
+	o.o.o = O()
+
+	p = RProxy(o)
+
+	print o
+	print p
+
+	o()
+	print '.'
+
+	p()
+	p.o()
+	p.o.o()
+	p.o.o.__call__()
+	
 
 #=======================================================================
 #                                            vim:set ts=4 sw=4 nowrap :

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040910180554'''
+__sub_version__ = '''20040913172511'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -72,10 +72,29 @@ class BasicMappingDispatch(dispatch.BasicDispatch, mapping.BasicMapping):
 class BasicMappingInterfaceDispatch(BasicMappingDispatch):
 	'''
 	'''
+	# if this is True, single interfaces as thy are returned by
+	# interfaces.getinterfaces (in a tuple) will be un wrapped and
+	# stored as-is...
+	__unwrap_single_interfaces__ = True
+
+	def addrule(self, marker, target):
+		'''
+		'''
+		if hasattr(self, '__unwrap_single_interfaces__') and self.__unwrap_single_interfaces__ \
+				and type(marker) in (tuple, list) and len(marker) == 1:
+			marker = marker[0]
+		return super(BasicMappingDispatch, self).addrule(marker, target)
 	def resolve(self, obj):
 		'''
 		'''
-		return super(BasicMappingDispatch, self).resolve(interface.getinterfaces(obj))
+		interfaces = interface.getinterfaces(obj)
+		if hasattr(self, '__unwrap_single_interfaces__') and self.__unwrap_single_interfaces__ \
+				and type(interfaces) in (tuple, list) and len(interfaces) == 1:
+			try:
+				return super(BasicMappingDispatch, self).resolve(interfaces[0])
+			except dispatch.DispatchError:
+				pass
+		return super(BasicMappingDispatch, self).resolve(interfaces)
 
 
 
