@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.11'''
-__sub_version__ = '''20040413042136'''
+__sub_version__ = '''20040413045006'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -260,7 +260,7 @@ class InstanceEvent(AbstractEvent):
 		super(InstanceEvent, self).__init__(*p, **n)
 ##	def __callhook__(self, hook, evt, *p, **n):
 ##		'''
-##		this if present will be used to call each hook (e.g. hook wrapper).
+##		this, if present, will be used to call each hook (e.g. hook wrapper).
 ##		'''
 ##		hook(evt, *p, **n)
 	def source(self):
@@ -396,7 +396,7 @@ class _ClassEvent(InstanceEvent, type):
 	# this will define a list of methods to be auto-converted to
 	# classmethods....
 	# WARNING: do not change unless you know what you are doing!
-	__interface_methods__ = ('fire', 'source', 'unsource', 'predicate')
+	__interface_methods__ = ('fire', 'source', 'unsource', 'predicate', '__callhook__')
 
 ##	__suppress_exceptions__ = True
 
