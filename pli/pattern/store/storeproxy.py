@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.01'''
-__sub_version__ = '''20040821210101'''
+__version__ = '''0.0.05'''
+__sub_version__ = '''20040821211955'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -41,7 +41,7 @@ class BaseStoreProxy(store.BaseStore):
 		if len(from_keys) + len(to_keys) != len(dict.fromkeys(from_keys + to_keys)):
 			if flags == 0:
 				##!!!
-				raise ''
+				raise TypeError, 'both the curent store (%s) and the new backend (%s) have matching keys.' % (self, backend)
 		for k, v in self.iteritems():
 			if k in backend:
 				# sanity check...
