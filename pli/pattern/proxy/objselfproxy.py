@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20040307230823'''
+__sub_version__ = '''20040321190810'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,7 +11,7 @@ import types
 import new
 
 import pli.functional as func
-import pli.pattrn.proxy.utils as utils
+import pli.pattern.proxy.utils as utils
 
 
 #-----------------------------------------------------------------------

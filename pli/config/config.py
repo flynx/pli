@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040321135442'''
+__sub_version__ = '''20040321184607'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -53,6 +53,12 @@ from pli.pattern.state.fsm import transition
 # 			- internal rules (used by sub componenets).
 #
 #-----------------------------------------------------------------------
+class Component(instanceevent.Event):
+	'''
+	'''
+	pass
+
+
 #----------------------------------------------------------Dependency---
 ##!! REVISE !!##
 class Dependency(instanceevent.Event):
