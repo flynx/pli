@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040909160930'''
+__sub_version__ = '''20040909163249'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -18,7 +18,7 @@ import pli.interface as interface
 #-----------------------------------------------------------------------
 #------------------------------------------------BasicMappingDispatch---
 # this is a mapping mixin....
-class BasicMappingDispatch(BasicDispatch, mapping.BasicMapping):
+class BasicMappingDispatch(dispatch.BasicDispatch, mapping.BasicMapping):
 	'''
 	this is a mapping dispatch object.
 
@@ -39,7 +39,7 @@ class BasicMappingDispatch(BasicDispatch, mapping.BasicMapping):
 	def __setitem__(self, name, value):
 		'''
 		'''
-		self.reslove(valuse)[name] = value
+		self.resolve(value)[name] = value
 	def __delitem__(self, name):
 		'''
 		'''
@@ -76,6 +76,68 @@ class BasicMappingInterfaceDispatch(BasicMappingDispatch):
 		'''
 		'''
 		return super(BasicMappingDispatch, self).resolve(interface.getinterfaces(obj))
+
+
+
+#=======================================================================
+if __name__ == '__main__':
+
+	class IA(interface.Interface):
+		__format__ = {
+						'aaa' : {
+							'type': int,
+							'default': 321,
+						},
+						'*' : {
+							'LIKE': 'aaa',
+							'type': str,
+						},
+					 }
+
+	class IB(IA):
+		__foramt__ = {
+						'bbb' : {
+							'type': str,
+							'default': '',
+						},
+					 }
+
+	class A(interface.ObjectWithInterface):
+		__implemments__ = IA
+
+	class B(interface.ObjectWithInterface):
+		__implemments__ = IB
+
+	store = BasicMappingInterfaceDispatch()
+	IAStore = {}
+	store.addrule((IA,), IAStore)
+	IBStore = {}
+	store.addrule((IB,), IBStore)
+
+
+	a0 = A()
+	a1 = A()
+	a2 = A()
+
+	b0 = B()
+	b1 = B()
+	b2 = B()
+
+	store['a0'] = a0
+	store['a1'] = a1
+	store['a2'] = a2
+
+	store['b0'] = b0
+	store['b1'] = b1
+	store['b2'] = b2
+
+	print IAStore
+	print IBStore
+
+	print store['a0'] == a0
+	print store['b1'] == b1
+
+	print [ k for k in store ]
 
 
 

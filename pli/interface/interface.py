@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.17'''
-__sub_version__ = '''20040831004734'''
+__version__ = '''0.2.19'''
+__sub_version__ = '''20040909170101'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -326,6 +326,29 @@ def getinterfaces(obj):
 		return tuple(obj.__implemments__)
 	else:
 		return (obj.__implemments__,)
+
+
+#-------------------------------------------------------------getdata---
+def getdata(obj, interface=None):
+	'''
+	this will return a dict containing the data taken from the object in compliance 
+	to the interface.
+	'''
+	if interface != None:
+		format = interface
+	else:
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	res = {}
+	for k in format:
+		if not hasattr(obj, k):
+			format_k = format[k]
+			if 'default' in format_k:
+				res[k] = format_k['default']
+			elif format_k.get('essential', False):
+				raise InterfaceError, 'object %s does not have an essential attribute "%s".' % (obj, k)
+		else:
+			res[k] = getattr(obj, k)
+	return res
 
 
 #----------------------------------------------------------checkvalue---

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.05'''
-__sub_version__ = '''20040821212328'''
+__sub_version__ = '''20040909163609'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,7 +11,7 @@ import pli.pattern.store as store
 
 
 #-----------------------------------------------------------------------
-
+#------------------------------------------------------BaseStoreProxy---
 SAFE_TRNSFER=0
 FORCE_OVERWRITE=1
 # this stop the overwriting of data in the target backend...
@@ -58,9 +58,6 @@ class BaseStoreProxy(store.BaseStore):
 					continue
 			backend[k] = v
 		self._setbackend(backend)
-
-
-		
 
 
 
