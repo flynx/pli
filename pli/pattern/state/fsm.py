@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.19'''
-__sub_version__ = '''20041118120308'''
+__version__ = '''0.3.22'''
+__sub_version__ = '''20041121151606'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -136,12 +136,17 @@ def isinloop(s):
 #----------------------------------------------------------transition---
 # TODO add support for string state names... (+ check consistency... (?))
 # TODO add doc paramiter to transitions...
-def transition(s1, s2, condition=None):
+# TODO add transition mode: manual/automatic
+# modes:
+AUTO = 0
+MANUAL = 1
+
+def transition(s1, s2, condition=None, mode=AUTO):
 	'''
 	create a transition from s1 to s2.
 	'''
 	if not isterminal(s1):
-		s1.transition(s2, condition)
+		s1.transition(s2, condition, mode)
 	else:
 		raise FiniteStateMachineError, 'can\'t add transition to a terminal state %s.' % s1
 
@@ -261,7 +266,7 @@ class FiniteStateMachine(state.State):
 ##			raise FiniteStateMachineError, 'can\'t start a raw FSM object (change to a valid state).'
 		# start the loop...
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__:
-			if hasattr(self, '_running') and not self._running:
+			if hasattr(self, '_running') and self._running:
 				raise FiniteStateMachineError, 'the %s FSM is already running.' % self
 			self._running = True
 			try:
@@ -453,17 +458,19 @@ class State(FiniteStateMachine):
 
 	# TODO add support for string state names... (+ check consistency... (?))
 	# TODO write a "removetransition" method....
-	def transition(cls, tostate, condition=None):
+	def transition(cls, tostate, condition=None, mode=AUTO):
 		'''
 		this will create a transition from the current state to the tostate.
 		'''
 		transitions = cls._transitions
 		if transitions == None:
-			transitions = cls._transitions = {tostate: condition}
+##			transitions = cls._transitions = {tostate: condition}
+			transitions = cls._transitions = {tostate: (condition, mode)}
 ##		elif tostate in transitions:
 ##			raise TransitionError, 'a transition from %s to %s already exists.' % (cls, tostate)
 		else:
-			cls._transitions[tostate] = condition
+##			cls._transitions[tostate] = condition
+			cls._transitions[tostate] = (condition, mode)
 	transition = classmethod(transition)
 	def changestate(self, tostate):
 		'''
@@ -480,9 +487,16 @@ class State(FiniteStateMachine):
 			raise TransitionError, 'can\'t change state of %s to state %s without a transition.' % (self, tostate)
 		# check condition...
 		transitions = self._transitions
-		if transitions[tostate] != None and not transitions[tostate](self):
+##		if transitions[tostate] != None and not transitions[tostate](self):
+##		if transitions[tostate] != None and transitions[tostate][0] != None and not transitions[tostate][0](self):
+		if transitions[tostate][0] != None and not transitions[tostate][0](self):
 			raise TransitionError, 'conditional transition from %s to state %s failed.' % (self, tostate)
 		super(State, self).changestate(tostate)
+		# restart the fsm if __auto_change_state__ is set and we are
+		# not running...
+		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__ \
+				and not self._running:
+			self.start()
 	def iternextstates(self):
 		'''
 		this will iterate through the states directly reachable from 
@@ -500,19 +514,33 @@ class State(FiniteStateMachine):
 		this will try to next change state.
 		'''
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__:
-			if self._transitions != None:
-				for tostate in self._transitions:
+			transitions = self._transitions
+			if transitions != None:
+				for tostate, (cond, mode) in transitions.items():
 					try:
-						self.changestate(tostate)
-						return
+##						self.changestate(tostate)
+##						return
+						if mode == AUTO:
+							self.changestate(tostate)
+							return
 					except:
 						##!!!
 						pass
-			if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
-				if hasattr(self, '__resolvestatechange__'):
-					# try to save the day and call the resolve method...
-					return self.__resolvestatechange__()
-				raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
+##			if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
+##				if hasattr(self, '__resolvestatechange__'):
+##					# try to save the day and call the resolve method...
+##					return self.__resolvestatechange__()
+##				# we endup here if there are no exiting transitions
+##				# from a non-terminal state...
+##				# Q: whay do we need a terminal state?
+##				# A: to prevent exiting from it...
+##				raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
+			if (not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__) \
+					and hasattr(self, '__resolvestatechange__'):
+				# try to save the day and call the resolve method...
+				return self.__resolvestatechange__()
+			else:
+				raise FiniteStateMachineStop, 'stop.'
 	# this is here for documentation...
 ##	def __resolvestatechange__(self):
 ##		'''
