@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.07'''
-__sub_version__ = '''20041206003444'''
+__sub_version__ = '''20041208222823'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -316,7 +316,10 @@ class DictTypeUnion(DictUnion, dict):
 
 #-----------------------------------------------------------------------
 #---------------------------------------------------------ObjectUnion---
-class BasicObjectUnion(object):
+# TODO rename....
+# TODO split to various mix-ins...
+##class BasicObjectUnion(object):
+class ObjectUnion(object):
 	'''
 	this represents the union of the attr of several objects.
 	'''

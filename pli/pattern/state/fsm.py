@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.22'''
-__sub_version__ = '''20041122033829'''
+__sub_version__ = '''20041209024648'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -388,7 +388,7 @@ class _StoredState(stored._StoredClass):
 # TODO "Sub-FSMs"
 # TODO revise magic method names and function...
 # XXX __onenterstate__ is bad in case of auto state change... (???)
-class State(FiniteStateMachine):
+class BasicState(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
 
@@ -493,7 +493,7 @@ class State(FiniteStateMachine):
 ##		if transitions[tostate] != None and transitions[tostate][0] != None and not transitions[tostate][0](self):
 		if transitions[tostate][0] != None and not transitions[tostate][0](self):
 			raise TransitionError, 'conditional transition from %s to state %s failed.' % (self, tostate)
-		super(State, self).changestate(tostate)
+		super(BasicState, self).changestate(tostate)
 		# restart the fsm if __auto_change_state__ is set and we are
 		# not running...
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__ \
@@ -557,12 +557,83 @@ class State(FiniteStateMachine):
 		'''
 		this will proxy the attr access to the original startup class....
 		'''
-		##!!! check for looping searching !!!##
+		##!!! check for looping search !!!##
 		# get the name in the startup class...
 		try:
 			return getattr(self.__startup_class__, name)
 		except AttributeError:
 			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+
+
+###--------------------------------------------StateWithStartupPriority---
+##class StateWithStartupAttrPriority(BasicState):
+##	'''
+##	'''
+##	__ignore_registration__ = True
+##
+##	def __getattribute__(self, name):
+##		'''
+##		'''
+##		try:
+##			return getattr(
+##					super(StateWithStartupAttrPriority, self).__getattribute__(self, '__startup_class__'),
+##					name)
+##		except AttributeError:
+##			try:
+##				return super(StateWithStartupAttrPriority, self).__getattribute__(self,  name)
+##			except AttributeError:
+##				raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+##
+##
+###--------------------------------------------StateWithCurrentPriority---
+##class StateWithCurrentAttrPriority(BasicState):
+##	'''
+##	'''
+##	__ignore_registration__ = True
+##
+##	def __getattr__(self, name):
+##		'''
+##		this will proxy the attr access to the original startup class....
+##		'''
+##		##!!! check for looping search !!!##
+##		# get the name in the startup class...
+##		try:
+##			return getattr(self.__startup_class__, name)
+##		except AttributeError:
+##			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+
+
+#-------------------------------------------------StateWithAttrPriority---
+class StateWithAttrPriority(BasicState):
+	'''
+	'''
+	__ignore_registration__ = True
+	__startupfirstattrs__ = (
+				# interface specific...
+				'__implemments__',
+			)
+
+	def __getattribute__(self, name):
+		'''
+		'''
+		getattribute = super(StateWithAttrPriority, self).__getattribute__
+		try:
+			if name in getattribute('__startupfirstattrs__'):
+				try:
+					# get startup...
+					return getattr(getattribute('__startup_class__'), name)
+				except AttributeError:
+					pass
+			# get local...
+			return getattribute(name)
+		except AttributeError:
+			# fail...
+			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+State = StateWithAttrPriority
+##State = BasicState
 
 
 #--------------------------------------------------------InitialState---
