@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.23'''
-__sub_version__ = '''20041008165014'''
+__sub_version__ = '''20041009053823'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -101,6 +101,8 @@ class _BasicInterface(type, mapping.Mapping):
 		'''
 		if hasattr(cls, '__interface_writable__') and not cls.__interface_writable__:
 			raise InterfaceError, 'the interface %s is not modifiable.' % cls
+		if value == None and cls._isdependedon(name):
+			raise InterfaceError, 'can\'t shadow attr %s due to "LIKE" dependencies.' % name
 		if '__format__' in cls.__dict__ and cls.__format__ != None:
 			cls.__format__[name] = value
 			return
@@ -115,6 +117,9 @@ class _BasicInterface(type, mapping.Mapping):
 			if ('__format__' not in cls.__dict__ or name not in cls.__dict__['__format__']) \
 					and (not hasattr(cls, '__contagious_delete__') or not cls.__contagious_delete__):
 				raise InterfaceError, 'the interface %s is not modifiable.' % cls
+			#
+			if cls._isdependedon(name):
+				raise InterfaceError, 'can\'t remove attr %s due to "LIKE" dependencies.' % name
 			# delete... 
 			# this is safe as-is as we get here in two cases: 
 			# 	1. the name is local
@@ -126,6 +131,8 @@ class _BasicInterface(type, mapping.Mapping):
 					if hasattr(c, '__format__') \
 							and c.__format__ != None \
 							and name in c.__format__:
+						if hasattr(c, '__interface_writable__') and not c.__interface_writable__:
+							raise InterfaceError, 'the interface %s is not modifiable.' % c
 						del c.__format__[name]
 						return 
 		else:
@@ -159,6 +166,9 @@ class _BasicInterface(type, mapping.Mapping):
 	def __isconsistent__(cls, errors=None):
 		'''
 		'''
+		err = None
+		if errors != None:
+			err = []
 		allowed_props = cls.__attribute_properties__
 		for name in cls:
 			try:
@@ -166,19 +176,45 @@ class _BasicInterface(type, mapping.Mapping):
 				for n in props:
 					if n not in allowed_props:
 						raise InterfaceError, 'unknown option "%s".' % prop
+			except KeyError, e:
+				if cls._getrealprops(name) != None:
+					if err != None:
+						err += [e]
+					else:
+						return False
 			except Exception, e:
-				if errors != None:
-					errors += [e]
-		if errors in ([], None):
+				if err != None:
+					err += [e]
+				else:
+					return False
+		if err in ([], None):
 			return True
+		errors.extend(err)
 		return False
-	def _getrealprops(cls, name):
+	def _isdependedon(cls, name):
 		'''
-		this will return the real option dict for the attr (as defined in the __format__).
+		this will return true if the name is single occuring (not None) and at least 
+		one "LIKE" prop points at it.
 
-		NOTE: if the attr is nod defined in the current class it will be searched in the mro.
+		NOTE: the result this returns is relative to the first occurance of name.
 		'''
-		# sanity checks....
+		lst = list(cls._realpropiter(name))
+		# check if we have a LIKE prop depending on this name...
+		if name in cls and len([ i for i in lst if i != None ]) < 2:
+			if len(lst) > 1 and lst[0] == None:
+				return False
+			# we need to search... (this might be slow!)
+			for c in cls.__mro__:
+				try:
+					for d in c.__format__.itervalues():
+						if d != None and 'LIKE' in d and d['LIKE'] == name:
+							return True
+				except AttributeError:
+					pass
+		return False
+	def _realpropiter(cls, name):
+		'''
+		'''
 		if not hasattr(cls, '__format__'):
 			raise InterfaceError, 'interface %s does not have a format defined.' % cls
 		format = cls.__format__
@@ -187,8 +223,17 @@ class _BasicInterface(type, mapping.Mapping):
 					and c.__format__ != None \
 					and name in c.__format__:
 				##!!! process the 'LIKE' option...
-				return c.__format__[name]
-		raise KeyError, name
+				yield c.__format__[name]
+	def _getrealprops(cls, name):
+		'''
+		this will return the real option dict for the attr (as defined in the __format__).
+
+		NOTE: if the attr is nod defined in the current class it will be searched in the mro.
+		'''
+		try:
+			return cls._realpropiter(name).next()
+		except StopIteration:
+			raise KeyError, name
 	def getattrproperty(cls, name, prop=None):
 		'''
 
@@ -197,26 +242,32 @@ class _BasicInterface(type, mapping.Mapping):
 			val		: if prop is given and found (might also be None).
 			dict	: if name is found and prop not given.
 
-		NOTE: if a property is not defined for the attr None will be returned (this is the same as if its value was none).
+		NOTE: if a property is not defined for the attr None will be 
+		      returned (this is the same as if its value was None).
 		'''
 		##!! REVISE !!##
 		allowed_props = cls.__attribute_properties__ + (None,)
 		if prop not in allowed_props:
 			raise InterfaceError, 'unknown option "%s".' % prop
 		if name not in cls:
-			if '*' in cls:
+			if '*' in cls and cls['*'] != None:
 				res = {}
 			else:
 				raise KeyError, name
 		else:
-##			res = cls[name].copy()
-			res = cls._getrealprops(name).copy()
+			res = cls._getrealprops(name)
+		if res == None:
+			raise KeyError, name
+		res = res.copy()
 		# resolve the 'LIKE' prop...
 		visited = [res]
 		while 'LIKE' in res: 
 			if type(res['LIKE']) is str:
-##				ext_format = cls[res['LIKE']].copy()
-				ext_format = cls._getrealprops(res['LIKE']).copy()
+##				ext_format = cls._getrealprops(res['LIKE']).copy()
+				for fmt in cls._realpropiter(res['LIKE']):
+					if fmt != None:
+						ext_format = fmt.copy()
+						break
 			elif type(res['LIKE']) is dict:
 				ext_format = res['LIKE'].copy()
 			else:
