@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.01'''
-__sub_version__ = '''20040831005654'''
+__version__ = '''0.0.05'''
+__sub_version__ = '''20040909175426'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -27,9 +27,10 @@ class ObjectWithInterface(object):
 		'''
 		'''
 		obj = object.__new__(cls, *p, **n)
+		ogetattribute = object.__getattribute__
 		_interface = obj.__implemments__
 		if _interface != None:
-			obj.__dict__.update(dict([ (n, v['default']) \
+			ogetattribute(obj, '__dict__').update(dict([ (n, v['default']) \
 									for n, v \
 										in type(_interface) is tuple \
 											and logictypes.DictUnion(*[ i.__format__ for i in _interface ]).iteritems() \
@@ -39,28 +40,27 @@ class ObjectWithInterface(object):
 	def __getattribute__(self, name):
 		'''
 		'''
-		if name == '__implemments__' \
-				or object.__getattribute__(self, '__implemments__') == None \
-				or interface.isreadable(self, name):
+		if name in ('__implemments__',) or \
+				interface.isreadable(self, name):
 			return super(ObjectWithInterface, self).__getattribute__(name)
 		raise interface.InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
 		'''
 		'''
-		if object.__getattribute__(self, '__implemments__') == None \
-				or (interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value)):
+##		if name in ('__implemments__',):
+##			return super(InterfaceProxy, self).__setattr__(name, value)
+		if interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 			return super(ObjectWithInterface, self).__setattr__(name, value)
 		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''
-		if object.__getattribute__(self, '__implemments__') != None \
-				and not interface.isdeletable(self, name):
-			raise interface.InterfaceError, 'can\'t delete an essential attribute "%s".' % name
-		super(ObjectWithInterface, self).__delattr__(name)
+		if interface.isdeletable(self, name):
+			return super(ObjectWithInterface, self).__delattr__(name)
+		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
 
 
-#------------------------------------------------InterfaceObjectProxy---
+#------------------------------------------------------InterfaceProxy---
 # TODO move this to pli.pattern.proxy (???)
 class InterfaceProxy(object):
 	'''

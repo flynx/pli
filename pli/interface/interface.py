@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.19'''
-__sub_version__ = '''20040909170101'''
+__sub_version__ = '''20040909172233'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -24,6 +24,10 @@ import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
+# TODO write an InterfaceUnion class.... (e.g. an interface composed of
+#      several interfaces, that will support the "interface" interface)
+#
+#
 #------------------------------------------------------InterfaceError---
 class InterfaceError(Exception):
 	'''
@@ -329,6 +333,7 @@ def getinterfaces(obj):
 
 
 #-------------------------------------------------------------getdata---
+# XXX should types be checked here???
 def getdata(obj, interface=None):
 	'''
 	this will return a dict containing the data taken from the object in compliance 
@@ -339,14 +344,21 @@ def getdata(obj, interface=None):
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
 	res = {}
+##	star = format.get('*', False) != False or False
 	for k in format:
 		if not hasattr(obj, k):
+			if k == '*':
+				continue
 			format_k = format[k]
 			if 'default' in format_k:
 				res[k] = format_k['default']
 			elif format_k.get('essential', False):
 				raise InterfaceError, 'object %s does not have an essential attribute "%s".' % (obj, k)
 		else:
+			res[k] = getattr(obj, k)
+	if '*' in format:
+		##!!! HACK !!!##
+		for k in [ n for n in object.__getattribute__(obj, '__dict__') if n not in format ]:
 			res[k] = getattr(obj, k)
 	return res
 

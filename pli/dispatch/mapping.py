@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040909163249'''
+__sub_version__ = '''20040909175404'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -88,17 +88,17 @@ if __name__ == '__main__':
 							'type': int,
 							'default': 321,
 						},
-						'*' : {
-							'LIKE': 'aaa',
-							'type': str,
-						},
 					 }
 
 	class IB(IA):
-		__foramt__ = {
+		__format__ = {
 						'bbb' : {
 							'type': str,
 							'default': '',
+							'writable': True,
+						},
+						'*' : {
+							'LIKE': 'bbb',
 						},
 					 }
 
@@ -122,6 +122,11 @@ if __name__ == '__main__':
 	b0 = B()
 	b1 = B()
 	b2 = B()
+
+	b0.xxx = '123'
+
+	print 'b0 data: ', interface.getdata(b0)
+
 
 	store['a0'] = a0
 	store['a1'] = a1
