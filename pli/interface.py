@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.01'''
-__sub_version__ = '''20040829144740'''
+__version__ = '''0.2.07'''
+__sub_version__ = '''20040829155655'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -235,8 +235,6 @@ class _Interface(type, mapping.Mapping):
 		'''
 		return cls.getattrproperty(name, 'deleteable') in (True, None) \
 				and cls.getattrproperty(name, 'essential') != True
-	##!!!
-
 
 
 #-----------------------------------------------------------Interface---
@@ -360,8 +358,6 @@ def checkattr(obj, name, interface=None):
 
 #-----------------------------------------------------------------------
 # attribute level functions...
-# Q: should there be additional logic to determine for example
-#    attr readability for an object not supporting interfaces...
 #---------------------------------------------------------isessential---
 def isessential(obj, name, interface=None):
 	'''
@@ -370,10 +366,10 @@ def isessential(obj, name, interface=None):
 	      interface was given this will return False.
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
-	return True in [ i.isessential(name) for i in fromat ]
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	return format.get('essential', True)
 
 
 #----------------------------------------------------------isreadable---
@@ -384,10 +380,10 @@ def isreadable(obj, name, interface=None):
 	      interface was given this will return True.
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
-	return False not in [ i.isreadable(name) for i in fromat ]
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	return format.get('readable', True)
 
 
 #----------------------------------------------------------iswritable---
@@ -398,10 +394,10 @@ def iswritable(obj, name, interface=None):
 	      interface was given this will return True.
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
-	return False not in [ i.iswritable(name) for i in fromat ]
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	return format.get('writable', True)
 
 
 #---------------------------------------------------------isdeletable---
@@ -412,27 +408,12 @@ def isdeletable(obj, name, interface=None):
 	      interface was given this will return True.
 	'''
 	if interface != None:
-		format = (interface,)
+		format = interface
 	else:
-		format = getinterfaces(obj)
-	return False not in [ i.isdeletable(name) for i in fromat ]
+		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+	return format.get('deleteable', True)
 
 
-###----------------------------------------------------istypecompatible---
-####!!! ?????
-##def istypecompatible(obj, name, interface=None):
-##	'''
-##	'''
-##	##!!!
-##
-##
-###-----------------------------------------------------------isdefault---
-##def isdefault(obj, name, interface=None):
-##	'''
-##	'''
-##	##!!!
-##
-##
 #---------------------------------------------------isvaluecompatible---
 def isvaluecompatible(obj, name, value, interface=None):
 	'''
@@ -492,7 +473,6 @@ def checkobject(obj, interface=None):
 	for n in format:
 		# Q: which one of the folowing is faster??
 		if n not in o_attrs:
-##			if isessential(obj, n):
 			if format[n].get('essential', False):
 				raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
 		else:
@@ -509,7 +489,7 @@ def checkobject(obj, interface=None):
 
 #-----------------------------------------------------------------------
 #--------------------------------------------------------------getdoc---
-##!! revise 
+# Q: do we need type information here???
 def getdoc(obj, name=None, interface=None):
 	'''
 	this will return a dict containing the attr name and the coresponding
@@ -527,14 +507,6 @@ def getdoc(obj, name=None, interface=None):
 		raise InterfaceError, 'attribute "%s" is not defined in the interface for %s.' % (name, obj)
 	# if name is not present...
 	res = {}
-	# this is bad as getattrproperty is called for each attr in each
-	# interface... (see below for a more eficient variant...)
-	#for i in format[::-1]:
-	#	res.update(dict([ (n, i.getattrproperty(n, 'doc')) for n in i ]))
-	# NOTE: this is faster in the above variant... (complexity is less
-	#       for cases where there are overlaping interfaces...)
-	#       though this might be slightly slower due to the nested
-	#       loops...
 	for n in format:
 		if n not in res:
 			res[n] = format[n].get('doc', None)
@@ -551,7 +523,6 @@ class ObjectWithInterface(object):
 	# NOTE: if this is None interface support will be disabled.
 	__implemments__ = None
 
-	##!!!
 	def __new__(cls, *p, **n):
 		'''
 		'''
@@ -633,7 +604,7 @@ if __name__ == '__main__':
 	class ITest(Interface):
 		__format__ = {\
 				'aaa': {},
-				'ess': {'essential': True},
+				'ess': {'essential': True, 'doc': 'example essential attr...'},
 				'xxx': {'doc':'ITest'},
 				}
 
@@ -680,9 +651,14 @@ if __name__ == '__main__':
 	print checkattr(a, 'ccc')
 	print checkvalue(a, 'ccc', 0)
 
-	print getdoc(a, 'ccc')
+	print
+	print 'doc for object', a
+	for n, d in getdoc(a).iteritems():
+		print '    ', n, ':\t\t', d
+	print
 
 	print checkessentials(a)
+
 
 
 #=======================================================================
