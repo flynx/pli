@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.07'''
-__sub_version__ = '''20040829155655'''
+__version__ = '''0.2.17'''
+__sub_version__ = '''20040829205156'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -32,6 +32,7 @@ class InterfaceError(Exception):
 #----------------------------------------------------------_Interface---
 class _Interface(type, mapping.Mapping):
 	'''
+	this is the interface metaclass.
 	'''
 	# this will define the interface format...
 	__format__ = None
@@ -90,8 +91,11 @@ class _Interface(type, mapping.Mapping):
 			# c was not a dict-like....
 			pass
 		try:
+			##!!! is this correct ?
 			return super(_Interface, cls).__getitem__(name)
-		except AttributeError:
+##		except AttributeError:
+		##!!!!
+		except:
 			raise KeyError, str(name)
 	def __setitem__(cls, name, value):
 		'''
@@ -240,7 +244,13 @@ class _Interface(type, mapping.Mapping):
 #-----------------------------------------------------------Interface---
 class Interface(object):
 	'''
-	XXX write more docs...
+	this is the basic interface class.
+	this provides a basic mechanism to define object attribute format.
+
+	NOTE: this only provides meens to define attribute format, as 
+	      methods are also attributes they can be checked using the 
+		  predicate mechanism.
+
 
 	the attribute definition format is as follows:
 		{
@@ -315,6 +325,11 @@ def getinterfaces(obj):
 #----------------------------------------------------------checkvalue---
 def checkvalue(obj, name, value, interface=None):
 	'''
+	this will check the correctness/compatibility of the obj, attr name 
+	and value triplit.
+	if all is well will return True else raise an exception.
+
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = (interface,)
@@ -351,6 +366,11 @@ def checkvalue(obj, name, value, interface=None):
 #     interface....
 def checkattr(obj, name, interface=None):
 	'''
+	this will check the correctness/compatibility of the obj, attr name pair.
+	if all is well will return True else raise an exception.
+
+	NOTE: the value to be used is taken from the objects attribute.
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	return checkvalue(obj, name, getattr(obj, name), interface)
 
@@ -361,62 +381,89 @@ def checkattr(obj, name, interface=None):
 #---------------------------------------------------------isessential---
 def isessential(obj, name, interface=None):
 	'''
+	this will return True if the name is essential, else False.
 
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return False.
+	NOTE: if the interface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
-	return format.get('essential', True)
+	if name in format:
+		return format[name].get('essential', True)
+	elif '*' in format:
+		return format['*'].get('essential', True)
+	return False
 
 
 #----------------------------------------------------------isreadable---
 def isreadable(obj, name, interface=None):
 	'''
+	this will return True if the name is readable, else False.
 
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
+	NOTE: if the interface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
-	return format.get('readable', True)
+	if name in format:
+		return format[name].get('readable', True)
+	elif '*' in format:
+		return format['*'].get('readable', True)
+	return False
 
 
 #----------------------------------------------------------iswritable---
 def iswritable(obj, name, interface=None):
 	'''
+	this will return True if the name is writable, else False.
 
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
+	NOTE: if the interface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
-	return format.get('writable', True)
+	if name in format:
+		return format[name].get('writable', True)
+	elif '*' in format:
+		return format['*'].get('writable', True)
+	return False
 
 
 #---------------------------------------------------------isdeletable---
 def isdeletable(obj, name, interface=None):
 	'''
+	this will return True if the name is deletable, else False.
 
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
+	NOTE: if the interface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
-	return format.get('deleteable', True)
+	if name in format:
+		return format[name].get('deletable', True) and not format[name].get('essential', False)
+	elif '*' in format:
+		return format['*'].get('deletable', True) and not format[name].get('essential', False)
+	return False
 
 
 #---------------------------------------------------isvaluecompatible---
 def isvaluecompatible(obj, name, value, interface=None):
 	'''
+	this will return True if the obj, name and value triplet is valid, else False.
+
+	NOTE: if the interface is not given, the objects interface(s) is used.
 	'''
 	try:
 		return checkvalue(obj, name, value, interface)
@@ -430,6 +477,10 @@ def isvaluecompatible(obj, name, value, interface=None):
 #     interface....
 def iscompatible(obj, name, interface=None):
 	'''
+	this will return True if the obj, name pair is valid, else False.
+
+	NOTE: the value to be used is taken from the objects attribute.
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	try:
 		return checkattr(obj, name, interface)
@@ -443,6 +494,9 @@ def iscompatible(obj, name, interface=None):
 #-----------------------------------------------------checkessentials---
 def checkessentials(obj, interface=None):
 	'''
+	this will check if obj contains all the essential attributes defined by the interface.
+
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
@@ -464,6 +518,10 @@ def checkessentials(obj, interface=None):
 #---------------------------------------------------------checkobject---
 def checkobject(obj, interface=None):
 	'''
+	this will check if the object complies to the interface will return
+	True if yes, else False.
+
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
@@ -494,7 +552,9 @@ def getdoc(obj, name=None, interface=None):
 	'''
 	this will return a dict containing the attr name and the coresponding
 	doc defined in the interface.
-	if name is not present this will return all the docs for each attr defined...
+
+	NOTE: if name is not present this will return all the docs for each attr defined...
+	NOTE: if the inteface is not given, the objects interface(s) is used.
 	'''
 	if interface != None:
 		format = interface
@@ -518,6 +578,7 @@ def getdoc(obj, name=None, interface=None):
 #-------------------------------------------------ObjectWithInterface---
 class ObjectWithInterface(object):
 	'''
+	this is a basic object with inteface support.
 	'''
 	# this defines the objects' interface.
 	# NOTE: if this is None interface support will be disabled.
@@ -576,8 +637,8 @@ class InterfaceProxy(object):
 	def __getattr__(self, name):
 		'''
 		'''
-		if self.__implemments__ == None \
-				or name == '__implemments__' or isreadable(self, name):
+##		if name == '__implemments__'
+		if isreadable(self, name):
 			return getattr(self.__source__, name)
 		raise InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
@@ -585,17 +646,83 @@ class InterfaceProxy(object):
 		'''
 		if name in ('__source__', '__implemments__'):
 			return super(InterfaceProxy, self).__setattr__(name, value)
-		if self.__implemments__ == None \
-				or (iswritable(self, name) and isvaluecompatible(self, name, value)):
+		if iswritable(self, name) and isvaluecompatible(self, name, value):
 			return setattr(self.__source__, name, value)
 		raise InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''
-		if self.__implemments__ != None and isessential(self, name):
-			raise InterfaceError, 'can\'t delete an essential attribute "%s".' % name
-		delattr(self.__source__, name)
+		if isdeletable(self, name):
+			delattr(self.__source__, name)
+		raise InterfaceError, 'can\'t delete attribute "%s".' % name
 
+
+#=======================================================================
+# this is the utility section....
+#-----------------------------------------------------------------------
+
+import inspect
+import types
+import pli.functional as func
+
+
+#--------------------------------------------------_arecallablesalike---
+def _arecallablesalike(c0, c1):
+	'''
+	'''
+	if type(c0) in (types.MethodType, types.FunctionType):
+		argspec0 = inspect.getargspec(c0)
+	else:
+		argspec0 = inspect.getargspec(c0.__call__)
+	if type(c1) in (types.MethodType, types.FunctionType):
+		argspec1 = inspect.getargspec(c1)
+	else:
+		argspec1 = inspect.getargspec(c1.__call__)
+	return argspec0 == argspec1
+
+
+#-----------------------------------------------------------likevalue---
+def likevalue(obj):
+	'''
+	this will create an interface property dict that describes the argument.
+
+	NOTE: this is usefull as it will create a predicate that will check 
+	      function/method signature.
+	'''
+	res = {}
+	# type or predicate...
+	if callable(obj):
+		# function signature...
+		res['predicate'] = func.curry(_arecallablesalike, obj)
+	else:
+		res['type'] = type(obj)
+	# doc...
+	if hasattr(obj, '__doc__'):
+		res['doc'] = obj.__doc__
+	return res
+
+
+#-----------------------------------------------------createinterface---
+def createinterface(obj, name=None, doc=None):
+	'''
+	this will generate an interface from an example object.
+	'''
+	if name == None:
+		try:
+			name = 'I' + hasattr(obj, '__name__') and obj.__name__ or obj.__class__.__name__
+		except:
+			name = 'IUnnamed'
+	format = {}
+	names = dir(obj)
+	for n in names:
+		format[n] = likevalue(getattr(obj, n))
+	class I(Interface):
+		if doc != None:
+			__doc__ = doc
+		__format__ = format
+	I.__name__ = name
+	return I
+	
 
 
 #=======================================================================
@@ -650,6 +777,12 @@ if __name__ == '__main__':
 
 	print checkattr(a, 'ccc')
 	print checkvalue(a, 'ccc', 0)
+
+	print
+
+	print isreadable(a, 'ess')
+	print iswritable(a, 'ess')
+	print isdeletable(a, 'ess')
 
 	print
 	print 'doc for object', a
