@@ -1,5 +1,11 @@
-# this file was generated on [200408200255]
+# this file was generated on [200408212108]
 pli changes:
+
+version 0.0.72 (200408212051):
+- added the pli.pattern.store.storeproxy.... (name might still change!)
+
+version 0.0.71 (200408200305):
+- test version of pli.pattern.store.store.BaseStore (using the pli.pattern.mixin.mapping)
 
 version 0.0.70 (200408200247):
 - added pli.pattern.mixin.mapping.AbstractMapping...
