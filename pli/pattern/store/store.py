@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.47'''
-__sub_version__ = '''20040803235503'''
+__sub_version__ = '''20040820033403'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,8 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 from __future__ import generators
 import time
 import re
+
+import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
@@ -37,7 +39,8 @@ def isstoredtype(store, name):
 #      argument...
 # TODO rename to MappingBaseStore...
 #
-class BaseStore(object):
+##class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
+class BaseStore(mapping.MappingWithMethods, mapping.BasicMappingProxy):
 	'''
 	'''
 	# if this is true strict object type checking will be enabled...
@@ -49,6 +52,8 @@ class BaseStore(object):
 	# name... (attrname = __typenameformat___ % <type>.__name__)
 	__typenameformat___ = '%s'
 
+	__source_attr__ = '_store_data'
+
 	def __init__(self, name):
 		'''
 		'''
@@ -56,11 +61,11 @@ class BaseStore(object):
 		self._store_types = {}
 		self._store_data = {}
 ##		super(BaseStore, self).__init__(name)
-	def __getitem__(self, key):
-		'''
-		'''
-##		print '>>>', self.__name__, id(self)
-		return self._store_data[key]
+	# dict minimal methods:
+##	def __getitem__(self, key):
+##		'''
+##		'''
+##		return self._store_data[key]
 	def __setitem__(self, key, obj):
 		'''
 		'''
@@ -73,41 +78,43 @@ class BaseStore(object):
 		# add the object
 		if self.__strictnames__ and key in self._store_data:
 			raise TypeError, 'an object with the id "%s" already exists.' % key
-		self._store_data[key] = obj
-	def __delitem__(self, key):
-		'''
-		'''
-		del self._store_data[key]
-	def __contains__(self, key):
-		'''
-		'''
-		return key in self._store_data
-	def __iter__(self):
-		'''
-		'''
-##		for n in self._store_data:
-##			yield n
-		return self._store_data.__iter__()
-	def iterkeys(self):
-		'''
-		'''
-		return self._store_data.iterkeys()
-	def itervalues(self):
-		'''
-		'''
-		return self._store_data.itervalues()
-	def iteritems(self):
-		'''
-		'''
-		return self._store_data.iteritems()
-	def keys(self):
-		'''
-		'''
-		return self._store_data.keys()
-	def values(self):
-		'''
-		'''
-		return self._store_data.values()
+##		self._store_data[key] = obj
+		super(BaseStore, self).__setitem__(key, obj)
+##	def __delitem__(self, key):
+##		'''
+##		'''
+##		del self._store_data[key]
+##	def __iter__(self):
+##		'''
+##		'''
+##		return self._store_data.__iter__()
+	# dict secondary methods:
+	# NOTE: might be good to un comment these...
+##	def __contains__(self, key):
+##		'''
+##		'''
+##		return key in self._store_data
+##	def iterkeys(self):
+##		'''
+##		'''
+##		return self._store_data.iterkeys()
+##	def itervalues(self):
+##		'''
+##		'''
+##		return self._store_data.itervalues()
+##	def iteritems(self):
+##		'''
+##		'''
+##		return self._store_data.iteritems()
+##	def keys(self):
+##		'''
+##		'''
+##		return self._store_data.keys()
+##	def values(self):
+##		'''
+##		'''
+##		return self._store_data.values()
+	# BaseStore specific methods...
 	def add_object_type(self, otype):
 		'''
 		'''
