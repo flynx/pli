@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.14'''
-__sub_version__ = '''20040309232448'''
+__sub_version__ = '''20040321214647'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -29,7 +29,6 @@ class ImportDependencyError(Exception):
 def _load_module(package_dir, mod_name):
 	'''
 	'''
-	print 'importing:', mod_name
 	mod_dat = ()
 	# import...
 	try:

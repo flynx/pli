@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.43'''
-__sub_version__ = '''20040321213526'''
+__version__ = '''0.2.46'''
+__sub_version__ = '''20040322143005'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -175,6 +175,22 @@ class onExitState(instanceevent.Event):
 		super(onExitState, self).__init__()
 
 
+#--------------------------------------------onFiniteStateMachineStop---
+class onFiniteStateMachineStop(instanceevent.Event):
+	'''
+	'''
+	__suppress_exceptions__ = False
+
+	def __init__(self, state_name=None, fsm=None):
+		'''
+		'''
+		self.state_name = state_name
+		# XXX this is a cyclic reference....
+		if fsm != None:
+			self.fsm= fsm
+		super(onFiniteStateMachineStop, self).__init__()
+
+
 #--------------------------------------------------FiniteStateMachine---
 # WARNING: this has not been tested for being thread-safe...
 # NOTE: whole FSMs can not (yet) be reproduced by deep copying... (not
@@ -218,6 +234,8 @@ class FiniteStateMachine(state.State):
 		# change state to the initial state if one defined...
 		if hasattr(self, '__initial_state__') and self.__initial_state__ != None:
 			self.changestate(self.__initial_state__)
+		# create a general fsm stop event...
+		self.onFiniteStateMachineStop = onFiniteStateMachineStop(fsm=self)
 	def start(self):
 		'''
 		this is the FSM main loop.
@@ -234,6 +252,11 @@ class FiniteStateMachine(state.State):
 				while True:
 					# break on terminal state...
 					if isterminal(self):
+						# fire the state stop event...
+						evt_name = 'onStop' + self.__class__.__name__
+						if hasattr(self, evt_name):
+							getattr(self, evt_name).fire()
+						# exit...
 						break
 ##					# handle stops...
 ##					if self._running == False:
@@ -248,6 +271,8 @@ class FiniteStateMachine(state.State):
 			except FiniteStateMachineStop:
 				pass
 			self._running = False
+			# fire the fsm stop event...
+			self.onFiniteStateMachineStop.fire()
 		else:
 			raise FiniteStateMachineError, 'can\'t start a manual (non-auto-change-state) FSM.'
 ##	def stop(self, reason=None, exception=None):
@@ -273,6 +298,9 @@ class FiniteStateMachine(state.State):
 									  ('onExit' + state_name, self.__state_exit_event__)): 
 				if not hasattr(self, evt_name):
 					setattr(self, evt_name, evt_cls(state_name))
+			# the stop event...
+			if isterminal(state):
+				setattr(self, 'onStop' + state_name, onFiniteStateMachineStop(state_name))
 	def changestate(self, tostate):
 		'''
 		'''
