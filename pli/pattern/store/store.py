@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.45'''
-__sub_version__ = '''20040708155454'''
+__version__ = '''0.0.47'''
+__sub_version__ = '''20040730022351'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -151,8 +151,11 @@ class AttrTypeBaseStore(BaseStore):
 			return object.__getattribute__(self, '_store_types')
 		if name in self._store_types:
 			return self._store_types[name]
-##		return super(AttrTypeBaseStore, self).__getattr__(name)
-		raise AttributeError, 'object "%s" has no attribute "%s"' % (self, name)
+		try:
+			return super(AttrTypeBaseStore, self).__getattr__(name)
+		except AttributeError:
+			# XXX is this correct....
+			raise AttributeError, 'object "%s" has no attribute "%s"' % (self, name)
 
 
 #--------------------------------------------------------RPCBaseStore---
