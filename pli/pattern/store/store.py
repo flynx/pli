@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.49'''
-__sub_version__ = '''20041014151353'''
+__sub_version__ = '''20041019031531'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -205,7 +205,7 @@ class AttrTypeBaseStore(BaseStore):
 		name = self.__typenameformat___ % otype.__name__
 		if hasattr(self, '__check_type_name_format__') and self.__check_type_name_format__ and \
 				re.match(self.__type_name_format__, name) is None:
-			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
+			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % name
 		super(AttrTypeBaseStore, self).add_object_type(otype)
 
 

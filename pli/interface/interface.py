@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.35'''
-__sub_version__ = '''20041017040116'''
+__version__ = '''0.2.37'''
+__sub_version__ = '''20041019035838'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -43,28 +43,23 @@ class InterfaceError(Exception):
 #-----------------------------------------------------_BasicInterface---
 class _BasicInterface(type, mapping.Mapping):
 	'''
-	this is the interface metaclass.
+	the interface metaclass.
+
+	this defines the basic functionality:
+		- dict-like class interface.
+		- 'LIKE' special prop handling.
 	'''
 	# this will define the interface format...
 	__format__ = None
 	# this if False will prevent the modification of the interface
 	# after it's definition... (default: False)
-	__interface_writable__ = True
+	__interface_writable__ = False
 	# this if True will enable element deletion from base interfaces if
 	# it was not defined locally... (default: False)
 	__contagious_delete__ = False
 
 	# WARNING: do not change this unless you know what you are doing!
 	__attribute_properties__ = (
-				'type',
-				'default',
-				'predicate',
-				'essential',
-				'doc',
-				'handler',
-				'readable',
-				'writable',
-				'deleteable',
 				# special options...
 				'LIKE',
 			)
@@ -160,7 +155,10 @@ class _BasicInterface(type, mapping.Mapping):
 					and c.__format__ != None:
 				for k, v in c.__format__.iteritems():
 					# ignore visited or hidden items...
-					if k in visited or v == None:
+					if k in visited:
+						continue
+					if v == None:
+						visited += [k]
 						continue
 					visited += [k]
 					yield k
@@ -177,7 +175,7 @@ class _BasicInterface(type, mapping.Mapping):
 				props = cls.getattrproperty(name)
 				for n in props:
 					if n not in allowed_props:
-						raise InterfaceError, 'unknown option "%s".' % prop
+						raise InterfaceError, 'unknown option "%s".' % n
 			except KeyError, e:
 				if cls._getrealprops(name) != None:
 					if err != None:
@@ -308,6 +306,18 @@ class _BasicInterface(type, mapping.Mapping):
 class _Interface(_BasicInterface):
 	'''
 	'''
+	# WARNING: do not change this unless you know what you are doing!
+	__attribute_properties__ = _BasicInterface.__attribute_properties__ + (
+				'type',
+				'default',
+				'predicate',
+				'essential',
+				'doc',
+				'handler',
+				'readable',
+				'writable',
+				'deleteable',
+			)
 	# interface methods (2nd generation):
 	# TODO exception safe??????
 	def isessential(cls, name):
@@ -464,11 +474,15 @@ def checkvalue(obj, name, value, interface=None):
 	if all is well will return True else raise an exception.
 
 	NOTE: if the inteface is not given, the objects interface(s) is used.
+	NOTE: if neither an interface is geven nor the object has one, this will
+	      allways return True.
 	'''
 	if interface != None:
 		format = (interface,)
 	else:
 		format = getinterfaces(obj)
+	if format == ():
+		return True
 	# get the effective inteface...
 	star = None
 	for i in format:
@@ -556,11 +570,17 @@ def isreadable(obj, name, interface=None):
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
 	NOTE: if the interface is not given, the objects interface(s) is used.
+	NOTE: if neither an interface is geven nor the object has one, this will
+	      function as hasattr(obj, name).
 	'''
 	if interface != None:
 		format = interface
 	else:
-		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+		format = getinterfaces(obj)
+		# if there is no interface defined...
+		if format == ():
+			return hasattr(obj, name)
+		format = logictypes.DictUnion(*format[::-1])
 	if name in format:
 		return format[name].get('readable', True)
 	elif '*' in format:
@@ -576,11 +596,18 @@ def iswritable(obj, name, interface=None):
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
 	NOTE: if the interface is not given, the objects interface(s) is used.
+	NOTE: if neither an interface is geven nor the object has one, this will
+	      allways return True.
 	'''
 	if interface != None:
 		format = interface
 	else:
-		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+##		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+		format = getinterfaces(obj)
+		# if there is no interface defined...
+		if format == ():
+			return True
+		format = logictypes.DictUnion(*format[::-1])
 	if name in format:
 		return format[name].get('writable', True)
 	elif '*' in format:
@@ -596,11 +623,18 @@ def isdeletable(obj, name, interface=None):
 	NOTE: if the object does not support interfaces and no explicit 
 	      interface was given this will return True.
 	NOTE: if the interface is not given, the objects interface(s) is used.
+	NOTE: if neither an interface is geven nor the object has one, this will
+	      function as hasattr(obj, name).
 	'''
 	if interface != None:
 		format = interface
 	else:
-		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+##		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
+		format = getinterfaces(obj)
+		# if there is no interface defined...
+		if format == ():
+			return hasattr(obj, name)
+		format = logictypes.DictUnion(*format[::-1])
 	if name in format:
 		return format[name].get('deletable', True) and not format[name].get('essential', False)
 	elif '*' in format:
@@ -667,6 +701,7 @@ def createdictusing(obj, interface=None):
 # object level functions...
 #-----------------------------------------------------checkessentials---
 # TODO write a dict version of this...
+# TODO add multible err sideffect...
 def checkessentials(obj, interface=None):
 	'''
 	this will check if obj contains all the essential attributes defined by the interface.
@@ -838,7 +873,7 @@ def inherit(*classes, **options):
 	name = options.pop('iname', 'Unnamed')
 	depth = options.pop('depth', 1)
 	# create a class...
-	inter = _Interface(name, classes, {})
+	inter = _Interface(name, classes, {'__interface_writable__': True})
 	implemments(inter, depth+1)
 	
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20041009204038'''
+__sub_version__ = '''20041018034823'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -16,7 +16,7 @@ import pli.misc.acl as acl
 # isvisible
 isvisible = acl.isvisible
 
-# isaccesible
+# isaccessible
 isaccessible = acl.isaccessible
 
 
@@ -30,7 +30,7 @@ isglobalmethodallowed = acl.isglobalmethodallowed
 def iswritable(obj, name, uid=None):
 	'''
 	'''
-	if isaccesible(obj) and interface.iswritable(obj, name):
+	if isaccessible(obj) and interface.iswritable(obj, name):
 		try:
 			o_obj = getattr(obj, name)
 			if isaccessible(o_obj):
@@ -53,7 +53,7 @@ _setattr = __builtin__.setattr
 def hasattr(obj, name, uid=None):
 	'''
 	'''
-	if isaccesible(obj) and _hasattr(obj, name) and interface.isreadable(obj, name):
+	if isaccessible(obj) and _hasattr(obj, name) and interface.isreadable(obj, name):
 		o_obj = getattr(obj, name)
 		if isaccessible(o_obj):
 			return True
@@ -64,8 +64,8 @@ def hasattr(obj, name, uid=None):
 def getattr(obj, name, uid=None):
 	'''
 	'''
-	if isaccesible(obj) and _hasattr(obj, name) and interface.isreadable(obj, name):
-		o_obj = getattr(obj, name)
+	if isaccessible(obj) and _hasattr(obj, name) and interface.isreadable(obj, name):
+		o_obj = _getattr(obj, name)
 		if isaccessible(o_obj):
 			return o_obj
 	raise AttributeError, '"%s" object has no attribute "%s".' % (obj, name)
@@ -75,9 +75,9 @@ def getattr(obj, name, uid=None):
 def setattr(obj, name, value, uid=None):
 	'''
 	'''
-	if isaccesible(obj) and iswritable(obj, name):
+	if isaccessible(obj) and iswritable(obj, name):
 		if not interface.isvaluecompatible(obj, name, value):
-			raise interface.InterfaceErro, 'can\'t write value %s to attribute "%s" of object "%s".' % (value, name, obj)
+			raise interface.InterfaceError, 'can\'t write value %s to attribute "%s" of object "%s".' % (value, name, obj)
 		return _setattr(obj, name, value)
 	raise AttributeError, 'can\'t write attribute "%s" of object "%s".' % (name, obj)
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.42'''
-__sub_version__ = '''20041008154139'''
+__sub_version__ = '''20041019040755'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,6 +11,7 @@ import time
 import random
 import sha
 
+import pli.interface as interface
 ##!! remove ...
 import pli.misc.acl as acl
 import pli.misc.passcrypt as passcrypt
@@ -40,6 +41,24 @@ class Session(object):
 	# NOTE: this will override the settings of the containers'
 	#       private/public attrs...
 	__public__ = True
+
+	# setup interface...
+	interface.inherit(iname='ISession')
+	# private...
+	interface.private('__public__')
+	interface.private('__private_attrs__')
+	interface.private('__public_attrs__')
+	interface.private('__selector_class__')
+	interface.private('_onSessionOpen')
+	interface.private('_onSessionClose')
+	interface.private('onSessionOpen')
+	interface.private('onSessionClose')
+	interface.private('checkpassword')
+	interface.private('_setpassword')
+	interface.private('password')
+	# public...
+	interface.add('changepassword', writable=False, deleteable=False)
+
 	# this will define the private attributes
 	__private_attrs__ = (
 						  '__public__',
@@ -149,8 +168,13 @@ class RPCSessionManager(object):
 	'''
 	# this will define the active session container object (defaults to dict). 
 	__active_sessions__ = None
-	# this will define the session object container.
+	# this will define the session object container (dict-like).
 	__session_objects__ = None
+	# this will define the proxy object that will be used to wrap the
+	# session object...
+	# this will take the session object as argument and return the
+	# proxy.
+	__session_proxy__ = None
 	# if this is set password checking will be enabled...
 	# NOTE: for this to function the session object must have a
 	#       "checkpassword" method (see the Session class for details).
@@ -214,13 +238,15 @@ class RPCSessionManager(object):
 		sid_len = hasattr(self, '__sid_len__') and self.__sid_len__ or 32
 		# make sure the sid is unique... (just in case... be pedantic! :) )
 		while 1:
-			# generate a sid...
+			# generate a unique sid...
 			sid = self._new_sid(length=sid_len)
 			if sid not in self.__active_sessions__:
 				# select a session object...
-				if obj_id not in self.__session_objects__:
+				obj = self.__session_objects__.get(obj_id, None)
+##				if obj_id not in self.__session_objects__:
+				if obj == None:
 					raise SessionError, 'no such object ("%s").' % obj_id
-				obj = self.__session_objects__[obj_id]
+##				obj = self.__session_objects__[obj_id]
 				# check password...
 				if hasattr(self, '__password_check__') and self.__password_check__ and \
 						hasattr(obj, 'checkpassword') and not obj.checkpassword(password):
@@ -228,6 +254,9 @@ class RPCSessionManager(object):
 				# check uniqueness...
 				if hasattr(obj, '__unique_session__') and obj.__unique_session__ and obj in self.__active_sessions__.values():
 					raise SessionError, 'can\'t open two sessions for this object (%s).' % obj_id
+				# proxy...
+				if hasattr(self, '__session_proxy__') and self.__session_proxy__ != None:
+					obj = self.__session_proxy__(obj)
 				# add to list of active sessions...
 				self.__active_sessions__[sid] = obj
 				# set the time...
@@ -322,7 +351,6 @@ class RPCSessionManager(object):
 					# check if this attr is accessible...
 					obj = acl.getattr(obj, obj_name)
 					if hasattr(obj, '__acl_check_cutoff__') and obj.__acl_check_cutoff__:
-						print '!!!!!!!!!!!!'
 						acl_check_cutoff = True
 				else:
 					obj = getattr(obj, obj_name)
@@ -419,25 +447,27 @@ class BaseRPCSessionManager(RPCSessionManager):
 		'''
 		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
 			acl = self.__acl_lib__ 
-##		else:
-##			global acl
-		return acl.hasattr(obj, name)
+			return acl.hasattr(obj, name)
+		else:
+			return hasattr(obj, name)
 	def getattr(self, sid, path, obj, name):
 		'''
 		'''
 		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
 			acl = self.__acl_lib__ 
-##		else:
-##			global acl
-		# form the result
-		return acl.getattr(obj, name)
+			# form the result
+			return acl.getattr(obj, name)
+		else:
+			# form the result
+			return getattr(obj, name)
 	def getattrs(self, sid, path, obj, *names):
 		'''
 		'''
 		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
 			acl = self.__acl_lib__ 
-##		else:
-##			global acl
+			_getattr = acl.getattr
+		else:
+			_getattr = getattr
 ##		# get the actual target...
 ##		obj = self._getobject(sid, self.__active_sessions__[sid], path)
 		# form the result
@@ -445,7 +475,7 @@ class BaseRPCSessionManager(RPCSessionManager):
 		for name in names:
 			# this will return only the allowed attributes...
 			try:
-				res[name] = acl.getattr(obj, name)
+				res[name] = _getattr(obj, name)
 			except:
 				pass
 		return res
@@ -454,24 +484,35 @@ class BaseRPCSessionManager(RPCSessionManager):
 		'''
 		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
 			acl = self.__acl_lib__ 
-##		else:
-##			global acl
-		return acl.setattr(obj, name, val)
+			return acl.setattr(obj, name, val)
+		else:
+			return setattr(obj, name, val)
 	def setattrs(self, sid, path, obj, data):
 		'''
 		'''
 		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
 			acl = self.__acl_lib__ 
-##		else:
-##			global acl
+			_setattr = acl.setattr
+		else:
+			_setattr = setattr
 		err = False
 		for key in data:
 			try:
-				acl.setattr(obj, key, data[key])
+				_setattr(obj, key, data[key])
 			except:
 				err = True
 		if err:
 			return False
+	def delattr(self, sid, path):
+		'''
+		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+			# form the result
+			return acl.delattr(obj, name)
+		else:
+			return delattr(obj, name)
+	##!!! remove dep on __public_attrs__...   (???)
 	def get_methods(self, sid, path, obj):
 		'''
 		'''
@@ -540,11 +581,6 @@ class BaseRPCSessionManager(RPCSessionManager):
 		if res == '':
 			res = 'no documentation present for this object.'
 		return res
-	# these need ACL!!
-##	def delattr(self, sid, path):
-##		'''
-##		'''
-##		pass
 	# Standard XMLRPC methods:
 	# NOTE: these are only available outside of a session...
 	def listMethods(self):

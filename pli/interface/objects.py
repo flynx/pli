@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20041017035455'''
+__sub_version__ = '''20041018182000'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -59,10 +59,10 @@ def strhelp(obj):
 
 #-----------------------------------------------------------------------
 # TODO make it possible to change the __implemments__ attr name...
-#-------------------------------------------------ObjectWithInterface---
-class ObjectWithInterface(object):
+#---------------------------------------------ObjectWithInterfaceInit---
+class ObjectWithInterfaceInit(object):
 	'''
-	this is a basic object with interface support.
+	this will setup the object according to the interface.
 	'''
 	# this defines the objects' interface.
 	# NOTE: if this is None interface support will be disabled.
@@ -77,6 +77,19 @@ class ObjectWithInterface(object):
 		if _interface != None:
 			ogetattribute(obj, '__dict__').update(interface.createdictusing(obj, _interface))
 		return obj
+	# pli protocols...
+	__help__ = classmethod(strhelp)
+
+
+#-------------------------------------------------ObjectWithInterface---
+class ObjectWithInterface(ObjectWithInterfaceInit):
+	'''
+	this is a basic object with interface support.
+	'''
+	# this defines the objects' interface.
+	# NOTE: if this is None interface support will be disabled.
+	__implemments__ = None
+
 	def __getattribute__(self, name):
 		'''
 		'''
@@ -102,8 +115,6 @@ class ObjectWithInterface(object):
 				interface.isdeletable(self, name):
 			return super(ObjectWithInterface, self).__delattr__(name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
-	# pli protocols...
-	__help__ = strhelp
 
 
 
@@ -158,7 +169,7 @@ class ProxyWithInterface(AbstractInterfaceProxy):
 			delattr(self.__source__, name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
 	# pli protocols...
-	__help__ = strhelp
+	__help__ = classmethod(strhelp)
 
 
 #------------------------------------------------------InterfaceProxy---
