@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040709022614'''
+__sub_version__ = '''20040907143557'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -112,6 +112,15 @@ class _StoredObject(_StoredClass):
 ##			obj.__type_name__ = obj.__class__.__name__
 		# store the object...
 		getattr(cls, cls.__object_store_attr_name__)[name] = obj
+
+
+#---------------------------------------------------------StoredClass---
+class StoredClass(object):
+	'''
+	'''
+	__metaclass__ = _StoredClass
+
+	__ignore_registration__ = True
 
 
 #--------------------------------------------------------StoredObject---

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.47'''
-__sub_version__ = '''20040820033403'''
+__sub_version__ = '''20040907144201'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -39,8 +39,8 @@ def isstoredtype(store, name):
 #      argument...
 # TODO rename to MappingBaseStore...
 #
-##class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
-class BaseStore(mapping.MappingWithMethods, mapping.BasicMappingProxy):
+class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
+##class BaseStore(mapping.MappingWithMethods, mapping.BasicMappingProxy):
 	'''
 	'''
 	# if this is true strict object type checking will be enabled...

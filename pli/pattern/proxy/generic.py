@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040906174006'''
+__sub_version__ = '''20040908015008'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -85,7 +85,7 @@ class AbstractProxy(object):
 	def __repr__(self):
 		'''
 		'''
-		return '<%s proxy at %s to %s>' % (self.__class__.__name__, 
+		return '<%s proxy at %s to %s>' % (object.__getattribute__(self, '__class__').__name__, 
 											hex(id(self)),
 											repr(getattr(self, self.__proxy_target_attr_name__)))
 
@@ -129,6 +129,10 @@ class ComparibleProxy(AbstractProxy):
 
 
 #---------------------------------------------------------CachedProxy---
+# TODO write a more elaborate cache manager... (wee need to take into
+#      consideration, input args... etc.)
+#      might be good to make an "iscached" predicate...
+#
 class CachedProxy(AbstractProxy):
 	'''
 	'''
@@ -247,9 +251,9 @@ class InheritAndOverrideProxy(AbstractProxy):
 
 
 #-----------------------------------TranparentInheritAndOverrideProxy---
-
+# this is the Proxy cache...
 _TranparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
-
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Q: do we need any other magic methods???
 class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy):
 	'''
