@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.22'''
-__sub_version__ = '''20041209024648'''
+__version__ = '''0.3.27'''
+__sub_version__ = '''20041209140057'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -550,57 +550,6 @@ class BasicState(FiniteStateMachine):
 ##		resolve the situation.
 ##		'''
 ##		pass
-	# Q: does this need to be __gatattr__ or __getattribute__ ????
-	# NOTE: this might make the attr access quite slow...
-	# Q: is there a faster way??? (via MRO manipulation or something...)
-	def __getattr__(self, name):
-		'''
-		this will proxy the attr access to the original startup class....
-		'''
-		##!!! check for looping search !!!##
-		# get the name in the startup class...
-		try:
-			return getattr(self.__startup_class__, name)
-		except AttributeError:
-			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
-
-
-###--------------------------------------------StateWithStartupPriority---
-##class StateWithStartupAttrPriority(BasicState):
-##	'''
-##	'''
-##	__ignore_registration__ = True
-##
-##	def __getattribute__(self, name):
-##		'''
-##		'''
-##		try:
-##			return getattr(
-##					super(StateWithStartupAttrPriority, self).__getattribute__(self, '__startup_class__'),
-##					name)
-##		except AttributeError:
-##			try:
-##				return super(StateWithStartupAttrPriority, self).__getattribute__(self,  name)
-##			except AttributeError:
-##				raise AttributeError, '%s object has no attribute "%s"' % (self, name)
-##
-##
-###--------------------------------------------StateWithCurrentPriority---
-##class StateWithCurrentAttrPriority(BasicState):
-##	'''
-##	'''
-##	__ignore_registration__ = True
-##
-##	def __getattr__(self, name):
-##		'''
-##		this will proxy the attr access to the original startup class....
-##		'''
-##		##!!! check for looping search !!!##
-##		# get the name in the startup class...
-##		try:
-##			return getattr(self.__startup_class__, name)
-##		except AttributeError:
-##			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
 
 
 #-------------------------------------------------StateWithAttrPriority---
@@ -613,6 +562,8 @@ class StateWithAttrPriority(BasicState):
 				'__implemments__',
 			)
 
+	# TODO either combine the folowing or find a better scheme to do
+	#      things...
 	def __getattribute__(self, name):
 		'''
 		'''
@@ -623,17 +574,39 @@ class StateWithAttrPriority(BasicState):
 					# get startup...
 					return getattr(getattribute('__startup_class__'), name)
 				except AttributeError:
-					pass
-			# get local...
-			return getattribute(name)
+##					pass
+					# get local...
+					return getattribute(name)
+			else:
+				try:
+					# get local...
+					return getattribute(name)
+				except AttributeError:
+					# get startup...
+					return getattr(getattribute('__startup_class__'), name)
+##			# get local...
+##			return getattribute(name)
 		except AttributeError:
 			# fail...
 			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
+##	# Q: does this need to be __gatattr__ or __getattribute__ ????
+##	# NOTE: this might make the attr access quite slow...
+##	# Q: is there a faster way??? (via MRO manipulation or something...)
+##	def __getattr__(self, name):
+##		'''
+##		this will proxy the attr access to the original startup class....
+##		'''
+##		##!!! check for looping search !!!##
+##		# get the name in the startup class...
+##		try:
+##			return getattr(self.__startup_class__, name)
+##		except AttributeError:
+##			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# this is here to simplify things...
 State = StateWithAttrPriority
-##State = BasicState
 
 
 #--------------------------------------------------------InitialState---
