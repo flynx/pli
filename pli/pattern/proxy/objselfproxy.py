@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20040321190810'''
+__sub_version__ = '''20040514193254'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -17,7 +17,7 @@ import pli.pattern.proxy.utils as utils
 #-----------------------------------------------------------------------
 #-----------------------------------------------StaticObjectSelfProxy---
 # 
-# the goal of this is to wrap the object shadow its namespace with
+# the goal of this is to wrap the object and shadow its namespace with
 # another (this is somethong like inheriting from the object and
 # defining aditional data).
 # this is done by:

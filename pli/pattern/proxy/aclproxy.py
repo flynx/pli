@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.03'''
-__sub_version__ = '''20040216232534'''
+__sub_version__ = '''20040514192432'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -46,14 +46,13 @@ class AccessTranslationProxy(object):
 	def __getattr__(self, name):
 		'''
 		'''
+		r_name = name
 		if hasattr(self, '__attr_spec__') and self.__attr_spec__ != None:
 			attr_spec = self.__attr_spec__
-			r_name = name
 			if name not in attr_spec:
 				if hasattr(self, '__strict_spec__') and self.__strict_spec__:
 					# attr not in spec...
-					##!!!
-					raise NameError, ''
+					raise NameError, 'object %s has no attribute "%s"' % (self, name)
 			else:
 				# check self.__attr_spec__ ....
 				spec = attr_spec[name]
@@ -64,25 +63,26 @@ class AccessTranslationProxy(object):
 						spec = spec['reader']
 						if spec == None:
 							# attr is not readable...
-							##!!!
-							raise NameError, ''
+							raise NameError, 'object %s has no attribute "%s"' % (self, name)
 						elif type(spec) in (str, unicode):
 							r_name = spec
 						else:
 							##!!! should we pass an arg here???
 							return spec(r_name)
+					##!!! is this affected by __strict_spec__??
+					else:
+						raise NameError, 'object %s has no attribute "%s"' % (self, name)
 		return self.__datareader__(r_name)
 	def __setattr__(self, name, val):
 		'''
 		'''
+		r_name = name
 		if hasattr(self, '__attr_spec__') and self.__attr_spec__ != None:
 			attr_spec = self.__attr_spec__
-			r_name = name
 			if name not in attr_spec:
 				if hasattr(self, '__strict_spec__') and self.__strict_spec__:
 					# attr not in spec...
-					##!!!
-					raise NameError, ''
+					raise NameError, 'attribute "%s" of object %s is not writable.' % (name, self)
 			else:
 				# check self.__attr_spec__ ....
 				spec = attr_spec[name]
@@ -93,13 +93,15 @@ class AccessTranslationProxy(object):
 						spec = spec['writer']
 						if spec == None:
 							# attr is not writable...
-							##!!!
-							raise NameError, ''
+							raise NameError, 'attribute "%s" of object %s is not writable.' % (name, self)
 						elif type(spec) in (str, unicode):
 							r_name = spec
 						else:
 							##!!! should we pass an arg here???
 							return spec(r_name, val)
+					##!!! is this affected by __strict_spec__??
+					else:
+						raise NameError, 'attribute "%s" of object %s is not writable.' % (name, self)
 		return self.__datawriter__(r_name, val)
 	# LL direct (dumb) data accessors....
 	# this is the place to put any far-side (post) acl checks...
