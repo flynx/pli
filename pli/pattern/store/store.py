@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.49'''
-__sub_version__ = '''20041019031531'''
+__sub_version__ = '''20041026143903'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -126,6 +126,7 @@ class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
 		print '''WARNING: the pli.pattern.store.BaseStore.get_types method will be shortly removed!
 		 use the itertypenames, itertypes methods instead!'''
 		return self._store_types.keys()
+
 	def gettypenames(self):
 		'''
 		this will return a list of type names supported by the store.

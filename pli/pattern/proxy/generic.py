@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.08'''
-__sub_version__ = '''20041017005102'''
+__sub_version__ = '''20041021182125'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -197,6 +197,7 @@ class CachedProxyMixin(AbstractProxy):
 	_setcache = classmethod(_setcache)
 
 
+##!!! rewrite the folowing three.... (or create inherit specific options/variants)
 #----------------------------------------------GetattributeProxyMixin---
 class GetattributeProxyMixin(AbstractProxy):
 	'''
