@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.02'''
-__sub_version__ = '''20040729032305'''
+__version__ = '''0.3.05'''
+__sub_version__ = '''20040729122720'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -227,13 +227,11 @@ class FiniteStateMachine(state.State):
 	_stop_exception = None
 	_stop_reason = None
 
-##	def __init__(self):
 	# this is the super safe version of init.... (incase w mix the
 	# incompatible classes....)
 	def __init__(self, *p, **n):
 		'''
 		'''
-##		super(FiniteStateMachine, self).__init__()
 		# super-safe...
 		super(FiniteStateMachine, self).__init__(*p, **n)
 		# init all states...
@@ -477,19 +475,20 @@ class State(FiniteStateMachine):
 		'''
 		this will try to next change state.
 		'''
-		if self._transitions != None:
-			for tostate in self._transitions:
-				try:
-					self.changestate(tostate)
-					return
-				except:
-					##!!!
-					pass
-		if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
-			if hasattr(self, '__resolvestatechange__'):
-				# try to save the day and call the resolve method...
-				return self.__resolvestatechange__()
-			raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
+		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__:
+			if self._transitions != None:
+				for tostate in self._transitions:
+					try:
+						self.changestate(tostate)
+						return
+					except:
+						##!!!
+						pass
+			if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
+				if hasattr(self, '__resolvestatechange__'):
+					# try to save the day and call the resolve method...
+					return self.__resolvestatechange__()
+				raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
 	# this is here for documentation...
 ##	def __resolvestatechange__(self):
 ##		'''

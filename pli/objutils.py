@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.21'''
-__sub_version__ = '''20040720144939'''
+__version__ = '''0.0.22'''
+__sub_version__ = '''20040729152425'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -229,7 +229,8 @@ class ObjectWithAttrs(object):
 		'''
 		if not self._isattrwritable(name, val, strict=(hasattr(self, '__strict_attr_format__') and self.__strict_attr_format__)):
 			raise TypeError, 'attribute "%s" does not comply with the format of %s object.' % (name, self)
-		self.__dict__[name] = val
+##		self.__dict__[name] = val
+		super(ObjectWithAttrs, self).__setattr__(name, val)
 	def __delattr__(self, name):
 		'''
 		'''
