@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.42'''
-__sub_version__ = '''20041019040755'''
+__version__ = '''0.1.71'''
+__sub_version__ = '''20041027054900'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -12,6 +12,7 @@ import random
 import sha
 
 import pli.interface as interface
+from pli.logictypes import ANY
 ##!! remove ...
 import pli.misc.acl as acl
 import pli.misc.passcrypt as passcrypt
@@ -167,9 +168,13 @@ class RPCSessionManager(object):
 	this class provides the generic RPC session interface.
 	'''
 	# this will define the active session container object (defaults to dict). 
+	# NOTE: the item format of this is:  <sid>: (<obj-id>, <obj>)
 	__active_sessions__ = None
 	# this will define the session object container (dict-like).
 	__session_objects__ = None
+	# this if True will prevent opening two connection for one session 
+	# object (default: False).
+	__unique_session__ = True
 	# this will define the proxy object that will be used to wrap the
 	# session object...
 	# this will take the session object as argument and return the
@@ -252,13 +257,18 @@ class RPCSessionManager(object):
 						hasattr(obj, 'checkpassword') and not obj.checkpassword(password):
 					raise SessionError, 'no such object ("%s").' % obj_id
 				# check uniqueness...
-				if hasattr(obj, '__unique_session__') and obj.__unique_session__ and obj in self.__active_sessions__.values():
+				if (obj_id, ANY) in self.__active_sessions__.values() and \
+						((hasattr(self, '__unique_session__') and self.__unique_session__) \
+						or \
+						(hasattr(obj, '__unique_session__') and obj.__unique_session__)):
 					raise SessionError, 'can\'t open two sessions for this object (%s).' % obj_id
+##				if hasattr(obj, '__unique_session__') and obj.__unique_session__ and (obj_id, ANY) in self.__active_sessions__.values():
+##					raise SessionError, 'can\'t open two sessions for this object (%s).' % obj_id
 				# proxy...
-				if hasattr(self, '__session_proxy__') and self.__session_proxy__ != None:
-					obj = self.__session_proxy__(obj)
+##				if hasattr(self, '__session_proxy__') and self.__session_proxy__ != None:
+##					obj = self.__session_proxy__(obj)
 				# add to list of active sessions...
-				self.__active_sessions__[sid] = obj
+				self.__active_sessions__[sid] = (obj_id, obj)
 				# set the time...
 				if self.__timeout__ != None:
 					obj._last_accessed = time.time()
@@ -274,7 +284,7 @@ class RPCSessionManager(object):
 		if sid not in self.__active_sessions__:
 			return
 		# fire _onSessionClose event
-		obj = self.__active_sessions__[sid]
+		obj = self.__active_sessions__[sid][1]
 		if hasattr(obj, '_onSessionClose'):
 			obj._onSessionClose(self)
 		del self.__active_sessions__[sid]
@@ -286,7 +296,7 @@ class RPCSessionManager(object):
 		'''
 		if sid not in self.__active_sessions__ or \
 				self.__timeout__ != None and \
-				(time.time() - self.__active_sessions__[sid]._last_accessed) > self.__timeout__:
+				(time.time() - self.__active_sessions__[sid][1]._last_accessed) > self.__timeout__:
 			self.close_session(sid)
 			return False
 		return True
@@ -308,7 +318,10 @@ class RPCSessionManager(object):
 				raise SessionError, 'no such session.'
 			path = method.split('.')
 			# get the session...
-			session_obj = self.__active_sessions__[sid]
+			session_obj = self.__active_sessions__[sid][1]
+			# proxy...
+			if hasattr(self, '__session_proxy__') and self.__session_proxy__ != None:
+				session_obj = self.__session_proxy__(session_obj)
 			# set access time...
 			if self.__timeout__ != None:
 				session_obj._last_accessed = time.time()
@@ -330,7 +343,7 @@ class RPCSessionManager(object):
 ##			acl = self.__acl_lib__ 
 ##		else:
 ##			global acl
-		obj = self._getobject(sid, self.__active_sessions__[sid], path)
+		obj = self._getobject(sid, self.__active_sessions__[sid][1], path)
 		# check acl...
 		if acl.isglobalmethodallowed(obj, meth):
 			# call the method
@@ -381,9 +394,9 @@ class RPCSessionManager(object):
 	def check_sessions(self):
 		'''
 		'''
-		for session in self.__active_sessions__.keys():
+		for session in self.__active_sessions__:
 			if not self.isalive(session):
-				name = self.__active_sessions__[session].__name__
+				name = self.__active_sessions__[session][0]
 				##!! rewrite (with logger...) !!##
 				print '[%s] session for "%s" terminated on timeout.' % (time.strftime('%Y%m%d%H%M%S'), name)
 	# Global Methods:
@@ -469,7 +482,7 @@ class BaseRPCSessionManager(RPCSessionManager):
 		else:
 			_getattr = getattr
 ##		# get the actual target...
-##		obj = self._getobject(sid, self.__active_sessions__[sid], path)
+##		obj = self._getobject(sid, self.__active_sessions__[sid][1], path)
 		# form the result
 		res = {}
 		for name in names:

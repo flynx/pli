@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20041019035838'''
+__sub_version__ = '''20041026155043'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -349,6 +349,8 @@ class Interface(object):
 	NOTE: this only provides meens to define attribute format, as 
 	      methods are also attributes they can be checked using the 
 		  predicate mechanism.
+	NOTE: if the value of the attr key is None, the attr will be 
+	      invisible.
 
 
 	the attribute definition format is as follows:

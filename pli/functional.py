@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.5.14'''
-__sub_version__ = '''20040608182632'''
+__sub_version__ = '''20041026153457'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -36,7 +36,7 @@ rcurry = lambda func, *pargs, **nargs:\
 #-----------------------------------------------------------fastcurry---
 # Originally written by Alex Martelli
 # 	http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/229472
-# NOTE: though this is faster, it is also less flexible then the above
+# NOTE: though this is faster, it is also less flexible than the above
 #       variants.
 # NOTE: here 'arg' can not be None.
 fastcurry = lambda func, arg:\
