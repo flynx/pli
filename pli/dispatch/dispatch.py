@@ -1,13 +1,11 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040909150818'''
+__sub_version__ = '''20040909160639'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
-
-import pli.pattern.mixin.mapping as mapping
 
 
 
@@ -19,65 +17,58 @@ class DispatchError(Exception):
 
 
 #-----------------------------------------------------------------------
+#----------------------------------------------------AbstractDispatch---
 class AbstractDispatch(object):
 	'''
 	'''
 	pass
 
 
-#-----------------------------------------------------------------------
-#
-# the most basic dispatch is a dict.
-#
-# 
-#
 #-------------------------------------------------------BasicDispatch---
-class CallableDispatch(object):
+# Q: this is masicly a dict, so do we need a special interface????
+class BasicDispatch(AbstractDispatch):
 	'''
 	'''
-	def __call__(self, obj):
-		'''
-		'''
-		return self[obj]
-	
-
-#-------------------------------------------------------QueryDispatch---
-# this will provide a query interface...
-class QueryDispatch(object):
-	'''
-	'''
-	pass
-
-
-# this is a mapping mixin....
-class MappingDispatch(object):
-	'''
-	'''
-	# this is a 
 	__targets__ = None
 
-	def __getitem__(self, name):
+	# basic methods...
+	def resolve(self, marker):
 		'''
 		'''
-		pass
-	def __setitem__(self, name):
+		try:
+			return self.__targets__[marker]
+		except KeyError:
+			raise DispatchError, 'marker "%s" is not present in the targets list.' % marker
+	# rule manipulation...
+	def addrule(self, marker, target):
 		'''
 		'''
-		pass
-	def __delitem__(self, name):
+		if hasattr(self, '__targets__') and self.__targets__ != None:
+			self.__targets__[marker] = target
+		else:
+			self.__targets__ = {marker: target}
+	def delrule(self, marker):
 		'''
 		'''
-		pass
-	def __contains__(self, name):
+		if hasattr(self, '__targets__') and self.__targets__ != None and marker in self.__targets__:
+			del self.__targets__[marker]
+		else:
+			raise DispatchError, 'no rule defined for marker %s.' % marker
+	def clearrules(self):
 		'''
 		'''
-		pass
-	def __iter__(self):
-		'''
-		'''
-		pass
+		del self.__targets__
 
 
+#-------------------------------------------------------BasicDispatch---
+class CallableDispatch(BasicDispatch):
+	'''
+	'''
+	def __call__(self, *p, **n):
+		'''
+		'''
+		return self.resolve(*p, **n)
+	
 
 
 #=======================================================================
