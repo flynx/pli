@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.02'''
-__sub_version__ = '''20040825140133'''
+__sub_version__ = '''20040825172907'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -111,9 +111,10 @@ class Plugins(object):
 		else:
 			raise TypeError, 'the path may either be a string (or unicode), a package or None (got: %s).' % path
 
-		self._path = path
-		self._prefix = prefix
-		self._ignore = ignore
+##		# debug data...
+##		self._path = path
+##		self._prefix = prefix
+##		self._ignore = ignore
 
 		if hasattr(self, '__plugin_load_event__'):
 			load_event = self.__plugin_load_event__
