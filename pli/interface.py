@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.15'''
-__sub_version__ = '''20040724013316'''
+__sub_version__ = '''20040724144129'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -146,6 +146,7 @@ def checkessentials(interface, obj):
 
 
 #---------------------------------------------------------checkobject---
+##!! REVISE !!##
 def checkobject(interface, obj):
 	'''
 	this will test the object compatibility yith the interface.

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.02'''
-__sub_version__ = '''20040709020701'''
+__sub_version__ = '''20040729032305'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -227,10 +227,15 @@ class FiniteStateMachine(state.State):
 	_stop_exception = None
 	_stop_reason = None
 
-	def __init__(self):
+##	def __init__(self):
+	# this is the super safe version of init.... (incase w mix the
+	# incompatible classes....)
+	def __init__(self, *p, **n):
 		'''
 		'''
-		super(FiniteStateMachine, self).__init__()
+##		super(FiniteStateMachine, self).__init__()
+		# super-safe...
+		super(FiniteStateMachine, self).__init__(*p, **n)
 		# init all states...
 		self.initstates()
 		# change state to the initial state if one defined...
