@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040213021525'''
+__sub_version__ = '''20040803232005'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -75,7 +75,7 @@ class GenericStaticStoreClient(store.BaseStore):
 		'''
 		'''
 ##		print '>>>', self._store_data.__getitem__('ttt')
-		print '!!!', self._store_data, id(self._store_data)
+##		print '!!!', self._store_data, id(self._store_data)
 		for e in self._store_data.iterkeys():
 			if self.isaccessible(e):
 				yield e
@@ -139,6 +139,17 @@ class StaticStoreClient(GenericStaticStoreClient):
 					False not in [getattr(obj, attr) == val for attr, val in self._store_filters.items()]:
 				return True
 		return False
+
+
+#----------------------------------------StaticStoreClientConstructor---
+class StaticStoreClientConstructor(StaticStoreClient):
+	'''
+	'''
+	def __init__(self, source_store=None, filters={}):
+		'''
+		'''
+		self.__source_store__ = source_store
+		super(StaticStoreClientConstructor, self).__init__(filters)
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.47'''
-__sub_version__ = '''20040730022351'''
+__sub_version__ = '''20040803235503'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -128,25 +128,25 @@ class AttrTypeBaseStore(BaseStore):
 	'''
 	# this if set will check the attr name compliance with the python
 	# variable name syntax...
-	__check_name_format__ = True
+	__check_type_name_format__ = True
+##	__check_type_name_format__ = False
 	# this will define a pattern against which the attribute name is to
 	# be checked...
-	__name_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
+	__type_name_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
 
 	# NOTE: if this is both an AttributeBaseStore and na
 	#       AttrTypeBaseStore the name will get checked twice, and I
 	#       see no beautifull way out of this....
-	def __setitem__(self, key, value):
-		'''
-		'''
-		if hasattr(self, '__check_name_format__') and self.__check_name_format__ and \
-				re.match(self.__name_format__, key) is None:
-			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
-		super(AttrTypeBaseStore, self).__setitem__(key, value)
+##	def __setitem__(self, key, value):
+##		'''
+##		'''
+##		if hasattr(self, '__check_type_name_format__') and self.__check_type_name_format__ and \
+##				re.match(self.__type_name_format__, key) is None:
+##			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
+##		super(AttrTypeBaseStore, self).__setitem__(key, value)
 	def __getattr__(self, name):
 		'''
 		'''
-		##!!! HACK !!!##
 		if name in ('_store_types',):
 			return object.__getattribute__(self, '_store_types')
 		if name in self._store_types:
@@ -156,6 +156,14 @@ class AttrTypeBaseStore(BaseStore):
 		except AttributeError:
 			# XXX is this correct....
 			raise AttributeError, 'object "%s" has no attribute "%s"' % (self, name)
+	def add_object_type(self, otype):
+		'''
+		'''
+		name = self.__typenameformat___ % otype.__name__
+		if hasattr(self, '__check_type_name_format__') and self.__check_type_name_format__ and \
+				re.match(self.__type_name_format__, name) is None:
+			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
+		super(AttrTypeBaseStore, self).add_object_type(otype)
 
 
 #--------------------------------------------------------RPCBaseStore---
@@ -217,10 +225,10 @@ class AttributeBaseStore(BaseStore):
 	'''
 	# this if set will check the attr name compliance with the python
 	# variable name syntax...
-	__check_name_format__ = True
+	__check_key_format__ = True
 	# this will define a pattern against which the attribute name is to
 	# be checked...
-	__name_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
+	__key_format__ = re.compile('[_a-zA-Z][_a-zA-Z\d]*$')
 
 	# NOTE: if this is both an AttributeBaseStore and na
 	#       AttrTypeBaseStore the name will get checked twice, and I
@@ -228,8 +236,8 @@ class AttributeBaseStore(BaseStore):
 	def __setitem__(self, key, value):
 		'''
 		'''
-		if hasattr(self, '__check_name_format__') and self.__check_name_format__ and \
-				re.match(self.__name_format__, key) is None:
+		if hasattr(self, '__check_key_format__') and self.__check_key_format__ and \
+				re.match(self.__key_format__, key) is None:
 			raise NameError, 'stored objects name must comply with python variable naming rules (got: "%s").' % key
 		super(AttributeBaseStore, self).__setitem__(key, value)
 	def __getattr__(self, name):

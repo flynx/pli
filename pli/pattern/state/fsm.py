@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.12'''
-__sub_version__ = '''20040730031350'''
+__version__ = '''0.3.17'''
+__sub_version__ = '''20040802180146'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -246,7 +246,7 @@ class FiniteStateMachine(state.State):
 		# store a ref to the original startup class....
 		# NOTE: this is an instance attribute! (might pose a problem on
 		#       serializatio....)
-		self._startup_cls = self.__class__
+		self.__startup_class__ = self.__class__
 		# change state to the initial state if one defined...
 		if hasattr(self, '__initial_state__') and self.__initial_state__ != None:
 			self.changestate(self.__initial_state__)
@@ -327,6 +327,9 @@ class FiniteStateMachine(state.State):
 	def _changestate(self, tostate):
 		'''
 		'''
+		# call the __onexitstate__...
+		if hasattr(self, '__onexitstate__'):
+			self.__onexitstate__()
 		# fire the exit event...
 		evt_name = 'onExit' + self.__class__.__name__
 		if hasattr(self, evt_name):
@@ -340,6 +343,8 @@ class FiniteStateMachine(state.State):
 		# run the post init method...
 		if hasattr(self, '__onafterstatechange__'):
 			self.__onafterstatechange__()
+		if hasattr(self, '__onenterstate__'):
+			self.__onenterstate__()
 
 
 #--------------------------------------------------------------_State---
@@ -375,6 +380,7 @@ class _StoredState(stored._StoredClass):
 # TODO add doc paramiter to transitions...
 # TODO error state handler...
 # TODO "Sub-FSMs"
+# TODO revise magic method names and function...
 class State(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
@@ -392,17 +398,24 @@ class State(FiniteStateMachine):
 							  NOTE: by default, this will select the first 
 									usable transition and use it to change
 									state.
+		__onenterstate__	: this is called once per state change, just after 
+							  the onEnter event is fired.
+							  NOTE: this is fired after the __onafterstatechange__
+							        method, and does NOTHING by default.
+		__onexitstate__		: this is called once per state change, just before
+							  the change and before the onExit event is fired.
 		__resolvestatechange__
 							: this is called by the above method if no usable
 							  transition was found and current state is not 
 							  terminal.
 		NOTE: all of the above methods receive no arguments but the object
-			  reference.
+			  reference (e.g. self).
 
 	on state instance creation, two events will get defined and added to the FSM:
 		onEnter<state-name> : this is fired on state change, just after the 
 							  __onstatechange__ method is finished.
-		onExit<state-name>	: this is fired just before the state is changed.
+		onExit<state-name>	: this is fired just before the state is changed, 
+							  just after the __onexitstate__ is done.
 
 	for more information see: pli.pattern.state.State
 
@@ -507,7 +520,7 @@ class State(FiniteStateMachine):
 ##		resolve the situation.
 ##		'''
 ##		pass
-
+	# Q: does this need to be __gatattr__ or __getattribute__ ????
 	def __getattr__(self, name):
 		'''
 		this will proxy the attr access to the original startup class....
@@ -515,7 +528,7 @@ class State(FiniteStateMachine):
 		##!!! check for looping searching !!!##
 		# get the name in the startup class...
 		try:
-			return getattr(self._startup_cls, name)
+			return getattr(self.__startup_class__, name)
 		except AttributeError:
 			raise AttributeError, '%s object has no attribute "%s"' % (self, name)
 

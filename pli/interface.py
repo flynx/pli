@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.15'''
-__sub_version__ = '''20040724144129'''
+__sub_version__ = '''20040731001951'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -194,6 +194,20 @@ def getdocdict(obj, attr=None, interface=None):
 
 
 #-----------------------------------------------------------------------
+#
+# Ways to define an interface:
+# 	a) dict-like object or dict magic attr
+# 		+ simple
+# 		+ no format constraints
+# 		- ugly syntax (??)
+# 	b) attributes with special value formats
+# 		+ good syntax
+# 		- not all attrs may be set (???)
+# 	c) attributes by example value
+# 		+ simple, prototype like
+# 		- limited control
+#
+#
 #-----------------------------------------------------------Interface---
 # TODO default templates...
 # TODO attribute name wildcards...
@@ -202,6 +216,8 @@ def getdocdict(obj, attr=None, interface=None):
 # TODO interface mathematics... (inheritance, combinations, ...)
 #
 # TODO add tests and paranoya!!!
+#
+# TODO make this a dict-like object...
 #
 # Q: does this need to be a class??? ....it might be good to create an
 #    interface object factory...
