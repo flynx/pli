@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.14'''
-__sub_version__ = '''20040326125114'''
+__sub_version__ = '''20040326130605'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -69,7 +69,7 @@ def ispythonimportable(package_dir, name):
 
 
 #---------------------------------------------------------packageiter---
-def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None):
+def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None, notimportable=None, ignore_modules=()):
 	'''\
 
 	This will return importable (and enabled) package names (without importing).
@@ -85,14 +85,19 @@ def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None
 	# some sanity checks...
 	if disabled_packages != None and type(disabled_packages) != list:
 		raise TypeError, 'disabled_packages must either be of list type or None (got type "%s").' % type(disabled_packages)
+	if notimportable != None and type(notimportable) != list:
+		raise TypeError, 'notimportable must either be of list type or None (got type "%s").' % type(notimportable)
 	# start the work...
 	loaded_packages = {}
 	for mod in os.listdir(package_dir):
-		# skip __init__.*
-		if mod.startswith('__init__.'):
-			continue
+##		# skip __init__.*
+##		if mod.startswith('__init__.'):
+##			continue
 		# get mod name...
 		mod_name = mod.split('.', 1)[0]
+		# 
+		if mod_name in ignore_modules:
+			continue
 		# include each name only once...
 		if mod_name not in loaded_packages.keys() + ['']:
 			# skip disabled plugins...
@@ -102,6 +107,8 @@ def packageiter(package_dir, disable_file='disabled.txt', disabled_packages=None
 				continue
 			if ispythonimportable(package_dir, mod_name):
 				yield mod_name
+			elif notimportable != None:
+				notimportable += [mod_name]
 ##			yield mod_name
 
 
@@ -129,7 +136,8 @@ def getpackagedepends(package_dir, mod_name, dependency_file='depends.txt', forb
 #---------------------------------------------------importpackageiter---
 # TODO make this return more specific error data (e.g. name, exception,
 #      traceback...).
-def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None, disabled_packages=None):
+def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
+						disabled_packages=None, notimportable=None, ignore_modules=()):
 	'''\
 
 	This is an import iterator. 
@@ -149,7 +157,7 @@ def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None, 
 	if err_names != None and type(err_names) != list:
 		raise TypeError, 'err_names must either be of list type or None (got type "%s").' % type(err_names)
 	# start the work...
-	for mod_name in packageiter(package_dir, disable_file, disabled_packages):
+	for mod_name in packageiter(package_dir, disable_file, disabled_packages, notimportable, ignore_modules):
 		mod_name, module = _load_module(package_dir, mod_name)
 		if module != None:
 			yield mod_name, module 
@@ -162,7 +170,7 @@ def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None, 
 # TODO make this a generic dependency checker (objutils ???)
 def importdependspackagesiter(package_dir, disable_file='disabled.txt',\
 								dependency_file='depends.txt', err_names=None,\
-								disabled_packages=None):
+								disabled_packages=None, notimportable=None, ignore_modules=()):
 	'''\
 	
 	This will import the modules in order of dependency.
@@ -189,7 +197,7 @@ def importdependspackagesiter(package_dir, disable_file='disabled.txt',\
 	# start the work...
 	loaded_packages = {}
 	wait_lst = {}
-	for mod_name in packageiter(package_dir, disable_file, disabled_packages):
+	for mod_name in packageiter(package_dir, disable_file, disabled_packages, notimportable, ignore_modules):
 		# get deps...
 		deps = getpackagedepends(package_dir, mod_name, dependency_file)
 		# if all dependencies are loaded load package...
