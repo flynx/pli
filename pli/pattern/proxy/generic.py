@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.01'''
-__sub_version__ = '''20040918215911'''
+__sub_version__ = '''20040919011303'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -325,7 +325,7 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 			return super(TranparentInheritAndOverrideProxy, self).__getattribute__(name)
 		return self.proxy_target.__getattribute__(name)
 	# directly proxy __setattr__ to the target...
-	proxymethod('__setattr__')
+##	proxymethod('__setattr__')
 
 
 #--------------------------------------RecursiveInheritNOverrideProxy---
