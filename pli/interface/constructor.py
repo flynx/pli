@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040917033032'''
+__sub_version__ = '''20040927223921'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -81,8 +81,8 @@ def dict2interface(dict, name=None, doc=None):
 		ns['__doc__'] = doc
 	return interface._Interface(name == None and 'unnamed' or name, (object,), ns)
 
-#-------------------------------------------------------obj2interface---
-interface = dict2interface
+###-------------------------------------------------------obj2interface---
+##interface = dict2interface
 
 
 #-------------------------------------------------------obj2interface---

@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.39'''
-__sub_version__ = '''20040328163952'''
+__version__ = '''0.1.42'''
+__sub_version__ = '''20041008154139'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -156,7 +156,7 @@ class RPCSessionManager(object):
 	#       "checkpassword" method (see the Session class for details).
 	__password_check__ = False
 	# define the acl lib...
-	__acl__ = None
+	__acl_lib__ = acl
 	# enable acl for object access (this should be handled by the
 	# object its self)....
 	__path_acl_check__ = True
@@ -297,6 +297,10 @@ class RPCSessionManager(object):
 		'''
 		this will call the global method and handel security...
 		'''
+##		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+##			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		obj = self._getobject(sid, self.__active_sessions__[sid], path)
 		# check acl...
 		if acl.isglobalmethodallowed(obj, meth):
@@ -307,6 +311,10 @@ class RPCSessionManager(object):
 		'''
 		get an object by its path (with ACL).
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		if hasattr(self, '__path_acl_check__') and self.__path_acl_check__:
 			acl_check_cutoff = False
 			for obj_name in path:
@@ -409,15 +417,27 @@ class BaseRPCSessionManager(RPCSessionManager):
 	def hasattr(self, sid, path, obj, name):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		return acl.hasattr(obj, name)
 	def getattr(self, sid, path, obj, name):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		# form the result
 		return acl.getattr(obj, name)
 	def getattrs(self, sid, path, obj, *names):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 ##		# get the actual target...
 ##		obj = self._getobject(sid, self.__active_sessions__[sid], path)
 		# form the result
@@ -432,10 +452,18 @@ class BaseRPCSessionManager(RPCSessionManager):
 	def setattr(self, sid, path, obj, name, val):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		return acl.setattr(obj, name, val)
 	def setattrs(self, sid, path, obj, data):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		err = False
 		for key in data:
 			try:
@@ -447,6 +475,10 @@ class BaseRPCSessionManager(RPCSessionManager):
 	def get_methods(self, sid, path, obj):
 		'''
 		'''
+		if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None:
+			acl = self.__acl_lib__ 
+##		else:
+##			global acl
 		# call the doc makic method if it exists...
 		if hasattr(obj, '__method_doc__'):
 			##!!!

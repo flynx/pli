@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.23'''
-__sub_version__ = '''20040918145144'''
+__sub_version__ = '''20041008165014'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -25,6 +25,7 @@ import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
+# TODO make it possible to change the __implemments__ attr name...
 # TODO write an InterfaceUnion class.... (e.g. an interface composed of
 #      several interfaces, that will support the "interface" interface)
 #
@@ -48,7 +49,7 @@ class _BasicInterface(type, mapping.Mapping):
 	__format__ = None
 	# this if False will prevent the modification of the interface
 	# after it's definition... (default: False)
-	__interface_writable__ = False
+	__interface_writable__ = True
 	# this if True will enable element deletion from base interfaces if
 	# it was not defined locally... (default: False)
 	__contagious_delete__ = False
@@ -548,7 +549,7 @@ def isdeletable(obj, name, interface=None):
 	if name in format:
 		return format[name].get('deletable', True) and not format[name].get('essential', False)
 	elif '*' in format:
-		return format['*'].get('deletable', True) and not format[name].get('essential', False)
+		return format['*'].get('deletable', True)
 	return False
 
 
@@ -728,6 +729,80 @@ def implemments(interface, depth=1):
 		else:
 			res = (interface, res) 
 	f_locals['__implemments__'] = res
+
+
+#-------------------------------------------------------------inherit---
+def inherit(*classes, **options):
+	'''
+	create an interface that is a combination of the given classes 
+	interfaces.
+
+	NOTE: if there are no parent interfaces, a new and empty interface will be created.
+
+	supported options:
+		name		- the name of the new interface (default: 'Unnamed')
+	
+	other options:
+		depth		- do not use this unless you know what you are doing.
+	'''
+	name = options.pop('name', 'Unnamed')
+	depth = options.pop('depth', 1)
+	# create a class...
+	inter = _Interface(name, classes, {})
+	implemments(inter, depth+1)
+	
+
+
+#-----------------------------------------------------------------------
+# the next several functions will modify the current interface...
+#-----------------------------------------------------------------add---
+# TODO add a batch variant of add...
+def add(name, **options):
+	'''
+
+	NOTE: if the name is already present in the interface this will update it.
+
+	add specific options:
+		force_addition
+					- this will force the modification of the interface.
+		depth		- do not use this unless you know what you are doing.
+	'''
+	depth = options.pop('depth', 1)
+	force = options.pop('force_addition', False)
+	f_locals = sys._getframe(depth).f_locals
+	if '__implemments__' not in f_locals:
+		raise InterfaceError, 'can\'t add name %s, no interface is defined.' % name
+	interface = f_locals['__implemments__']
+	if type(interface) is tuple:
+		raise InterfaceError, 'can\'t add name %s to an interface combination. '\
+					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
+	if force:
+		if name not in interface:
+			interface.__format__[name] = {}
+	elif not interface.__interface_writable__:
+		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
+	interface[name].update(options)
+
+
+#------------------------------------------------------------addusing---
+def addusing(name, template, depth=1):
+	'''
+	'''
+	add(name, LIKE=template, depth=depth+1)
+
+
+#-------------------------------------------------------------private---
+def private(name, depth=1):
+	'''
+	'''
+	add(name, readable=False, writable=False, depth=depth+1)
+
+
+#-----------------------------------------------------------essential---
+def essential(name, depth=1):
+	'''
+	'''
+	add(name, essential, depth=depth+1)
 
 
 

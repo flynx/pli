@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.05'''
-__sub_version__ = '''20040914012645'''
+__version__ = '''0.0.09'''
+__sub_version__ = '''20041008135202'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,10 +10,12 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 import pli.logictypes as logictypes
 ##import pli.interface.interface as interface
 import interface
+##import pli.interface.utils as iutils
 
 
 
 #-----------------------------------------------------------------------
+# TODO make it possible to change the __implemments__ attr name...
 #-------------------------------------------------ObjectWithInterface---
 class ObjectWithInterface(object):
 	'''
