@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.17'''
-__sub_version__ = '''20040501162854'''
+__version__ = '''0.0.19'''
+__sub_version__ = '''20040501170358'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -34,17 +34,18 @@ def _load_module(package_dir, mod_name, name_prefix=None):
 	'''
 	'''
 	mod_dat = ()
-	legal_name = name_prefix in (None, '') and mod_name or name_prefix + '.' + mod_name
+	mod_legal_name = name_prefix in (None, '') \
+						and mod_name or name_prefix + '.' + mod_name
 	# import...
 	try:
 		# restrict the import path to avoid uncontrolled imports...
 		mod_dat = imp.find_module(mod_name, [package_dir])
 		# check if the module is loaded...
-		if legal_name in sys.modules:
+		if mod_legal_name in sys.modules:
 			return mod_name, sys.modules[mod_name]
 		# load the module...
 ##		module = imp.load_module(mod_name, *mod_dat)
-		module = imp.load_module(legal_name, *mod_dat)
+		module = imp.load_module(mod_legal_name, *mod_dat)
 		# cleanup...
 		if len(mod_dat) > 1 and mod_dat[0] != None:
 			mod_dat[0].close()
