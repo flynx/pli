@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.02'''
-__sub_version__ = '''20040825172907'''
+__sub_version__ = '''20040825174127'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -132,11 +132,11 @@ class Plugins(object):
 			if load_event != None:
 				load_event.fire(name, module)
 			loaded[name] = module
-	def reload(self):
-		'''
-		'''
-		##!!!
-		raise NotImplementedError, 'this is not yet supported...'
+##	def reload(self):
+##		'''
+##		'''
+##		##!!!
+##		raise NotImplementedError, 'this is not yet supported...'
 
 
 
