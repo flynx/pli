@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.14'''
-__sub_version__ = '''20040326123356'''
+__sub_version__ = '''20040326125114'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -51,17 +51,18 @@ def _load_module(package_dir, mod_name):
 
 
 #--------------------------------------------------ispythonimportable---
-def ispythonimportable(package_dir, name, check_files=False):
+def ispythonimportable(package_dir, name):
 	'''
+	this will test if the module name is importable from package_dir.
 	'''
 	mod_path = os.path.join(package_dir, name)
-	# is directory -> contains __init__.py?
+	# is directory and contains __init__.py?
 	if os.path.isdir(mod_path) and \
 			True in [ os.path.exists(os.path.join(mod_path, '__init__' + ext[0])) \
 					  for ext in PY_SUFFIXES ]:
 		return True
 	else:
-		# is file -> is .py[cod]
+		# is file -> is .py[cod]...
 		return True in [ os.path.exists(os.path.join(mod_path, ext[0])) \
 						 for ext in PY_SUFFIXES ]
 	return False
