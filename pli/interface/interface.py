@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.23'''
-__sub_version__ = '''20041016032744'''
+__version__ = '''0.2.35'''
+__sub_version__ = '''20041017040116'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -141,7 +141,8 @@ class _BasicInterface(type, mapping.Mapping):
 		'''
 		'''
 		try:
-			cls._getrealprops(name)
+			if cls._getrealprops(name) == None:
+				return False
 			return True
 		except:
 ##			##!! is this needed???
@@ -157,8 +158,9 @@ class _BasicInterface(type, mapping.Mapping):
 		for c in cls.__mro__:
 			if hasattr(c, '__format__') \
 					and c.__format__ != None:
-				for k in c.__format__.iterkeys():
-					if k in visited:
+				for k, v in c.__format__.iteritems():
+					# ignore visited or hidden items...
+					if k in visited or v == None:
 						continue
 					visited += [k]
 					yield k
@@ -256,8 +258,6 @@ class _BasicInterface(type, mapping.Mapping):
 				raise KeyError, name
 		else:
 			res = cls._getrealprops(name)
-		if res == None:
-			raise KeyError, name
 		res = res.copy()
 		# resolve the 'LIKE' prop...
 		visited = [res]
@@ -373,11 +373,14 @@ class Interface(object):
 					        fully initialized, thus no assumptions about
 							object state should be made.
 							for instance this will happen for 
-							pli.interface.objects.InterfaceObject if both 
-							the handler and the default value are defined.
+							pli.interface.objects.ObjectWithInterface if
+							both the handler and the default value are 
+							defined.
 					  NOTE: it is not recommended for this to have side 
 					        effects as the handler call is not garaneed 
-							to precede an attribute write.
+							to precede an attribute write (for instance,
+							this should not modify the object in any 
+							way).
 	
 		readable	- this if False will prevent the attr from being
 					  read.
@@ -637,6 +640,30 @@ def iscompatible(obj, name, interface=None):
 
 
 #-----------------------------------------------------------------------
+# utility functions...
+#-----------------------------------------------------createdictusing---
+def createdictusing(obj, interface=None):
+	'''
+	this will create a dict populated by values created usin the interface given.
+
+	NOTE: the interface can either be a tuple of interfaces or a single interface.
+	NOTE: the object is needed in case there is a handler defined for an 
+	      attribute (if it is known that there are no handlers, it is quite safe 
+		  to pass None instead of the obj). 
+	'''
+	res = {}
+	if interface == None:
+		interface = interface.getinterfaces(obj)
+	for n, v in type(interface) is tuple \
+							and logictypes.DictUnion(*interface).iteritems() \
+							or interface.iteritems():
+		if 'default' in v and n != '*':
+			res[n] = getvalue(obj, n, v['default'], interface=interface)
+	return res
+
+
+
+#-----------------------------------------------------------------------
 # object level functions...
 #-----------------------------------------------------checkessentials---
 # TODO write a dict version of this...
@@ -691,6 +718,17 @@ def checkobject(obj, interface=None):
 		for n in o_attrs:
 			chackattr(obj, n)
 	return True
+
+
+#-------------------------------------------------populateobjectusing---
+def populateobjectusing(obj, interface=None):
+	'''
+	'''
+	if interface == None:
+		interface = interface.getinterfaces(obj)
+	for n, v in createdictusing(interfaces).iteritems():
+		setattr(obj, n, v)
+	return obj
 
 
 

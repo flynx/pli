@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20041016224637'''
+__sub_version__ = '''20041017035455'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,12 +11,14 @@ import pli.logictypes as logictypes
 ##import pli.interface.interface as interface
 import interface
 ##import pli.interface.utils as iutils
+import pli.pattern.proxy.generic as proxy
 
 
 
 #-----------------------------------------------------------------------
 #-------------------------------------------------------------strhelp---
 ##!!! ugly... revise!
+# Q: should this be in this module??
 def strhelp(obj):
 	'''
 	'''
@@ -28,10 +30,13 @@ def strhelp(obj):
 		if not d.get('readable', True) or n == '*':
 			continue
 		t = d.get('type', None)
-		if t == None and 'predicate' in d:
-			t = d['predicate'].__name__
-		else:
-			t = 'Any type'
+		if t == None:
+			if 'predicate' in d:
+				t = d['predicate'].__name__
+			else:
+				t = 'Any type'
+		elif hasattr(t, '__name__'):
+			t = t.__name__
 		if d.get('essential', False):
 			e_res += [ '    %s (%s):\t\t%s\n' % (n, t, d.get('doc', 'no doc.')) ]
 		else:
@@ -46,8 +51,9 @@ def strhelp(obj):
 		else:
 			t = 'Any type'
 		res += [ '    %s (%s):\t\t%s\n' % ('*', t, d.get('doc', 'no doc.')) ]
-	return 'Object of %s %s \n\nEssential Attributes:\n%s\nOptional Attributes:\n%s\n' \
-				% (obj.__class__.__name__, interf, ''.join(e_res), ''.join(res))
+	return 'Object of %s %s \n%s\n\nEssential Attributes:\n%s\nOptional Attributes:\n%s\n' \
+				% (obj.__class__.__name__, interf, obj.__doc__, ''.join(e_res), ''.join(res))
+
 
 
 
@@ -56,7 +62,7 @@ def strhelp(obj):
 #-------------------------------------------------ObjectWithInterface---
 class ObjectWithInterface(object):
 	'''
-	this is a basic object with inteface support.
+	this is a basic object with interface support.
 	'''
 	# this defines the objects' interface.
 	# NOTE: if this is None interface support will be disabled.
@@ -69,13 +75,7 @@ class ObjectWithInterface(object):
 		ogetattribute = object.__getattribute__
 		_interface = obj.__implemments__
 		if _interface != None:
-##			ogetattribute(obj, '__dict__').update(dict([ (n, v['default']) \
-			ogetattribute(obj, '__dict__').update(dict([ (n, interface.getvalue(obj, n, v['default'])) \
-									for n, v \
-										in type(_interface) is tuple \
-											and logictypes.DictUnion(*[ i.__format__ for i in _interface ]).iteritems() \
-											or _interface.__format__.iteritems() \
-										if 'default' in v and n != '*' ]))
+			ogetattribute(obj, '__dict__').update(interface.createdictusing(obj, _interface))
 		return obj
 	def __getattribute__(self, name):
 		'''
@@ -107,9 +107,21 @@ class ObjectWithInterface(object):
 
 
 
+#----------------------------------------------AbstractInterfaceProxy---
+class AbstractInterfaceProxy(proxy.AbstractProxy):
+	'''
+
+	NOTE: this was not intended for direct use...
+	'''
+	# NOTE: this is hardcoded in the derived classes, thus changing this
+	#       is not recommended.
+	# XXX is the fact of this being hardcoded good???
+	__proxy_target_attr_name__ = '__source__'
+
+
 #--------------------------------------------------ProxyWithInterface---
 # TODO move this to pli.pattern.proxy (???)
-class ProxyWithInterface(object):
+class ProxyWithInterface(AbstractInterfaceProxy):
 	'''
 	'''
 	__implemments__ = None
@@ -164,28 +176,40 @@ class InterfaceProxy(ProxyWithInterface):
 			self.__implemments__ = source.__implemments__
 
 
-###-------------------------------------------------InterfaceClassProxy---
-##class InterfaceClassProxy(type, InterfaceObjectProxy):
-##	'''
-##	'''
-##	__implemments__ = None
-##
-##	__source__ = None
-##
-##	def __init__(cls, name, bases, ns):
-##		type.__init__(cls, name, bases, ns)
+#---------------------------------------------RecursiveInterfaceProxy---
+##!!! test...
+class RecursiveInterfaceProxy(proxy.GetattrRecursiveProxyMixin, InterfaceProxy):
+	'''
+	'''
+##	def __call__():
+##		'''
+##		'''
+##		pass
 
-# TODO write a transparent metaclass interface generator/checker....
-#      e.g. afetr the class is defined it is used as an interface
-#      "example"....
-#      possibley: its objects will obey this interface... (is this
-#                 logical???)
 
 
 #=======================================================================
 if __name__ == '__main__':
 
 	class O(ObjectWithInterface):
+		interface.inherit(iname='IO')
+		interface.add('xxx', type=int, default=0)
+		interface.add('xx0', type=int, default=0)
+		interface.add('xx1', type=int, default=0)
+		interface.add('xx2', type=int, default=0)
+		interface.add('xx3', type=int, default=0)
+		interface.add('xx4', type=int, default=0)
+		interface.add('xx5', type=int, default=0)
+		interface.add('xx6', type=int, default=0)
+		interface.add('xx7', type=int, default=0)
+		interface.add('xx8', type=int, default=0)
+		interface.add('xx9', type=int, default=0)
+
+##		interface.hide('xxx')
+		interface.hide('xx0')
+
+		interface.add('*')
+
 		def f(self):
 			print '!!!'
 
@@ -197,6 +221,8 @@ if __name__ == '__main__':
 	o.f = f
 
 	print '123'
+
+	print o.xxx
 
 	o.xxx = 123
 

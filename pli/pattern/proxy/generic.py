@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.08'''
-__sub_version__ = '''20041017003902'''
+__sub_version__ = '''20041017005102'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -391,7 +391,10 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 _TranparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # TODO test if we need any other magic methods???
-class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, GetattributeProxyMixin, ComparibleProxyMixin, ProxyWithReprMixin):
+class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, 
+											GetattributeProxyMixin, 
+											ComparibleProxyMixin, 
+											ProxyWithReprMixin):
 	'''
 	this is a tranparent variant of InheritAndOverrideProxy. its' behavior 
 	is in no way diferent from the proxied object.
@@ -418,7 +421,9 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, GetattributePro
 # this is the Proxy cache...
 _RecursiveInheritNOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-class RecursiveInheritNOverrideProxy(GetattributeRecursiveProxyMixin, InheritAndOverrideProxy, ProxyWithReprMixin):
+class RecursiveInheritNOverrideProxy(GetattributeRecursiveProxyMixin,
+										InheritAndOverrideProxy, 
+										ProxyWithReprMixin):
 	'''
 	this is a general (semi-transparent) recursive proxy. e.g. it will wrap each
 	attribute before it is returned.
