@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.03'''
-__sub_version__ = '''20040328193355'''
+__sub_version__ = '''20040512161550'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -227,6 +227,16 @@ class DictUnion(object):
 		if res == []:
 			raise KeyError, '%s does not contain "%s"' % (self, name)
 		return res
+
+
+#-------------------------------------------------------DictTypeUnion---
+# WARNING: this is not done!
+class DictTypeUnion(DictUnion, dict):
+	'''
+	this is a diriviation from dict that can contain oun data.
+	'''
+	##!!!
+	pass
 
 
 #-----------------------------------------------------------ListUnion---
