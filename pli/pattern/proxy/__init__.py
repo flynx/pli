@@ -1,13 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040321190954'''
+__sub_version__ = '''20040906052612'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-##from generic import *
+from generic import *
 ##from aclproxy import *
 # legacy support...
 from callproxy import *

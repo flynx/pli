@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040905205140'''
+__sub_version__ = '''20040906052051'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -49,7 +49,7 @@ def createmethodwrappers(source_dict, method_list, wrapper, target_dict=None):
 
 
 #-----------------------------------------------------------------------
-#---------------------------------------------------------proxymethod---
+#--------------------------------------------------genericproxymethod---
 def proxymethod(method_name, source_attr, depth=1):
 	'''
 	this will create a proxy to the method name in the containing namespace.
