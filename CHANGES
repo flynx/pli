@@ -1,5 +1,8 @@
-# this file was generated on [200412261743]
+# this file was generated on [200412311612]
 pli changes:
+
+version 0.0.132 (200412311609):
+- added pli.event.decorator module.
 
 version 0.0.131 (200412261457):
 - add pli.event.event.isused function...

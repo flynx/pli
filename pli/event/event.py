@@ -2,8 +2,8 @@
 
 #-----------------------------------------------------------------------
 
-__version__ = '''0.3.15'''
-__sub_version__ = '''20041226145605'''
+__version__ = '''0.3.16'''
+__sub_version__ = '''20041231160717'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -40,6 +40,8 @@ import pli.objutils as objutils
 
 
 #-----------------------------------------------------------------------
+# TODO event chaining and auto-chaining (via inheritance or
+#      instanciation)....
 #----------------------------------------------------------EventError---
 class EventError(Exception):
 	'''
@@ -51,6 +53,13 @@ class EventBindError(EventError):
 	'''
 	an event bind error.
 	'''
+
+
+###-----------------------------------------------------EventChainError---
+##class EventChainError(EventError):
+##	'''
+##	an event chain error.
+##	'''
 
 
 #-----------------------------------------------------------------------
@@ -68,7 +77,7 @@ def bind(event, func, HOOK_DEBUG=False):
 				func.__suppress_exceptions__ = False
 			except:
 				pass
-		event.installhook(func)
+		return event.installhook(func)
 	else:
 		raise EventBindError, 'can\'t bind to non-event object %s.' % event
 
@@ -130,6 +139,16 @@ def isevent(obj):
 	'''
 	return isinstance(obj, AbstractEvent) or issubclass(obj, AbstractEvent)
 
+
+
+###-----------------------------------------------------------------------
+###---------------------------------------------------------------chain---
+##def chain(*events):
+##	'''
+##	'''
+##	if len(events) <= 1:
+##		raise EventChainError, 'can only chain two or more events (got: %s).' % len(events)
+##	##!!!
 
 
 #-----------------------------------------------------------------------
@@ -390,6 +409,7 @@ class InstanceEvent(AbstractEvent):
 			self.__eventhooks__ += (hook_func,)
 		else:
 			self.__eventhooks__ += (hook_func,)
+		return hook_func
 	installhook = objutils.classinstancemethod(installhook)
 	def uninstallhook(self, hook_func):
 		'''
@@ -518,6 +538,18 @@ class ClassEvent(AbstractEvent):
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # legacy support (and a convenient shorthand :) )...
 Event = ClassEvent
+
+
+
+###-----------------------------------------------------------------------
+###-----------------------------------------------InheritEventFireMixin---
+##class InheritEventFireMixin(AbstractEvent):
+##	'''
+##	'''
+##	def fire():
+##		'''
+##		'''
+##		pass
 
 
 
