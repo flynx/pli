@@ -1,11 +1,15 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20050331061318'''
+__sub_version__ = '''20050401013137'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
+# TODO solve the "proxy a proxy" problem....
+# TODO solve the infinite recursion problem when trying to call the
+#      parents __call__ method (may not be the only one affected) from
+#      a recursive proxy...
 
 __doc__ = '''\
 this module will define a set of utilities and classes to be used to build
@@ -23,6 +27,7 @@ import sys
 import new
 import types
 import weakref
+import copy
 
 
 
@@ -117,12 +122,14 @@ def _reduceproxyobject(obj):
 
 #---------------------------------------------_reconstructproxyobject---
 ##!!! REVISE !!!##
+# XXX this will not call __init__
+# TODO make this compatible with custom __init__'s
 def _reconstructproxyobject(proxy_data, target):
 	'''
 	'''
 	ogetattribute = object.__getattribute__
 	# build basic proxy...
-	res = proxy_data['__proxy__'](target)
+	res = proxy_data['__proxy__'].__new__(proxy_data['__proxy__'], target)
 	proxy_cls = ogetattribute(res, '__class__')
 	##!!! REVISE !!!##
 	# now update the proxy private NS...
@@ -440,17 +447,22 @@ class _InheritAndOverrideProxyMetaclass(type):
 # this is the Proxy cache...
 _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 #
-# NOTE: the problem that might accur here is when we assign to
-#       self.__class__.something
+# NOTE: there might be problems if the proxied object directly modifies
+#       it's class... 
+#          (this will not happen in TransparentInheritAndOverrideProxy)
 # TODO test module support (e.g. proxieng a module)...
+# TODO test class support (e.g. proxieng a class)...
 # TODO think of ways to make this better... things like:
 # 		- auto metaclass creation.
 # 		- more libiral __new__ and __init__
-# TODO make this support recursion and/or layaring... e.g. make
-#      proxying a proxy possible...
 # XXX there is a problem with the targets __new__ and __init__
 #     methods...
 #     they can get called on proxy init...
+# WARNING: nested proxies may have odd sideeffects, for example they
+#          will likely (not tested) reflect the proxies class
+#          updates... this is due to the fact that CPython prevents two
+#          classes to share namespaces (that is, it prevents
+#          assignement to <class>.__dict__...) :(
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this works as follows:
@@ -504,21 +516,30 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 				return _obj
 			# create an object of a class (also just created) inherited
 			# from cls and source.__class__
-##			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
-			_obj = object.__new__(new.classobj('DynamicProxyBase',
-												(cls, source.__class__),
-												{'__metaclass__': cls.__proxy_metaclass__}))
-##			class DynamicProxyBase(cls, source.__class__):
-##				__metaclass__ = _InheritAndOverrideProxyMetaclass
-##			_obj = object.__new__(DynamicProxyBase)
+			if isinstance(source, cls):
+				##!!! HACK !!!##
+				# resolve a C3 mro conflict by cloning the parent
+				# class... (ugly, but works :| )
+				_obj = object.__new__(new.classobj('DynamicProxyBase',
+													(type(cls.__name__,
+															cls.__bases__, 
+															dict(cls.__dict__)), source.__class__),
+													{'__metaclass__': cls.__proxy_metaclass__}))
+			else:
+				_obj = object.__new__(new.classobj('DynamicProxyBase',
+													(cls, source.__class__),
+													{'__metaclass__': cls.__proxy_metaclass__}))
+			# create a name for the new class...
+			# NOTE: the name may not be unique!
+			cls_name = cls_name + '_' + str(cls.__proxy_count__)
+			cls.__proxy_count__ += 1
+			# considering that the class we just created is unique we
 			# get the new class....
 			cls = object.__getattribute__(_obj, '__class__')
 			cls.__proxy__ = proxy
 			cls.__proxy_base__ = cls
 			# name the new class... 
-			# NOTE: the name may not be unique!
-			cls.__name__ = cls_name + '_' + str(cls.__proxy_count__)
-			cls.__proxy_count__ += 1
+			cls.__name__ = cls_name
 			# considering that the class we just created is unique we
 			# can use it as a data store... (and we do not want to
 			# polute the targets dict :) )
@@ -529,6 +550,12 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 		# we fall here in case we either are a class constructor, function or a callable....
 		# WARNING: this is Python implementation specific!!
 		except (TypeError, AttributeError), e:
+
+##			import traceback, sys
+##			exc_type, exc_value, exc_trackback = sys.exc_info()
+##			print 'ERR:', "%s:%s" % (exc_type, exc_value)
+##			traceback.print_tb(exc_trackback)
+
 			# function or callable
 			if type(source) in (types.FunctionType, types.LambdaType, types.MethodType, weakref.CallableProxyType):
 				# callable wrapper hook...
@@ -729,6 +756,7 @@ if __name__ == '__main__':
 	print
 	p.o.o.__call__()
 
+	print '-' * 72
 	# test picklability...
 	pp = _reduceproxyobject(p)
 	print pp
@@ -742,6 +770,31 @@ if __name__ == '__main__':
 	ppp = pickle.loads(pickle.dumps(p))
 
 	ppp.o.o.__call__()
+
+	# test nested proxies...
+	print '=' * 72
+
+	x = O()
+	x.xxx = 'some data'
+	xp = InheritAndOverrideProxy(x)
+	xpp = InheritAndOverrideProxy(xp)
+
+	print xp
+	print xpp
+	
+	print '-' * 72
+	# test picklability for nested proxies...
+	xppp = _reduceproxyobject(xpp)
+	print xpp
+	xppp = _reconstructproxyobject(*xppp)
+	print xppp
+
+	print
+
+	xpppp = pickle.loads(pickle.dumps(xpp))
+	print xpp
+	print xpppp
+
 
 
 
