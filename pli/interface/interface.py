@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.2.19'''
-__sub_version__ = '''20040914014112'''
+__version__ = '''0.2.23'''
+__sub_version__ = '''20040918145144'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -30,6 +30,7 @@ import pli.pattern.mixin.mapping as mapping
 #
 #
 #------------------------------------------------------InterfaceError---
+# TODO docs!!
 class InterfaceError(Exception):
 	'''
 	'''
@@ -83,25 +84,14 @@ class _BasicInterface(type, mapping.Mapping):
 	def __getitem__(cls, name):
 		'''
 		'''
-		# sanity checks....
-		if not hasattr(cls, '__format__'):
-			raise InterfaceError, 'interface %s does not have a format defined.' % cls
-		format = cls.__format__
 		try:
-			for c in cls.__mro__:
-				if hasattr(c, '__format__') \
-						and c.__format__ != None \
-						and name in c.__format__:
-					return c.__format__[name]
+			return cls.getattrproperty(name)
 		except TypeError:
-			# c was not a dict-like....
-			pass
-		try:
-			##!!! is this correct ?
-			return super(_BasicInterface, cls).__getitem__(name)
-##		except AttributeError:
-		##!!!!
-		except:
+##			##!! is this needed???
+##			try:
+##				return super(_BasicInterface, cls).__getitem__(name)
+##			except:
+##				raise KeyError, str(name)
 			raise KeyError, str(name)
 	def __setitem__(cls, name, value):
 		'''
@@ -139,9 +129,19 @@ class _BasicInterface(type, mapping.Mapping):
 						return 
 		else:
 			raise KeyError, str(name)
-##	def __contains__(cls, name):
-##		'''
-##		'''
+	def __contains__(cls, name):
+		'''
+		'''
+		try:
+			cls._getrealprops(name)
+			return True
+		except:
+##			##!! is this needed???
+##			try:
+##				return super(_BasicInterface, cls).__contains__(name)
+##			except:
+##				raise KeyError, str(name)
+			return False
 	def __iter__(cls):
 		'''
 		'''
@@ -171,6 +171,23 @@ class _BasicInterface(type, mapping.Mapping):
 		if errors in ([], None):
 			return True
 		return False
+	def _getrealprops(cls, name):
+		'''
+		this will return the real option dict for the attr (as defined in the __format__).
+
+		NOTE: if the attr is nod defined in the current class it will be searched in the mro.
+		'''
+		# sanity checks....
+		if not hasattr(cls, '__format__'):
+			raise InterfaceError, 'interface %s does not have a format defined.' % cls
+		format = cls.__format__
+		for c in cls.__mro__:
+			if hasattr(c, '__format__') \
+					and c.__format__ != None \
+					and name in c.__format__:
+				##!!! process the 'LIKE' option...
+				return c.__format__[name]
+		raise KeyError, name
 	def getattrproperty(cls, name, prop=None):
 		'''
 
@@ -189,14 +206,16 @@ class _BasicInterface(type, mapping.Mapping):
 			if '*' in cls:
 				res = {}
 			else:
-				raise KeyError, str(name)
+				raise KeyError, name
 		else:
-			res = cls[name].copy()
+##			res = cls[name].copy()
+			res = cls._getrealprops(name).copy()
 		# resolve the 'LIKE' prop...
 		visited = [res]
 		while 'LIKE' in res: 
 			if type(res['LIKE']) is str:
-				ext_format = cls[res['LIKE']].copy()
+##				ext_format = cls[res['LIKE']].copy()
+				ext_format = cls._getrealprops(res['LIKE']).copy()
 			elif type(res['LIKE']) is dict:
 				ext_format = res['LIKE'].copy()
 			else:
@@ -233,6 +252,7 @@ class _BasicInterface(type, mapping.Mapping):
 
 
 #----------------------------------------------------------_Interface---
+# TODO docs!!
 class _Interface(_BasicInterface):
 	'''
 	'''
@@ -291,9 +311,11 @@ class Interface(object):
 		doc			- this is the attr documentation
 	
 		handler		- this is the alternative attribute handler.
-					  this will take the object, attr name and option 
+					  this will take the object, attr name and attr 
 					  value as arguments and its' return will replace 
 					  the original value.
+					  NOTE: if the 'default' option is set it WILL get 
+					        filtered through the handler.
 					  NOTE: this can be called when the object is not 
 					        fully initialized, thus no assumptions about
 							object state should be made.
@@ -349,6 +371,7 @@ def getinterfaces(obj):
 
 #-------------------------------------------------------------getdata---
 # XXX should types be checked here???
+# TODO write a dict version of this...
 def getdata(obj, interface=None):
 	'''
 	this will return a dict containing the data taken from the object in compliance 
@@ -359,7 +382,6 @@ def getdata(obj, interface=None):
 	else:
 		format = logictypes.DictUnion(*getinterfaces(obj)[::-1])
 	res = {}
-##	star = format.get('*', False) != False or False
 	for k in format:
 		if not hasattr(obj, k):
 			if k == '*':
@@ -564,6 +586,7 @@ def iscompatible(obj, name, interface=None):
 #-----------------------------------------------------------------------
 # object level functions...
 #-----------------------------------------------------checkessentials---
+# TODO write a dict version of this...
 def checkessentials(obj, interface=None):
 	'''
 	this will check if obj contains all the essential attributes defined by the interface.
@@ -588,6 +611,7 @@ def checkessentials(obj, interface=None):
 
 
 #---------------------------------------------------------checkobject---
+# TODO write a dict version of this...
 def checkobject(obj, interface=None):
 	'''
 	this will check if the object complies to the interface will return
@@ -650,6 +674,42 @@ def getdoc(obj, name=None, interface=None):
 #---------------------------------------------------------implemments---
 def implemments(interface, depth=1):
 	'''
+	this will add an interface to the object.
+
+	this function is accumulative, thus it can be called many times, and
+	the interfaces will be combined in order reverse to the calls (
+	maximum prcidence/priority is the last added), this also could be called 
+	head addition.
+	Example:
+		implemments(IA)
+		implemments(IB)
+		implemments(IC)		# maximum priority
+
+		is equivalent to:
+
+		__implemments__ = (IC, IB, IA)
+
+
+	NOTE: this is a (almost) shorthand for: 
+			__implemments__ = interface + __implemments__
+		  ...it differs in that it handles existane checks for the 
+		  __implemments__ name.
+	NOTE: this does not see inherited interfaces, thus they shold 
+	      be *passed on* by hand before this is used.
+		  Example:
+		  	---cut---
+			class A(object):
+				implemments(IA)
+
+			class B(A):
+				# this must be done if we want the A's interface to be 
+				# combined with B's...
+				__implemments__ = A.__implemments__
+				implemments(IA)
+
+			--uncut--
+		  but this should not be an issue as one should combine interfaces
+		  by inheritance instead of combining them explicitly in the object.
 	'''
 	f_locals = sys._getframe(depth).f_locals
 	res = f_locals.get('__implemments__', None)

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040831161913'''
+__sub_version__ = '''20040917033032'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -72,9 +72,22 @@ def likevalue(obj, method_writable=False):
 	return res
 
 
-#-----------------------------------------------------createinterface---
+#------------------------------------------------------dict2interface---
+def dict2interface(dict, name=None, doc=None):
+	'''
+	'''
+	ns = {'__format__': dict}
+	if doc != None:
+		ns['__doc__'] = doc
+	return interface._Interface(name == None and 'unnamed' or name, (object,), ns)
+
+#-------------------------------------------------------obj2interface---
+interface = dict2interface
+
+
+#-------------------------------------------------------obj2interface---
 ##!!! revise !!!##
-def createinterface(obj, name=None, doc=None, methods_writable=False):
+def obj2interface(obj, name=None, doc=None, methods_writable=False):
 	'''
 	this will generate an interface from an example object.
 	'''
