@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.77'''
-__sub_version__ = '''20050110052652'''
+__sub_version__ = '''20050125124053'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -155,6 +155,8 @@ class Session(object):
 
 #-----------------------------------------------------------------------
 #---------------------------------------------------RPCSessionManager---
+# TODO revise __persistent_sessions__ mechanism.... (curently seems to
+#      be "hackish" :) )
 # TODO split this into diferent functionality primitives...
 # 		- *global method call* functionality.
 # 		- session
@@ -355,7 +357,7 @@ class RPCSessionManager(object):
 			# the session timout is either not present or is not None
 			if self.__timeout__ != None \
 					and (self.__persistent_sessions__ \
-						and (not hasattr(obj, '__timeout__') or obj.__timeout__ != None) \
+						and (not hasattr(session_obj, '__timeout__') or session_obj.__timeout__ != None) \
 						or True) \
 					or False:
 				session_obj._last_accessed = time.time()
@@ -400,7 +402,8 @@ class RPCSessionManager(object):
 		if hasattr(self, '__path_acl_check__') and self.__path_acl_check__:
 			acl_check_cutoff = False
 			for obj_name in path:
-				if not acl_check_cutoff:
+				##!!! REWRITE !!!##
+				if hasattr(self, '__acl_lib__') and self.__acl_lib__ != None and not acl_check_cutoff:
 					# check if this attr is accessible...
 					obj = acl.getattr(obj, obj_name)
 					if hasattr(obj, '__acl_check_cutoff__') and obj.__acl_check_cutoff__:

@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.08'''
-__sub_version__ = '''20050111050358'''
+__version__ = '''0.1.14'''
+__sub_version__ = '''20050125001252'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -197,6 +197,23 @@ class CachedProxyMixin(AbstractProxy):
 	_setcache = classmethod(_setcache)
 
 
+#---------------------------------------------------GetattrProxyMixin---
+class GetattrProxyMixin(AbstractProxy):
+	'''
+	'''
+	def __getattr__(self, name):
+		'''
+		'''
+		ogetattribute = object.__getattribute__
+		proxy_target_attr = ogetattribute(self, '__proxy_target_attr_name__')
+##		if name in ogetattribute(self, '__proxy_public_attrs__') + (proxy_target_attr,):
+##			return super(GetattributeProxyMixin, self).__getattribute__(name)
+##		return ogetattribute(self, proxy_target_attr).__getattribute__(name)
+		# here the reason we use getattribute is to go through the full
+		# *get attribute* dance in the proxied object...
+		return getattr(ogetattribute(self, proxy_target_attr), name)
+
+
 ##!!! rewrite the folowing three.... (or create inherit specific options/variants)
 #----------------------------------------------GetattributeProxyMixin---
 class GetattributeProxyMixin(AbstractProxy):
@@ -333,6 +350,26 @@ class GetattributeRecursiveProxyMixin(AbstractProxy):
 
 #-----------------------------------------------------------------------
 # this section defines ready to use base proxies...
+#------------------------------------InheritAndOverrideProxyMetaclass---
+# this should provide the means to construct a class for the proxy
+# without invoking any functionality of its bases' metaclasses...
+class _InheritAndOverrideProxyMetaclass(type):
+	'''
+	not designed for direct use...
+
+	this acts as a terminator, preventing the invocation of any functionality
+	of the base metaclasses.
+	'''
+	def __init__(self, name, bases, ns):
+		'''
+		'''
+		return type.__init__(self, name, bases, ns)
+	def __call__(self, *p, **n):
+		'''
+		'''
+		return type.__call__(self, *p, **n)
+
+
 #---------------------------------------------InheritAndOverrideProxy---
 # this is the Proxy cache...
 _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
@@ -355,9 +392,14 @@ _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 #    reference the target objects __dict__. thus enabling setting and
 #    referencing data to the proxied object....
 #
+# TODO make a pasive version of this... (e.g. no __new__ nore __init__
+#      methods...) to facilitate better compatibility...
 class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 	'''
 	this is a general (semi-transparent) proxy.
+
+	NOTE: this is not compatible with objects that do something in 
+	      the meta-classes' __init__ or __new__ methods...
 	'''
 	# this defines the attribute name where the proxy target is
 	# stored...
@@ -381,7 +423,13 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 				return _obj
 			# create an object of a class (also just created) inherited
 			# from cls and source.__class__
-			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
+##			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
+			_obj = object.__new__(new.classobj('DynamicProxyBase',
+												(cls, source.__class__),
+												{'__metaclass__': _InheritAndOverrideProxyMetaclass}))
+##			class DynamicProxyBase(cls, source.__class__):
+##				__metaclass__ = _InheritAndOverrideProxyMetaclass
+##			_obj = object.__new__(DynamicProxyBase)
 			# get the new class....
 			cls = object.__getattribute__(_obj, '__class__')
 			cls.__proxy__ = proxy

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.5.14'''
-__sub_version__ = '''20041206003344'''
+__sub_version__ = '''20050124064633'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -9,6 +9,8 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 from __future__ import generators
 import new
+
+##import pli.pattern.proxy as proxy
 
 
 #-----------------------------------------------------------------------
@@ -98,6 +100,54 @@ class RCurry(AbstractCurry):
 										**dict(self._curry_kw.items() + kw.items()))
 
 
+#---------------------------------------------------------LCurryProxy---
+##!!! TEST !!!##
+##class LCurryProxy(AbstractCurry, proxy.TranparentInheritAndOverrideProxy):
+##	'''
+##	'''
+##	def __init__(self, target, *p, **n):
+##		'''
+##		'''
+##		# handle recursive curry....
+##		if hasattr(target, '_curry_pargs'):
+##			p = p + target._curry_pargs
+##		if hasattr(target, '_curry_kw'):
+##			n = dict(n.items() + target._curry_kw.items())
+##		# assign the args...
+##		self._curry_pargs = p
+##		# XXX do we need to copy the dict???
+##		self._curry_kw = n
+##	def __call__(self, *p, **n):
+##		'''
+##		'''
+##		super(CurryProxy, self).__call__(*(p + self._curry_pargs), \
+##											**dict(n.items() + self._curry_kw.items()))
+
+
+#---------------------------------------------------------RCurryProxy---
+##!!! TEST !!!##
+##class RCurryProxy(AbstractCurry, proxy.TranparentInheritAndOverrideProxy):
+##	'''
+##	'''
+##	def __init__(self, target, *p, **n):
+##		'''
+##		'''
+##		# handle recursive curry....
+##		if hasattr(target, '_curry_pargs'):
+##			p = target._curry_pargs + p
+##		if hasattr(target, '_curry_kw'):
+##			n = dict(n.items() + target._curry_kw.items())
+##		# assign the args...
+##		self._curry_pargs = p
+##		# XXX do we need to copy the dict???
+##		self._curry_kw = n
+##	def __call__(self, *p, **n):
+##		'''
+##		'''
+##		super(CurryProxy, self).__call__(*(self._curry_pargs + p), \
+##											**dict(n.items() + self._curry_kw.items()))
+
+
 #--------------------------------------------------------------negate---
 # this will return a function that will return the oposite result
 # (boolean) to the original....
@@ -110,7 +160,7 @@ def raise_on_false(func, exception=Exception, name=None, msg=''):
 	'''
 	this will return a function wraping func so as to raise exception(msg) if it returns false.
 	'''
-	# sanity checks... ##!! TEST !!##
+	# sanity checks...
 	if func == None:
 		raise TypeError, 'func must not be None.'
 	if hasattr(func, '_raise_on_false_wrapped') and func._raise_on_false_wrapped:
