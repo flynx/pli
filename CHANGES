@@ -1,5 +1,12 @@
-# this file was generated on [200408192350]
+# this file was generated on [200408200255]
 pli changes:
+
+version 0.0.70 (200408200247):
+- added pli.pattern.mixin.mapping.AbstractMapping...
+- added pli.pattern.mixin.mapping.BasicMappingProxy...
+
+version 0.0.69 (200408200006):
+- started transfer of pli.pattern.store.store to use the pli.pattern.mixin.mapping.... (needs more testing)
 
 version 0.0.68 (200408191647):
 - added the pli.pattern.mixin package

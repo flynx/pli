@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.01'''
-__sub_version__ = '''20040819161314'''
+__sub_version__ = '''20040820025303'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,7 +11,15 @@ _marker = 'This is a marker string... (WARNING: do not use this in any way!)'
 
 
 #-----------------------------------------------------------------------
-class BasicMapping(object):
+class AbstractMapping(object):
+	'''
+	'''
+	pass
+
+
+#-----------------------------------------------------------------------
+#--------------------------------------------------------BasicMapping---
+class BasicMapping(AbstractMapping):
 	'''
 	this defines the basic mapping interface.
 	'''
@@ -77,6 +85,45 @@ class BasicMapping(object):
 ##		pass
 
 
+#---------------------------------------------------BasicMappingProxy---
+# NOTE: this is slower than a direct proxy...
+class BasicMappingProxy(AbstractMapping):
+	'''
+	'''
+	__source_attr__ = '__source__'
+
+	#__source__ = {}
+
+	# root methods:
+	def __getitem__(self, key):
+		'''
+		'''
+		return getattr(self, self.__source_attr__)[key]
+	def __setitem__(self, key, value):
+		'''
+		'''
+		getattr(self, self.__source_attr__)[key] = value
+	def __delitem__(self, key):
+		'''
+		'''
+		del getattr(self, self.__source_attr__)[key]
+	def __iter__(self):
+		'''
+		'''
+		return getattr(self, self.__source_attr__).__iter__()
+	
+	# 2nd generation methods:
+	def __contains__(self, key):
+		'''
+		'''
+		return key in getattr(self, self.__source_attr__)
+
+	def __len__(self):
+		'''
+		'''
+		return len(getattr(self, self.__source_attr__))
+	
+
 #---------------------------------------------------ComparableMapping---
 ##!!! REVIZE !!!##
 class ComparableMapping(BasicMapping):
@@ -93,9 +140,7 @@ class ComparableMapping(BasicMapping):
 	def __eq__(self, other):
 		'''
 		'''
-		return len(self) == len(other) and \
-			   False not in \
-			   		[ (k in other and self[k] == other[k]) for k in self ]
+		return cmp(self, other) == 0
 	def __ne__(self, other):
 		'''
 		'''
