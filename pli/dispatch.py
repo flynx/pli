@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.10'''
-__sub_version__ = '''20040311134209'''
+__sub_version__ = '''20040823024309'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __thanks__ = '''
@@ -181,6 +181,7 @@ class DispatchByArg(object):
 			weight  : optional priority (default: 0)
 
 
+	a predicate is the method used to process the pattern.
 	the predicate must obey the following interface:
 
 		predicate(pattern, args) -> res
@@ -222,6 +223,10 @@ class DispatchByArg(object):
 		'''
 		for func in self.resolve_iter(*pargs):
 			yield func(*pargs, **nargs)
+##	def predicate(self, pattern, args):
+##		'''
+##		'''
+##		pass
 	def resolve_iter(self, *pargs):
 		'''
 		yeild all the matching callables from heigh to low priority.
@@ -231,6 +236,9 @@ class DispatchByArg(object):
 		else:
 			predicate = rcurry(self.predicate, pargs)
 		res = filter(predicate, self.dba_rules[len(pargs)])
+##		res.reverse()
+##		for o in res:
+##			yield o[-1]
 		while 1:
 			if len(res) == 0:
 				return

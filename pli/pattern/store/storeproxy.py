@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.05'''
-__sub_version__ = '''20040821211955'''
+__sub_version__ = '''20040821212328'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -31,6 +31,10 @@ class BaseStoreProxy(store.BaseStore):
 		'''
 		self._store_data = backend
 
+	def getbackend(self):
+		'''
+		'''
+		return self._store_data
 	def changebackend(self, backend, flags=SAFE_TRNSFER):
 		'''
 		this will transfer data from the current backend to the new.

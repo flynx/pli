@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040723184058'''
+__sub_version__ = '''20040825042901'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -20,6 +20,8 @@ def string(obj):
 	return true if the object is either str or unicode.
 	'''
 	return type(obj) in (str, unicode)
+
+isstring = string
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 r_string = func.raise_on_false(string, TypeError, 'r_string', 'object is nither str or unicode.')

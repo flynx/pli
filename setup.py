@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20040820011700'''
+__sub_version__ = '''20040823025217'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -63,6 +63,7 @@ setup(
 				  'pli.apps.xmlrpcserver',
 				  'pli.aspect',
 				  'pli.config',
+##				  'pli.dispatch',
 				  'pli.event',
 				  'pli.misc',
 				  'pli.net',

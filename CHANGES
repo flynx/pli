@@ -1,5 +1,8 @@
-# this file was generated on [200408212120]
+# this file was generated on [200408250449]
 pli changes:
+
+version 0.0.73 (200408250410):
+- added pli.apps.pluginloader module...
 
 version 0.0.72 (200408212051):
 - added the pli.pattern.store.storeproxy.... (name might still change!)
