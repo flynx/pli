@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040909163900'''
+__sub_version__ = '''20040910153130'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -131,7 +131,7 @@ class StoredObject(object):
 	'''
 	'''
 	__metaclass__ = _StoredObject
-	def __init__(self, name):
+	def __init__(self, name, *p, **n):
 		pass
 
 

@@ -1,15 +1,15 @@
 #=======================================================================
 
-__version__ = '''0.0.47'''
-__sub_version__ = '''20040907144201'''
+__version__ = '''0.0.49'''
+__sub_version__ = '''20040910153023'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-from __future__ import generators
 import time
 import re
+import weakref
 
 import pli.pattern.mixin.mapping as mapping
 
@@ -54,7 +54,7 @@ class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
 
 	__source_attr__ = '_store_data'
 
-	def __init__(self, name):
+	def __init__(self, name, *p, **n):
 		'''
 		'''
 		self.__name__ = name
@@ -128,6 +128,17 @@ class BaseStore(mapping.Mapping, mapping.BasicMappingProxy):
 
 #-----------------------------------------------------------------------
 # Store mix-ins...
+#--------------------------------------------------------WeakrefStore---
+class WeakrefStore(BaseStore):
+	'''
+	'''
+	def __init__(self, name, *p, **n):
+		'''
+		'''
+		super(WeakrefStore, self).__init__(name, *p, **n)
+		self._store_data = weakref.WeakValueDictionary()
+
+
 #---------------------------------------------------AttrTypeBaseStore---
 class AttrTypeBaseStore(BaseStore):
 	'''

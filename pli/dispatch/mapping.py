@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040909175404'''
+__sub_version__ = '''20040910180554'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -141,6 +141,9 @@ if __name__ == '__main__':
 
 	print store['a0'] == a0
 	print store['b1'] == b1
+
+	print 'a0' in store
+	print 'b0' in store
 
 	print [ k for k in store ]
 
