@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.11'''
-__sub_version__ = '''20040908015008'''
+__sub_version__ = '''20040911205351'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -81,6 +81,9 @@ class AbstractProxy(object):
 	'''
 	__proxy_target_attr_name__ = 'proxy_target'
 
+
+#----------------------------------------------------------BasicProxy---
+class BasicProxy(AbstractProxy):
 	##!! check !!##
 	def __repr__(self):
 		'''
@@ -94,7 +97,7 @@ class AbstractProxy(object):
 #-----------------------------------------------------------------------
 # this section defines component mix-ins...
 #-----------------------------------------------------ComparibleProxy---
-class ComparibleProxy(AbstractProxy):
+class ComparibleProxy(BasicProxy):
 	'''
 	proxy mixin. this will transfer the rich comparison calls directly 
 	to the target...
@@ -133,7 +136,7 @@ class ComparibleProxy(AbstractProxy):
 #      consideration, input args... etc.)
 #      might be good to make an "iscached" predicate...
 #
-class CachedProxy(AbstractProxy):
+class CachedProxy(BasicProxy):
 	'''
 	'''
 	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
@@ -176,7 +179,7 @@ _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 #    referencing data to the proxied object....
 #
 ##class InheritAndOverrideProxy(CachedProxy):
-class InheritAndOverrideProxy(AbstractProxy):
+class InheritAndOverrideProxy(BasicProxy):
 	'''
 	this is a general (semi-transparent) proxy.
 	'''

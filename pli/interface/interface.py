@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.19'''
-__sub_version__ = '''20040909172233'''
+__sub_version__ = '''20040911191857'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -17,6 +17,7 @@ classes.
 
 import inspect
 import types
+import sys
 
 import pli.functional as func
 import pli.logictypes as logictypes
@@ -37,8 +38,8 @@ class InterfaceError(Exception):
 
 
 #-----------------------------------------------------------------------
-#----------------------------------------------------------_Interface---
-class _Interface(type, mapping.Mapping):
+#-----------------------------------------------------_BasicInterface---
+class _BasicInterface(type, mapping.Mapping):
 	'''
 	this is the interface metaclass.
 	'''
@@ -77,7 +78,7 @@ class _Interface(type, mapping.Mapping):
 		if not cls.__isconsistent__(errs):
 			errs[:] = dict.fromkeys([ e.__class__.__name__ + ': '+ str(e) for e in errs ]).keys()
 			raise InterfaceError, 'inconsistent interface definition for %s in:\n    %s.' % (cls, '\n    '.join(errs))
-		super(_Interface, cls).__init__(name, bases, ns)
+		super(_BasicInterface, cls).__init__(name, bases, ns)
 	# mapping specific:
 	def __getitem__(cls, name):
 		'''
@@ -97,7 +98,7 @@ class _Interface(type, mapping.Mapping):
 			pass
 		try:
 			##!!! is this correct ?
-			return super(_Interface, cls).__getitem__(name)
+			return super(_BasicInterface, cls).__getitem__(name)
 ##		except AttributeError:
 		##!!!!
 		except:
@@ -153,7 +154,7 @@ class _Interface(type, mapping.Mapping):
 						continue
 					visited += [k]
 					yield k
-
+	# interface specific (1st generation):
 	def __isconsistent__(cls, errors=None):
 		'''
 		'''
@@ -170,7 +171,6 @@ class _Interface(type, mapping.Mapping):
 		if errors in ([], None):
 			return True
 		return False
-	# interface specific (1st generation):
 	def getattrproperty(cls, name, prop=None):
 		'''
 
@@ -230,6 +230,12 @@ class _Interface(type, mapping.Mapping):
 ##				raise InterfaceError, 'property "%s" is not defined for attr "%s".' % (prop, name)
 				return None
 		return res
+
+
+#----------------------------------------------------------_Interface---
+class _Interface(_BasicInterface):
+	'''
+	'''
 	# interface methods (2nd generation):
 	# TODO exception safe??????
 	def isessential(cls, name):
@@ -612,6 +618,31 @@ def getdoc(obj, name=None, interface=None):
 		if n not in res:
 			res[n] = format[n].get('doc', None)
 	return res
+
+
+
+#-----------------------------------------------------------------------
+#---------------------------------------------------------implemments---
+def implemments(interface, depth=1):
+	'''
+	'''
+	f_locals = sys._getframe(depth).f_locals
+	res = f_locals.get('__implemments__', None)
+	if res == None:
+		f_locals['__implemments__'] = interface
+		return
+	# some sort of interface already exists...
+	if type(res) is tuple:
+		if type(interface) is tuple:
+			res = interface + res
+		else:
+			res = (interface,) + res
+	else:
+		if type(interface) is tuple:
+			res = interface + (res,)
+		else:
+			res = (interface, res) 
+	f_locals['__implemments__'] = res
 
 
 
