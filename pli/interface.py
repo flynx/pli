@@ -1,17 +1,22 @@
 #=======================================================================
 
-__version__ = '''0.0.07'''
-__sub_version__ = '''20040722142151'''
+__version__ = '''0.0.15'''
+__sub_version__ = '''20040724013316'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
+import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
-# TODO add tests and paranoya!!!
+
+##!!! REVISE !!!##
+
 # TODO write more docs...
+# TODO add support for pure dict interface definitions...
+
 #------------------------------------------------------InterfaceError---
 class InterfaceError(Exception):
 	'''
@@ -28,8 +33,12 @@ def isessential(obj, name, interface=None):
 	if interface == None \
 			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
 		return False
-	format = (interface != None and interface or obj.__implemments__).__format__
-##	format = obj.__implemments__.__format__
+
+	format = (interface != None and interface or obj.__implemments__)
+	format = type(format) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in format ]) \
+				or format.__format__
+
 	return name in format and format[name].get('essential', False) or '*' not in format
 
 
@@ -40,8 +49,12 @@ def iswritable(obj, name, interface=None):
 	if interface == None \
 			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
 		return True
-	format = (interface != None and interface or obj.__implemments__).__format__
-##	format = obj.__implemments__.__format__
+
+	format = (interface != None and interface or obj.__implemments__)
+	format = type(format) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in format ]) \
+				or format.__format__
+
 	return name in format and format[name].get('writable', True) or \
 				('*' in format and format['*'].get('writable', True))
 
@@ -53,8 +66,12 @@ def isreadable(obj, name, interface=None):
 	if interface == None \
 			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
 		return True
-	format = (interface != None and interface or obj.__implemments__).__format__
-##	format = obj.__implemments__.__format__
+
+	format = (interface != None and interface or obj.__implemments__)
+	format = type(format) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in format ]) \
+				or format.__format__
+
 	return name in format and format[name].get('readable', True) or \
 				('*' in format and format['*'].get('readable', True))
 
@@ -66,10 +83,91 @@ def iscompatible(obj, name, value, interface=None):
 	if interface == None \
 			and (not hasattr(obj, '__implemments__') or obj.__implemments__ is None):
 		return True
-	interface = interface != None and interface or obj.__implemments__
+
+	interface = (interface != None and interface or obj.__implemments__)
+
 	try:
-		interface.checkattr(name, value)
+		checkattr(interface, name, value)
 	except InterfaceError:
+		return False
+	return True
+
+
+#-----------------------------------------------------------checkattr---
+def checkattr(interface, name, value):
+	'''
+	'''
+	format = type(interface) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in interface ]) \
+				or interface.__format__
+	# resolve the format source...
+	if name not in format:
+		if '*' in format:
+			attr_format = format['*']
+		else:
+			raise InterfaceError, 'attribute "%s" is not defined in inteface %s' % (name, interface)
+	else:
+		attr_format = format[name].copy()
+	# special options:
+	# LIKE:
+	if 'LIKE' in attr_format: 
+		if type(attr_format['LIKE']) is str:
+			ext_format = format[attr_format['LIKE']].copy()
+		elif type(attr_format['LIKE']) is dict:
+			ext_format = attr_format['LIKE'].copy()
+		else:
+			raise TypeError, 'the argument of "LIKE" attribute option must '\
+					 'either be of type str or dict (got: %s).' % type(attr_format['LIKE'])
+		ext_format.update(attr_format)
+		attr_format = ext_format
+	# static attribute options:
+	# type:
+	if 'type' in attr_format and not issubclass(type(value), attr_format['type']):
+		raise InterfaceError, 'attribute type mismatch. "%s" attribute ' \
+							'must be of type %s (got: %s).' % (name, type(value), attr_format['type'])
+	# predicate:
+	if 'predicate' in attr_format and not attr_format['predicate'](value):
+		raise InterfaceError, 'predicate failed for "%s" attribute.' % name
+	return True
+
+
+#-----------------------------------------------------checkessentials---
+def checkessentials(interface, obj):
+	'''
+	'''
+	format = type(interface) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in interface ]) \
+				or interface.__format__
+	obj_attrs = dir(obj)
+	for attr in format:
+		if format[attr].get('essential', False) and attr not in obj_attrs:
+			raise InterfaceError, 'essential attribute "%s" missing.' % attr
+	return True
+
+
+#---------------------------------------------------------checkobject---
+def checkobject(interface, obj):
+	'''
+	this will test the object compatibility yith the interface.
+	'''
+	format = type(interface) is tuple \
+				and logictypes.DictUnion(*[ f.__format__ for f in interface ]) \
+				or interface.__format__
+	obj_attrs = dir(obj)
+	obj_data = vars(obj).copy()
+	for name in obj_attrs:
+		val = obj_data.pop(name)
+		if not interface.checkattr(name, val):
+			##!!! reason...
+			return False 
+	# check the star :)
+	if len(obj_data) > 0 and '*' not in format:
+##		##!!! reason...
+##		return False
+		raise InterfaceError, 'excess attributes (%s).' % obj_data.keys()
+	# check if any essentials are left out...
+	if not interface.checkessentials(obj):
+		##!!! reason...
 		return False
 	return True
 
@@ -94,7 +192,6 @@ def getdocdict(obj, attr=None, interface=None):
 	pass
 
 
-
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------Interface---
 # TODO default templates...
@@ -108,7 +205,6 @@ def getdocdict(obj, attr=None, interface=None):
 # Q: does this need to be a class??? ....it might be good to create an
 #    interface object factory...
 #
-##!! check !!##
 class Interface(object):
 	'''
 	XXX write more docs...
@@ -125,11 +221,11 @@ class Interface(object):
 	
 
 	supported options:
-		type		- value type or superclass
+		type		- value type or superclass.
+		default		- this is the default value of the option.
 		predicate	- this will get the option value as argument and
 					  test its compliance (if the will return False
 					  InterfaceError will be raised).
-		default		- this is the default value of the option.
 		essential	- this if true will guarantee the options'
 					  existance in the created object.
 	
@@ -161,101 +257,38 @@ class Interface(object):
 	
 	'''
 
-##	__strict_options__ = True
-	
 	__format__ = None
 
 	def __init__(*p, **n):
 		'''
 		'''
 		raise TypeError, 'can\'t create an interface instance.'
-	def checkattr(cls, name, value):
-		'''
-		'''
-		format = cls.__format__
-		# resolve the format source...
-		if name not in format:
-			if '*' in format:
-				attr_format = format['*']
-			else:
-				raise InterfaceError, 'attribute "%s" is not defined in inteface %s' % (name, cls)
-		else:
-			attr_format = format[name].copy()
-		# special options:
-		# LIKE:
-		if 'LIKE' in attr_format: 
-			if type(attr_format['LI1KE']) is str:
-				ext_format = format[attr_format['LIKE']].copy()
-			elif type(attr_format['LIKE']) is dict:
-				ext_format = attr_format['LIKE'].copy()
-			else:
-				raise TypeError, 'the argument of "LIKE" attribute option must '\
-						 'either be of type str or dict (got: %s).' % type(attr_format['LIKE'])
-			ext_format.update(attr_format)
-			attr_format = ext_format
-		# static attribute options:
-		# type:
-		if 'type' in attr_format and not issubclass(type(value), attr_format['type']):
-			raise InterfaceError, 'attribute type mismatch. "%s" attribute must be of type %s (got: %s).' % (name, type(value), attr_format['type'])
-		# predicate:
-		if 'predicate' in attr_format and not attr_format['predicate'](value):
-			raise InterfaceError, 'predicate failed for "%s" attribute.' % name
-		return True
 	checkattr = classmethod(checkattr)
-	def checkessentials(cls, obj):
-		'''
-		'''
-		format = cls.__format__
-		obj_attrs = dir(obj)
-		for attr in format:
-			if format[attr].get('essential', False) and attr not in obj_attrs:
-				raise InterfaceError, 'essential attribute "%s" missing.' % attr
-		return True
 	checkessentials = classmethod(checkessentials)
-	def checkobject(cls, obj):
-		'''
-		this will test the object compatibility yith the interface.
-		'''
-		format = cls.__format__
-		obj_attrs = dir(obj)
-		obj_data = vars(obj).copy()
-		for name in obj_attrs:
-			val = obj_data.pop(name)
-			if not cls.checkattr(name, val):
-				##!!! reason...
-				return False 
-		# check the star :)
-		if len(obj_data) > 0 and '*' not in format:
-##			##!!! reason...
-##			return False
-			raise InterfaceError, 'excess attributes (%s).' % obj_data.keys()
-		# check if any essentials are left out...
-		if not cls.checkessentials(obj):
-			##!!! reason...
-			return False
-		return True
 	checkobject = classmethod(checkobject)
 
 
 #-------------------------------------------------ObjectWithInterface---
 # TODO add tests and paranoya!!!
-##!! check !!##
 class ObjectWithInterface(object):
 	'''
-	this is an object with interfece support.
+	this is an object with interface support.
 	'''
-	# this defines the objects' interfece.
-	# NOTE: if this is None interfece support will be disabled.
+	# this defines the objects' interface.
+	# NOTE: if this is None interface support will be disabled.
 	__implemments__ = None
 
 	def __new__(cls, *p, **n):
 		'''
 		'''
 		obj = object.__new__(cls, *p, **n)
-		if obj.__implemments__ != None:
+		interface = obj.__implemments__
+		if interface != None:
 			obj.__dict__.update(dict([ (n, v['default']) \
 									for n, v \
-										in obj.__implemments__.__format__.iteritems() \
+										in type(interface) is tuple \
+											and logictypes.DictUnion(*[ i.__format__ for i in interface ]).iteritems() \
+											or interface.__format__.iteritems() \
 										if 'default' in v and n != '*' ]))
 		return obj
 	def __getattribute__(self, name):
@@ -272,7 +305,7 @@ class ObjectWithInterface(object):
 		if object.__getattribute__(self, '__implemments__') == None \
 				or (iswritable(self, name) and iscompatible(self, name, value)):
 			return super(ObjectWithInterface, self).__setattr__(name, value)
-		raise InterfaceError, 'can\'t write value "%s" attribute "%s".' % (value, name)
+		raise InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''
@@ -283,6 +316,7 @@ class ObjectWithInterface(object):
 
 
 #------------------------------------------------------InterfaceProxy---
+# TODO add tests and paranoya!!!
 class InterfaceProxy(object):
 	'''
 	'''
@@ -305,11 +339,11 @@ class InterfaceProxy(object):
 		'''
 		'''
 		if name in ('__source__', '__implemments__'):
-			super(InterfaceProxy, self).__setattr__(name, value)
+			return super(InterfaceProxy, self).__setattr__(name, value)
 		if self.__implemments__ == None \
 				or (iswritable(self, name) and iscompatible(self, name, value)):
 			return setattr(self.__source__, name, value)
-		raise InterfaceError, 'can\'t write value "%s" attribute "%s".' % (value, name)
+		raise InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	def __delattr__(self, name):
 		'''
 		'''

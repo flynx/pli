@@ -1,13 +1,14 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20040214022015'''
+__sub_version__ = '''20040723184058'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
 import re
+import time
 
 import pli.functional as func
 
@@ -53,6 +54,12 @@ def isdate(obj):
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 r_isdate = func.raise_on_false(isdate, TypeError, 'r_isdate', 'object does not match date pattern.')
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -today- -
+def today():
+	'''
+	'''
+	return time.strftime(DATE_FORMAT)
 
 
 #-------------------------------------------------------------isphone---

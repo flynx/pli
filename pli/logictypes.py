@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040608182626'''
+__sub_version__ = '''20040724012609'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -14,6 +14,9 @@ usage of standard python types.
 
 
 #-----------------------------------------------------------------------
+# TODO create a logic proxy, with adapters....
+#      UNION(*p), INTERSECTION(*n), ...
+#
 #-------------------------------------------------------------_Comare---
 class _Comare(object):
 	'''
@@ -282,6 +285,13 @@ class DictTypeUnion(DictUnion, dict):
 
 #-----------------------------------------------------------ListUnion---
 ##def ListUnion(list):
+##	'''
+##	'''
+##	pass
+
+
+#-------------------------------------------------------DictIntersect---
+##class DictIntersect(object):
 ##	'''
 ##	'''
 ##	pass
