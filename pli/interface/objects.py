@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20041011171247'''
+__sub_version__ = '''20041016224637'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,6 +11,43 @@ import pli.logictypes as logictypes
 ##import pli.interface.interface as interface
 import interface
 ##import pli.interface.utils as iutils
+
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------------------strhelp---
+##!!! ugly... revise!
+def strhelp(obj):
+	'''
+	'''
+	e_res = []
+	res = []
+	interf = interface.getinterfaces(obj)
+	format = logictypes.DictUnion(*interf)
+	for n, d in format.iteritems():
+		if not d.get('readable', True) or n == '*':
+			continue
+		t = d.get('type', None)
+		if t == None and 'predicate' in d:
+			t = d['predicate'].__name__
+		else:
+			t = 'Any type'
+		if d.get('essential', False):
+			e_res += [ '    %s (%s):\t\t%s\n' % (n, t, d.get('doc', 'no doc.')) ]
+		else:
+			res += [ '    %s (%s):\t\t%s\n' % (n, t, d.get('doc', 'no doc.')) ]
+	e_res.sort()
+	res.sort()
+	if '*' in format:
+		d = format['*']
+		t = d.get('type', None)
+		if t == None and 'predicate' in d:
+			t = d['predicate'].__name__
+		else:
+			t = 'Any type'
+		res += [ '    %s (%s):\t\t%s\n' % ('*', t, d.get('doc', 'no doc.')) ]
+	return 'Object of %s %s \n\nEssential Attributes:\n%s\nOptional Attributes:\n%s\n' \
+				% (obj.__class__.__name__, interf, ''.join(e_res), ''.join(res))
 
 
 
@@ -65,11 +102,14 @@ class ObjectWithInterface(object):
 				interface.isdeletable(self, name):
 			return super(ObjectWithInterface, self).__delattr__(name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
+	# pli protocols...
+	__help__ = strhelp
 
 
-#--------------------------------------------------InterfaceWithProxy---
+
+#--------------------------------------------------ProxyWithInterface---
 # TODO move this to pli.pattern.proxy (???)
-class InterfaceWithProxy(object):
+class ProxyWithInterface(object):
 	'''
 	'''
 	__implemments__ = None
@@ -91,7 +131,7 @@ class InterfaceWithProxy(object):
 		'''
 		'''
 		if name in ('__source__', '__implemments__'):
-			return super(InterfaceWithProxy, self).__setattr__(name, value)
+			return super(ProxyWithInterface, self).__setattr__(name, value)
 		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 ##			return setattr(self.__source__, name, value)
@@ -105,10 +145,12 @@ class InterfaceWithProxy(object):
 				interface.isdeletable(self, name):
 			delattr(self.__source__, name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
+	# pli protocols...
+	__help__ = strhelp
 
 
 #------------------------------------------------------InterfaceProxy---
-class InterfaceProxy(InterfaceWithProxy):
+class InterfaceProxy(ProxyWithInterface):
 	'''
 	'''
 	def __init__(self, source, interface=None):
@@ -164,6 +206,8 @@ if __name__ == '__main__':
 	print hasattr(O, '__implemments__')
 
 	o.f()
+
+	print o.__help__()
 
 
 

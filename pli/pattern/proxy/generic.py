@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.01'''
-__sub_version__ = '''20040919011303'''
+__version__ = '''0.1.08'''
+__sub_version__ = '''20041017003902'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -33,7 +33,7 @@ def proxymethod(method_name, depth=1):
 	'''
 	this will create a proxy to the method name in the containing namespace.
 
-	NOTE: this will add the method_name to the containing namespace.
+	NOTE: this will add the method_name to the *containing namespace* [evil laugh].
 	'''
 	# text of the new function....
 	txt = '''\
@@ -97,14 +97,20 @@ def isproxy(obj):
 class AbstractProxy(object):
 	'''
 	this is a base class for all proxies...
+
+	NOTE: this is not to be used directly.
 	'''
+	# this defines the attr name used to store the proxied object.
 	__proxy_target_attr_name__ = 'proxy_target'
 
 
-#----------------------------------------------------------BasicProxy---
-class BasicProxy(AbstractProxy):
+
+#-----------------------------------------------------------------------
+# this section defines component mix-ins...
+#--------------------------------------------------ProxyWithReprMixin---
+class ProxyWithReprMixin(AbstractProxy):
 	'''
-	this defines a nice proxy repr mixin.
+	proxy mixin. this defines a nice proxy repr method.
 	'''
 	def __repr__(self):
 		'''
@@ -115,11 +121,8 @@ class BasicProxy(AbstractProxy):
 											repr(getproxytarget(self)))
 
 
-
-#-----------------------------------------------------------------------
-# this section defines component mix-ins...
-#-----------------------------------------------------ComparibleProxy---
-class ComparibleProxy(BasicProxy):
+#------------------------------------------------ComparibleProxyMixin---
+class ComparibleProxyMixin(AbstractProxy):
 	'''
 	proxy mixin. this will transfer the rich comparison calls directly 
 	to the target...
@@ -153,13 +156,15 @@ class ComparibleProxy(BasicProxy):
 		return getproxytarget(self) <= other	
 
 
-#---------------------------------------------------------CachedProxy---
+#----------------------------------------------------CachedProxyMixin---
 # TODO write a more elaborate cache manager... (wee need to take into
 #      consideration, input args... etc.)
 #      might be good to make an "iscached" predicate...
 # NOTE: from here on all proxies are by default cached...
-class CachedProxy(BasicProxy):
+class CachedProxyMixin(AbstractProxy):
 	'''
+	proxy mixin. this defines basic cacheing mechanisms and cache
+	manipulation routines.
 	'''
 	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
 	# if None the proxy caching will be disabled
@@ -170,10 +175,10 @@ class CachedProxy(BasicProxy):
 		'''
 		res = cls._getcached(source)
 		if res == None and hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
-			obj = super(CachedProxy, cls).__new__(cls, source, *p, **n)
+			obj = super(CachedProxyMixin, cls).__new__(cls, source, *p, **n)
 			cls._setcache(source, obj)
 			return obj
-		return super(CachedProxy, cls).__new__(cls, source, *p, **n)
+		return super(CachedProxyMixin, cls).__new__(cls, source, *p, **n)
 ##	@classmethod
 	def _getcached(cls, source):
 		'''
@@ -191,7 +196,95 @@ class CachedProxy(BasicProxy):
 			cls.__proxy_cache__[source] = obj
 	_setcache = classmethod(_setcache)
 
+
+#----------------------------------------------GetattributeProxyMixin---
+class GetattributeProxyMixin(AbstractProxy):
+	'''
+	proxy mixin. this defines a basic __getattribute__ method that supports 
+	      the __proxy_public_attrs__ protocol...
+
+	NOTE: if this protocol is not needed use proxymethod('__getattribute__') instead...
+	'''
+	# this defines the attributes that are resolved to the proxy itself
+	# (not the target object)...
+	__proxy_public_attrs__ = ()
+
+	def __getattribute__(self, name):
+		'''
+		'''
+		ogetattribute = object.__getattribute__
+		proxy_target_attr = ogetattribute(self, '__proxy_target_attr_name__')
+		if name in ogetattribute(self, '__proxy_public_attrs__') + (proxy_target_attr,):
+			return super(GetattributeProxyMixin, self).__getattribute__(name)
+##		return ogetattribute(self, proxy_target_attr).__getattribute__(name)
+		# here the reason we use getattribute is to go through the full
+		# *get attribute* dance in the proxied object...
+		return getattr(ogetattribute(self, proxy_target_attr), name)
+
+
+#------------------------------------------GetattrRecursiveProxyMixin---
+class GetattrRecursiveProxyMixin(AbstractProxy):
+	'''
+	proxy mixin. this provides recursion e.g. will wrap the attrs using 
+	the __wrapper__.
+	this overloads __getattr__.
+
+	NOTE: if __wrapper__ is None this will use self.__class__ as a wrapper.
+	'''
+	# this will define the callable used to wrap the attributes
+	# returned by __getattr__.
+	__wrapper__ = None
+	
+	def __getattr__(self, name):
+		'''
+		'''
+		obj = super(GetattrRecursiveProxyMixin, self).__getattr__(name)
+		wrapper = None
+		try:
+			wrapper = self.__wrapper__
+		except:
+			pass
+		if wrapper == None:
+			return self.__class__(obj)
+		return wrapper(obj)
 		
+
+#-------------------------------------GetattributeRecursiveProxyMixin---
+class GetattributeRecursiveProxyMixin(AbstractProxy):
+	'''
+	proxy mixin. this provides recursion e.g. will wrap the attrs using 
+	the __wrapper__.
+	this overloads __getattribute__.
+
+	NOTE: if __wrapper__ is None this will use self.__class__ as a wrapper.
+	'''
+	# this will define the callable used to wrap the attributes
+	# returned by __getattribute__.
+	__wrapper__ = None
+	# this defines the attributes that are resolved to the proxy itself
+	# (not the target object)...
+	# NOTE: this is here for TranparentInheritAndOverrideProxy
+	#       compatibility...
+	# NOTE: the attrs defined here will not get wrapped.
+	__proxy_public_attrs__ = ()
+	
+	def __getattribute__(self, name):
+		'''
+		'''
+		ogetattribute = object.__getattribute__
+		obj = super(GetattributeRecursiveProxyMixin, self).__getattribute__(name)
+		if name in ogetattribute(self, '__proxy_public_attrs__') + (ogetattribute(self, '__proxy_target_attr_name__'),):
+			return obj
+		wrapper = None
+		try:
+			wrapper = ogetattribute(self, '__wrapper__')
+		except:
+			pass
+		if wrapper == None:
+			return ogetattribute(self, '__class__')(obj)
+		return wrapper(obj)
+
+
 
 #-----------------------------------------------------------------------
 # this section defines ready to use base proxies...
@@ -204,7 +297,7 @@ _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 # TODO test module support (e.g. proxieng a module)...
 # XXX there is a problem with the targets __new__ and __init__
 #     methods...
-#     they can get called on proxy iniy...
+#     they can get called on proxy init...
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this works as follows:
@@ -217,7 +310,7 @@ _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
 #    reference the target objects __dict__. thus enabling setting and
 #    referencing data to the proxied object....
 #
-class InheritAndOverrideProxy(CachedProxy):
+class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 	'''
 	this is a general (semi-transparent) proxy.
 	'''
@@ -298,7 +391,7 @@ class InheritAndOverrideProxy(CachedProxy):
 _TranparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # TODO test if we need any other magic methods???
-class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy):
+class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, GetattributeProxyMixin, ComparibleProxyMixin, ProxyWithReprMixin):
 	'''
 	this is a tranparent variant of InheritAndOverrideProxy. its' behavior 
 	is in no way diferent from the proxied object.
@@ -317,13 +410,6 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 				'__proxy_class__',
 			)
 
-	def __getattribute__(self, name):
-		'''
-		'''
-		ogetattribute = object.__getattribute__
-		if name in ogetattribute(self, '__proxy_public_attrs__') + (ogetattribute(self, '__proxy_target_attr_name__'),):
-			return super(TranparentInheritAndOverrideProxy, self).__getattribute__(name)
-		return self.proxy_target.__getattribute__(name)
 	# directly proxy __setattr__ to the target...
 ##	proxymethod('__setattr__')
 
@@ -332,12 +418,10 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 # this is the Proxy cache...
 _RecursiveInheritNOverrideProxy_cache = weakref.WeakKeyDictionary() 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-class RecursiveInheritNOverrideProxy(InheritAndOverrideProxy):
+class RecursiveInheritNOverrideProxy(GetattributeRecursiveProxyMixin, InheritAndOverrideProxy, ProxyWithReprMixin):
 	'''
-	this is the same as the above but it will wrap each attribute before 
-	it is returned.
-
-	NOTE: if __wrapper__ is None this will use self.__class__ as a wrapper.
+	this is a general (semi-transparent) recursive proxy. e.g. it will wrap each
+	attribute before it is returned.
 	'''
 	__wrapper__ = None
 	__proxy_count__ = 0
@@ -347,22 +431,6 @@ class RecursiveInheritNOverrideProxy(InheritAndOverrideProxy):
 				'__proxy_call__',
 				'__proxy_class__',
 			)
-
-	def __getattribute__(self, name):
-		'''
-		'''
-		ogetattribute = object.__getattribute__
-		obj = super(RecursiveInheritNOverrideProxy, self).__getattribute__(name)
-		if name in ogetattribute(self, '__proxy_public_attrs__') + (ogetattribute(self, '__proxy_target_attr_name__'),):
-			return obj
-		wrapper = None
-		try:
-			wrapper = ogetattribute(self, '__wrapper__')
-		except:
-			pass
-		if wrapper == None:
-			return ogetattribute(self, '__class__')(obj)
-		return wrapper(obj)
 
 
 
@@ -428,7 +496,7 @@ if __name__ == '__main__':
 	# and here we will create a diferent kind of proxy...
 	# this as in the example above will wrap the __call__ method...
 	# also this is recursive in it's nature. e.g. it will wrap each 
-	# attr with its self...
+	# attr with it self...
 	class RProxy(RecursiveInheritNOverrideProxy):
 		def __call__(self, *p, **n):
 			print 'Proxy:\n\t',

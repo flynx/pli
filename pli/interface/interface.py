@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.23'''
-__sub_version__ = '''20041014143847'''
+__sub_version__ = '''20041016032744'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -830,12 +830,12 @@ def add(name, **options):
 					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
 ##	if not interface.__interface_writable__:
 ##		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
-	if name not in interface:
-		if force:
-			interface.__format__[name] = {}
-		else:
-			interface[name] = {}
-	interface[name].update(options)
+	d = interface.get(name, {})
+	d.update(options)
+	if force:
+		interface.__format__[name] = d
+	else:
+		interface[name] = d
 
 
 #----------------------------------------------------------------hide---

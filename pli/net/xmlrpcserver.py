@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.07'''
-__sub_version__ = '''20040430192015'''
+__sub_version__ = '''20041016142240'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -13,6 +13,12 @@ import sys
 import traceback
 
 
+
+#-----------------------------------------------------------------------
+#----------------------------------------------------XMLRPCServerExit---
+class XMLRPCServerExit(Exception):
+	'''
+	'''
 
 #-----------------------------------------------------------------------
 #------------------------------------------------------RequestHandler---
@@ -77,6 +83,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 				response = self.call(method, params)
 				if type(response) != type(()):
 					response = (response,)
+##			except XMLRPCServerExit:
+##				##!!! prepare for exit...
+##				self._exit_now = True
+##				response =  xmlrpclib.dumps(0, methodresponse=1)
 			except:
 				# report exception back to server
 				exc_type, exc_value, exc_trackback = sys.exc_info()
@@ -113,6 +123,10 @@ class RequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 			# shut down the connection (from Skip Montanaro)
 			self.wfile.flush()
 			self.connection.shutdown(1)
+##			if hasattr(self, '_exit_now') and self._exit_now:
+##				##!!!
+##				print 'Exiting...'
+##				raise XMLRPCServerExit
 	# the GET handler
 ##	do_GET = do_POST
 	def do_GET(self):
