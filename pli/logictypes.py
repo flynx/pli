@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.00'''
-__sub_version__ = '''20040829143825'''
+__sub_version__ = '''20040829144619'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -11,7 +11,7 @@ usage of standard python types.
 
 #-----------------------------------------------------------------------
 
-import pli.pattren.mixin.mapping as mapping
+import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.01'''
-__sub_version__ = '''20040829143248'''
+__sub_version__ = '''20040829144740'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -523,7 +523,7 @@ def getdoc(obj, name=None, interface=None):
 	# if name is present...
 	if name != None:
 		if name in format:
-			return {name: format[n].get('essential', None)}
+			return {name: format[name].get('doc', None)}
 		raise InterfaceError, 'attribute "%s" is not defined in the interface for %s.' % (name, obj)
 	# if name is not present...
 	res = {}
@@ -535,10 +535,9 @@ def getdoc(obj, name=None, interface=None):
 	#       for cases where there are overlaping interfaces...)
 	#       though this might be slightly slower due to the nested
 	#       loops...
-	for i in format:
-		for n in i:
-			if n not in res:
-				res[n] = i.getattrproperty(n, 'doc')
+	for n in format:
+		if n not in res:
+			res[n] = format[n].get('doc', None)
 	return res
 
 
