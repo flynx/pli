@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.39'''
-__sub_version__ = '''20040214020620'''
+__sub_version__ = '''20040322161031'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,7 +11,8 @@ import time
 import random
 import sha
 
-##import acl as acl
+##!! remove ...
+import pli.misc.acl as acl
 import pli.misc.passcrypt as passcrypt
 
 
