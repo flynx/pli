@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.00'''
-__sub_version__ = '''20040829144619'''
+__version__ = '''0.1.03'''
+__sub_version__ = '''20040902191059'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -144,6 +144,10 @@ class DictUnion(mapping.MappingWithMethods):
 		others = list(others)
 		others.reverse()
 		self._members = self._members + tuple(others)
+	def memberindex(self, obj):
+		'''
+		'''
+		return list(self._members).index(obj)
 	def removemember(self, obj):
 		'''
 		'''
@@ -155,6 +159,16 @@ class DictUnion(mapping.MappingWithMethods):
 		'''
 		'''
 		return self._members
+	##!!! revise...
+	def popmember(self, index=0):
+		'''
+
+		NOTE: this by default will remove the highest priority member.
+		'''
+		m = list(self._members)
+		res = m.pop(index)
+		self._members = tuple(m)
+		return res
 	def itermembers(self):
 		'''
 		'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.01'''
-__sub_version__ = '''20040829143830'''
+__sub_version__ = '''20040905000830'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -131,40 +131,50 @@ class ComparableMapping(BasicMapping):
 	this defines the basic comparability interface for the basic mapping.
 	'''
 	# 2nd generation methods:
-	def __cmp__(self, other):
-		'''
-		'''
-		##!!! ugly !!!##
-		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
-			return cmp(dict([ (k, self[k]) for k in self ]), dict([ (k, other[k]) for k in other ]))
-		return -1
+##	def __cmp__(self, other):
+##		'''
+##		'''
+##		##!!! ugly !!!##
+##		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+##			return cmp(dict([ (k, self[k]) for k in self ]), dict([ (k, other[k]) for k in other ]))
+##		return -1
 
+	# 2rd generation methods:
 	def __eq__(self, other):
 		'''
 		'''
-		return cmp(self, other) == 0
+		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+			return dict([ (k, self[k]) for k in self ]) == dict([ (k, other[k]) for k in other ])
+		return False
 	def __ne__(self, other):
 		'''
 		'''
 		return not self == other
 
-	##!!!
-##	def __ge__(self, other):
-##		'''
-##		'''
-##		pass
-##	def __gt__(self, other):
-##		'''
-##		'''
-##		pass
-##	def __le__(self, other):
-##		'''
-##		'''
-##		pass
-##	def __lt__(self, other):
-##		'''
-##		'''
-##		pass
+	def __gt__(self, other):
+		'''
+		'''
+		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+			return dict([ (k, self[k]) for k in self ]) > dict([ (k, other[k]) for k in other ])
+		return False
+	def __lt__(self, other):
+		'''
+		'''
+		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+			return dict([ (k, self[k]) for k in self ]) < dict([ (k, other[k]) for k in other ])
+		return False
+	def __ge__(self, other):
+		'''
+		'''
+		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+			return dict([ (k, self[k]) for k in self ]) >= dict([ (k, other[k]) for k in other ])
+		return False
+	def __le__(self, other):
+		'''
+		'''
+		if hasattr(other, '__iter__') and hasattr(other, '__getitem__'):
+			return dict([ (k, self[k]) for k in self ]) <= dict([ (k, other[k]) for k in other ])
+		return False
 
 
 #------------------------------------------MappingWithIteratorMethods---

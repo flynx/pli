@@ -1,5 +1,8 @@
-# this file was generated on [200409011555]
+# this file was generated on [200409050023]
 pli changes:
+
+version 0.0.82 (200409050022):
+- fixed ComparableMapping in pli.pattern.mixin.mapping.... (now it actually works! :) ) ...though there is no __cmp__ method...
 
 version 0.0.82 (200408310058):
 - split the pli/interface.py into several modules now in the pli.interface package....
