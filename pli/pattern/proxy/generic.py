@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.07'''
-__sub_version__ = '''20040906053350'''
+__version__ = '''0.0.11'''
+__sub_version__ = '''20040906174006'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,10 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 __doc__ = '''\
 this module will define a set of utilities and classes to be used to build
 various proxies...
+
+NOTE: currently most proxy object do not use weak refs to reference the 
+      objcet, thus deleting the object alone will not cause its total
+	  removal...
 '''
 
 
@@ -69,15 +73,26 @@ def isproxy(obj):
 
 
 #-----------------------------------------------------------------------
+# TODO add weakref to target option!!!
 #-------------------------------------------------------AbstractProxy---
 class AbstractProxy(object):
 	'''
 	this is a base class for all proxies...
 	'''
+	__proxy_target_attr_name__ = 'proxy_target'
+
+	##!! check !!##
+	def __repr__(self):
+		'''
+		'''
+		return '<%s proxy at %s to %s>' % (self.__class__.__name__, 
+											hex(id(self)),
+											repr(getattr(self, self.__proxy_target_attr_name__)))
 
 
 
 #-----------------------------------------------------------------------
+# this section defines component mix-ins...
 #-----------------------------------------------------ComparibleProxy---
 class ComparibleProxy(AbstractProxy):
 	'''
@@ -113,10 +128,37 @@ class ComparibleProxy(AbstractProxy):
 		return getattr(self, self.__proxy_target_attr_name__) <= other
 
 
+#---------------------------------------------------------CachedProxy---
+class CachedProxy(AbstractProxy):
+	'''
+	'''
+	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
+	# if None the proxy caching will be disabled
+	__proxy_cache__ = None
+
+	def __new__(cls, source, *p, **n):
+		'''
+		'''
+		if hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
+			if source in cls.__proxy_cache__:
+				return cls.__proxy_cache__[source]
+			else:
+				res = cls.__proxy_cache__[source] = super(CachedProxy, cls).__new__(cls, source, *p, **n)
+				return res
+		return super(CachedProxy, cls).__new__(cls, source, *p, **n)
+
+		
+
+#-----------------------------------------------------------------------
+# this section defines ready to use base proxies...
 #---------------------------------------------InheritAndOverrideProxy---
+# this is the Proxy cache...
+_InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
+#
 # NOTE: the problem that might accur here is when we assign to
 #       self.__class__.something
 # TODO test module support (e.g. proxieng a module)...
+# TODO make this a child of CachedProxy...
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this works as follows:
@@ -129,22 +171,40 @@ class ComparibleProxy(AbstractProxy):
 #    reference the target objects __dict__. thus enabling setting and
 #    referencing data to the proxied object....
 #
+##class InheritAndOverrideProxy(CachedProxy):
 class InheritAndOverrideProxy(AbstractProxy):
 	'''
 	this is a general (semi-transparent) proxy.
 	'''
+	# this defines the attribute name where the proxy target is
+	# stored...
 	__proxy_target_attr_name__ = 'proxy_target'
+	# this is used to generate unique proxy class names...
+	__proxy_count__ = 0
+	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
+	# if None the proxy caching will be disabled
+##	__proxy_cache__ = None
+	__proxy_cache__ = _InheritAndOverrideProxy_cache
 
 	def __new__(cls, source, *p, **n):
 		'''
 		'''
 		osetattr = object.__setattr__
+		cls_name = cls.__name__
 		try:
+			# process proxy cache...
+			if hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
+				if source in cls.__proxy_cache__:
+					return cls.__proxy_cache__[source]
 			# create an object of a class (also just created) inherited
 			# from cls and source.__class__
 			_obj = object.__new__(new.classobj('',(cls, source.__class__), {}))
 			# get the new class....
 			cls = object.__getattribute__(_obj, '__class__')
+			# name the new class... 
+			# NOTE: the name may not be unique!
+			cls.__name__ = cls_name + '_' + str(cls.__proxy_count__)
+			cls.__proxy_count__ += 1
 			# considering that the class we just created is unique we
 			# can use it as a data store... (and we do not want to
 			# polute the targets dict :) )
@@ -167,6 +227,9 @@ class InheritAndOverrideProxy(AbstractProxy):
 				if hasattr(cls, '__proxy_class__') and cls.__proxy_class__ != None:
 					return cls.__proxy_class__(source)
 				return source
+		# process proxy cache...
+		if hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
+			cls.__proxy_cache__[source] = _obj
 		return _obj
 	# this is here to define the minimal __init__ format...
 	def __init__(self, source, *p, **n):
@@ -184,6 +247,9 @@ class InheritAndOverrideProxy(AbstractProxy):
 
 
 #-----------------------------------TranparentInheritAndOverrideProxy---
+
+_TranparentInheritAndOverrideProxy_cache = weakref.WeakKeyDictionary() 
+
 # Q: do we need any other magic methods???
 class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy):
 	'''
@@ -195,6 +261,10 @@ class TranparentInheritAndOverrideProxy(InheritAndOverrideProxy, ComparibleProxy
 		  variant.
 	'''
 	__proxy_target_attr_name__ = 'proxy_target'
+	__proxy_count__ = 0
+	__proxy_cache__ = _TranparentInheritAndOverrideProxy_cache
+	# this defines the attributes that are resolved to the proxy itself
+	# (not the target object)...
 	__proxy_public_attrs__ = (
 				'proxy_target',
 				'__proxy_call__',
@@ -272,6 +342,13 @@ if __name__ == '__main__':
 
 	print isproxy(p), isproxy(o)
 
+	print o
+	print p
+
+	p0 = Proxy(o)
+	p1 = Proxy(o)
+
+	print p is p0, p0 is p1
 
 
 #=======================================================================
