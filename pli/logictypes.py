@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.07'''
-__sub_version__ = '''20050302201424'''
+__version__ = '''0.1.12'''
+__sub_version__ = '''20050406044155'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -325,6 +325,126 @@ class DictUnion(mapping.Mapping):
 		return dict(self.items())
 
 
+#---------------------------------------------------WritableDictUnion---
+# modes:
+# get the last occurance...
+GET_LOCAL_LAST = 0
+# get the first occurance...
+GET_LOCAL_FIRST = 1
+
+# if key is not contained in union, add it to the last member...
+WRITE_NEW_TO_LAST = 0
+# if key is not contained in union, add it to the first member...
+WRITE_NEW_TO_FIRST = 2
+# if the key is present in the union more than once, override the last
+# occurance...
+WRITE_TO_LAST_OWNER = 0
+# if the key is present in the union more than once, override the first
+# occurance...
+WRITE_TO_FIRST_OWNER = 4
+# write to local (temporary) dict...
+# NOTE: if this is set, other write opts will be ignored...
+WRITE_LOCAL = 8
+# disable write...
+WRITE_DISABLED = 16
+
+# delete the last occurance of key...
+DELETE_LAST = 0
+# delete the first occurance of key...
+DELETE_FIRST = 32 
+# enable ocal key delete...
+DELETE_LOCAL = 64
+# disable deletion of anything but local keys...
+DELETE_LOCAL_ONLY = 128
+# disable delete...
+DELETE_DISABLED = 256
+
+class WritableDictUnion(DictUnion):
+	'''
+	'''
+	__modify_props__ = GET_LOCAL_FIRST \
+						| WRITE_NEW_TO_FIRST \
+						| WRITE_TO_FIRST_OWNER \
+						| DELETE_FIRST \
+						| DELETE_LOCAL
+
+	def __init__(self, *members):
+		'''
+		'''
+		super(WritableDictUnion, self).__init__(*members)
+		self._locals = {}
+	def __getitem__(self, name):
+		'''
+		'''
+		props = getattr(self, '__modify_props__', 0)
+		if props & GET_LOCAL_FIRST:
+			return self._locals.get(name, super(WritableDictUnion, self).__getitem__(name))
+		try:
+			return super(WritableDictUnion, self).__getitem__(name)
+		except KeyError:
+			if name in self._locals:
+				return self._locals[name]
+			raise KeyError, name
+	def __setitem__(self, name, value):
+		'''
+		'''
+		props = getattr(self, '__modify_props__', 0)
+		if props & WRITE_DISABLED:
+			raise TypeError, 'can\'t add values to a dict union object (writing is disabled).'
+		elif props & WRITE_LOCAL:
+			self._locals[name] = value
+		else:
+			try:
+				if props & WRITE_TO_FIRST_OWNER:
+					self.getallcontainersof(name)[0][name] = value
+				else:
+					self.getallcontainersof(name)[-1][name] = value
+			except KeyError:
+				if props & WRITE_NEW_TO_FIRST:
+					self.members()[0][name] = value
+				else:
+					self.members()[-1][name] = value
+	def __contains__(self, name):
+		'''
+		'''
+		if name in self._locals or super(WritableDictUnion, self).__contains__(name):
+			return True
+		return False
+	def __delitem__(self, name):
+		'''
+		'''
+		props = getattr(self, '__modify_props__', 0)
+		if props & DELETE_DISABLED:
+			raise TypeError, 'can\'t delete items (deletion is disabled).'
+		if props & DELETE_LOCAL and name in self._locals:
+			del self._locals[name]
+		elif not props & DELETE_LOCAL_ONLY:
+			if props & DELETE_FIRST:
+				del self.getallcontainersof(name)[0][name]
+			else:
+				del self.getallcontainersof(name)[-1][name]
+		else:
+			raise TypeError, 'can\'t delete from contained dicts.'
+	def __iter__(self):
+		'''
+		'''
+		seen = []
+		props = getattr(self, '__modify_props__', 0)
+		if props & GET_LOCAL_FIRST:
+			for k in self._locals:
+				yield k
+				seen += [k]
+		for k in super(WritableDictUnion, self).__iter__():
+			if k not in seen:
+				yield k
+				seen += [k]
+		if not props & GET_LOCAL_FIRST:
+			for k in self._locals:
+				if k not in seen:
+					yield k
+
+
+
 #-------------------------------------------------------DictTypeUnion---
 # WARNING: this is not done!
 class DictTypeUnion(DictUnion, dict):
@@ -387,6 +507,22 @@ class ObjectUnion(object):
 		return False
 	# interface methods...
 	##!!!
+
+
+
+if __name__ == '__main__':
+	d0 = {'a':1, 'b':2}
+	d1 = {'c':'!!!!!', 'b':'x'}
+
+	D = WritableDictUnion(d0, d1)
+
+	D['b'] = '*****'
+
+	print D.todict()
+	print d0, d1
+
+	print 'a' in D
+
 
 
 

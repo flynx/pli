@@ -1,5 +1,8 @@
-# this file was generated on [200504010132]
+# this file was generated on [200504110626]
 pli changes:
+
+version 0.0.140 (200504060442):
++ added pli.logictypes.WritableDictUnion class...
 
 version 0.0.138 (200503310620):
 - added support for proxy objects (module pli.pattern.proxy.generic) to be safely pickled and unpickled (needs more testing).

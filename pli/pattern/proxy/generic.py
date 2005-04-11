@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20050401013137'''
+__sub_version__ = '''20050405190239'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -486,6 +486,8 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 		  those will require the rewrite of these methods in the 
 		  metaclass; this can be defined in the __proxy_metaclass__
 		  class variable.
+	NOTE: this will only override methods. instance attribute 
+		  substitution can not be done...
 
 	Attributes:
 		__proxy__			- the class used to create the proxy.

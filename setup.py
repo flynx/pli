@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20041009203657'''
+__sub_version__ = '''20050411062518'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -80,7 +80,7 @@ setup(
 				  'pli.pattern.state',
 				  'pli.pattern.store',
 				  'pli.pattern.mixin',
-##				  'pli.pattern.tree',
+				  'pli.pattern.tree',
 				  'pli.serialize',
 				 ],
 ##	  py_modules = [],
