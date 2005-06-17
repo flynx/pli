@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.03'''
-__sub_version__ = '''20050112045459'''
+__sub_version__ = '''20050617022706'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -9,6 +9,9 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 _marker = 'This is a marker string... (WARNING: do not use this in any way!)'
 
+# NOTE: none of the defined here classes will contaminate the namespace
+#       of the object that derrives from any one or combination of
+#       them.
 
 #-----------------------------------------------------------------------
 #-----------------------------------------------------------ismapping---
