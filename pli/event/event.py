@@ -2,8 +2,8 @@
 
 #-----------------------------------------------------------------------
 
-__version__ = '''0.3.16'''
-__sub_version__ = '''20041231160717'''
+__version__ = '''0.3.23'''
+__sub_version__ = '''20050705153243'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -68,6 +68,8 @@ def bind(event, func, HOOK_DEBUG=False):
 	'''
 	register func as the event callback.
 
+	this will return the callback.
+
 	HOOK_DEBUG will enable exception propagation from event handlers.
 	'''
 	if isevent(event):
@@ -93,10 +95,82 @@ def unbind(event, func):
 		raise EventBindError, 'can\'t unbind from non-event object %s.' % event
 
 
+#-----------------------------------------------------------bindcount---
+# XXX might be good to make this obay the event bind mode... (???)
+def bindcount(event, func, count, HOOK_DEBUG=False):
+	'''
+	same as bind, but the handler will be called count times and then 
+	is unbound.
+
+	this will return the wrapped handler.
+
+	NOTE: due to the fact that this will create a unique wrapper for each
+	      bind, the handler will be bound regardless of the event bind 
+		  mode bind mode.
+	NOTE: the original callback is wrapped in another function, thus to 
+	      ecplicitly unbind use the returned function.
+	NOTE: the original callback given to the bindcount function is stored
+	      in the evt_orig_handler attribute of the wrapper.
+	'''
+	##!!! HACK: figute out a better way to do this...
+	##!!!       something like a "closure" kw would do the trick...
+	# this will enable closure modification...
+	count = [count]
+
+	# the wrapper function...
+	def runner(*p, **n):
+		'''
+		event handler wrapper. this will call the event count times and then unbind.
+
+		attributes:
+			evt_orig_handler	- stores the handler.
+			evt_handler_count	- stores the remaining call count.
+		'''
+		err = None
+		try:
+			res = func(*p, **n)
+		except Exception, err:
+			pass
+		# update counter..
+		if count[0] <= 1:
+			# on counter depleation unbind the event handler...
+			unbind(event, runner)
+		else:
+			count[0] -= 1
+			# NOTE: this does not pickle correctly...
+			runner.evt_handler_count = count[0]
+		# if an error occurred...
+		if err != None:
+			raise err
+		return res
+	# save the original callback...
+	# NOTE: this does not pickle correctly...
+	runner.evt_orig_handler = func
+	# bind and return the wrapper...
+	return bind(event, runner, HOOK_DEBUG)
+
+
+#------------------------------------------------------------bindonce---
+def bindonce(event, func, HOOK_DEBUG=False):
+	'''
+	will bind a one time handler. 
+	this is a special case of the bindcount	function.
+
+	same as:
+		bindcount(event, func, 1, HOOK_DEBUG)
+
+	NOTE: for more information see the bindcount function.
+	'''
+	return bindcount(event, func, 1, HOOK_DEBUG)
+	
+
 #-------------------------------------------------------------isbound---
 def isbound(event, func):
 	'''
 	test if func is bound to event.
+
+	NOTE: this does not work for bindonce or bindcount bound handlers...
+	      use their returns instead.
 	'''
 	if isevent(event):
 		return func in event.__eventhooks__

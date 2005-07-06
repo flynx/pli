@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20041026155043'''
+__sub_version__ = '''20050705163031'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -882,6 +882,8 @@ def inherit(*classes, **options):
 
 #-----------------------------------------------------------------------
 # the next several functions will modify the current interface...
+# NOTE: these work form inside the object itself! (ont the interface
+#       object...)
 #-----------------------------------------------------------------add---
 # TODO add a batch variant of add...
 def add(name, **options):

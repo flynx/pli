@@ -1,5 +1,9 @@
-# this file was generated on [200506180009]
+# this file was generated on [200507062030]
 pli changes:
+
+version 0.0.143 (200507051502):
+- added pli.event.event.bindcount and pli.event.bindonce...
+- added more docs for pli.pattern.state.fsm...
 
 version 0.0.140 (200504060442):
 + added pli.logictypes.WritableDictUnion class...

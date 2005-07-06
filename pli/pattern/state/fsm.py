@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.27'''
-__sub_version__ = '''20050329172912'''
+__version__ = '''0.3.28'''
+__sub_version__ = '''20050705155549'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -136,6 +136,9 @@ def isinloop(s):
 #----------------------------------------------------------transition---
 # TODO add support for string state names... (+ check consistency... (?))
 # TODO add doc paramiter to transitions...
+# TODO add support for logic var states (e.g. define a transition
+#      before the states are created...)
+#
 # modes:
 AUTO = 0
 MANUAL = 1
@@ -143,6 +146,8 @@ MANUAL = 1
 def transition(s1, s2, condition=None, mode=AUTO):
 	'''
 	create a transition from s1 to s2.
+
+	for more information see the BasicState.transition method.
 	'''
 	if not isterminal(s1):
 		s1.transition(s2, condition, mode)
@@ -180,6 +185,7 @@ class onExitState(event.InstanceEvent):
 
 
 #--------------------------------------------onFiniteStateMachineStop---
+# TODO write more docs...
 class onFiniteStateMachineStop(event.InstanceEvent):
 	'''
 	'''
@@ -191,7 +197,7 @@ class onFiniteStateMachineStop(event.InstanceEvent):
 		self.state_name = state_name
 		# XXX this is a cyclic reference....
 		if fsm != None:
-			self.fsm= fsm
+			self.fsm = fsm
 		super(onFiniteStateMachineStop, self).__init__()
 
 
@@ -200,7 +206,7 @@ class onFiniteStateMachineStop(event.InstanceEvent):
 # NOTE: whole FSMs can not (yet) be reproduced by deep copying... (not
 #       tested)
 # TODO test for safety of parallel execution of two fsm instances...
-# TODO write more docs...
+#      (is this data-isolated?)
 # TODO error state handler...
 # TODO "Sub-FSMs"
 #
@@ -382,7 +388,6 @@ class _StoredState(stored._StoredClass):
 
 
 #---------------------------------------------------------------State---
-# TODO write more docs...
 # TODO add doc paramiter to transitions...
 # TODO error state handler...
 # TODO "Sub-FSMs"
@@ -391,6 +396,11 @@ class _StoredState(stored._StoredClass):
 class BasicState(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
+
+	interface methods:
+		transition			: this will create a transition (see the method 
+							  doc for more detail).
+							  NOTE: this is a class method.
 
 	there are three utility methods that can be defined:
 		__runonce__			: this will be run only once per state, this is
@@ -463,15 +473,24 @@ class BasicState(FiniteStateMachine):
 	def transition(cls, tostate, condition=None, mode=AUTO):
 		'''
 		this will create a transition from the current state to the tostate.
+
+		the condition, if given, is passed the FSM object and if True is returned
+		the transition is finalized, else the transition is abborted.
+
+		the mode can be:
+			AUTO	- for automatic transitioning (default).
+			MANUAL	- for manual transitioning.
+
+		NOTE: the transitions are tested in order of definition.
+		NOTE: if automatic transitioning is enabled the MANUAL mode transitions 
+		      are skipped when searching for an appropriate exit.
 		'''
 		transitions = cls._transitions
 		if transitions == None:
-##			transitions = cls._transitions = {tostate: condition}
 			transitions = cls._transitions = {tostate: (condition, mode)}
 ##		elif tostate in transitions:
 ##			raise TransitionError, 'a transition from %s to %s already exists.' % (cls, tostate)
 		else:
-##			cls._transitions[tostate] = condition
 			cls._transitions[tostate] = (condition, mode)
 	transition = classmethod(transition)
 	def changestate(self, tostate):
@@ -489,8 +508,6 @@ class BasicState(FiniteStateMachine):
 			raise TransitionError, 'can\'t change state of %s to state %s without a transition.' % (self, tostate)
 		# check condition...
 		transitions = self._transitions
-##		if transitions[tostate] != None and not transitions[tostate](self):
-##		if transitions[tostate] != None and transitions[tostate][0] != None and not transitions[tostate][0](self):
 		if transitions != None and tostate in transitions \
 				and transitions[tostate][0] != None and not transitions[tostate][0](self):
 			raise TransitionError, 'conditional transition from %s to state %s failed.' % (self, tostate)
@@ -521,8 +538,6 @@ class BasicState(FiniteStateMachine):
 			if transitions != None:
 				for tostate, (cond, mode) in transitions.items():
 					try:
-##						self.changestate(tostate)
-##						return
 						if mode == AUTO:
 							self.changestate(tostate)
 							return
@@ -556,8 +571,8 @@ class BasicState(FiniteStateMachine):
 #-------------------------------------------------StateWithAttrPriority---
 class StateWithAttrPriority(BasicState):
 	'''
-	this will add adds the ability to resolve names to the startup class (e.g. 
-	the class that was defined as FSM base, or in other words, the desendant of 
+	this will add the ability to resolve names to the startup class (e.g. the 
+	class that was defined as FSM base, or in other words, the desendant of 
 	the FSM used to create the FSM instance).
 
 	the resolution order is as folows:
@@ -600,7 +615,6 @@ class StateWithAttrPriority(BasicState):
 					# get startup...
 					return getattr(getattribute('__startup_class__'), name)
 				except AttributeError:
-##					pass
 					# get current...
 					return getattribute(name)
 			else:
@@ -638,6 +652,7 @@ State = StateWithAttrPriority
 #--------------------------------------------------------InitialState---
 class InitialState(State):
 	'''
+	initial state base class.
 	'''
 	__is_initial_state__ = True
 	__ignore_registration__ = True
@@ -646,6 +661,7 @@ class InitialState(State):
 #-------------------------------------------------------TerminalState---
 class TerminalState(State):
 	'''
+	terminal state base class.
 	'''
 	__is_terminal_state__ = True
 	__ignore_registration__ = True
