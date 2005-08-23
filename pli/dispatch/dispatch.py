@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20041015011041'''
+__sub_version__ = '''20050819183526'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -25,7 +25,7 @@ class AbstractDispatch(object):
 
 
 #-------------------------------------------------------BasicDispatch---
-# Q: this is masicly a dict, so do we need a special interface????
+# Q: this is basicly a dict, so do we need a special interface????
 class BasicDispatch(AbstractDispatch):
 	'''
 	'''

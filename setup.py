@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20050824032158'''
+__sub_version__ = '''20050824032506'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -82,6 +82,9 @@ setup(
 				  'pli.pattern.mixin',
 				  'pli.pattern.tree',
 				  'pli.persistance',
+				  'pli.persistance.sql',
+				  'pli.persistance.sql.pgsql',
+				  'pli.persistance.sql.mssql',
 				  'pli.serialize',
 				 ],
 ##	  py_modules = [],
