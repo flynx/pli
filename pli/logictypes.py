@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20050824152135'''
+__sub_version__ = '''20050824153947'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -200,7 +200,7 @@ class AbstractDictChainMixin(mapping.Mapping):
 	def __getitem__(self, name):
 		'''
 		'''
-		for m in self.__iteruchainmembers__():
+		for m in self.__iterchainmembers__():
 			if name in m:
 				return m[name]
 		raise KeyError, 'key "%s" is not present in any of the members.' % name
@@ -217,7 +217,7 @@ class AbstractDictChainMixin(mapping.Mapping):
 	def __contains__(self, name):
 		'''
 		'''
-		for m in self.__iteruchainmembers__():
+		for m in self.__iterchainmembers__():
 			if name in m:
 				return True
 		return False
@@ -225,13 +225,13 @@ class AbstractDictChainMixin(mapping.Mapping):
 		'''
 		'''
 		seen = []
-		for m in self.__iteruchainmembers__():
+		for m in self.__iterchainmembers__():
 			for n in m:
 				if n not in seen:
 					seen += [n]
 					yield n
 	# AbstractDictChainMixin specific extension interface...
-##	def __iteruchainmembers__(self):
+##	def __iterchainmembers__(self):
 ##		'''
 ##		this will yield dicts, elements of the chain.
 ##		'''
@@ -272,13 +272,13 @@ class DictUnion(AbstractDictChainMixin):
 		members.reverse()
 		self._members = tuple(members)
 	# AbstractDictChainMixin specific extension interface...
-	def __iteruchainmembers__(self):
+	def __iterchainmembers__(self):
 		'''
 		'''
 		for m in self._members:
 			yield m
 	# the DictUnion specific interface...
-	# XXX should these depend on __iteruchainmembers__ or directly on
+	# XXX should these depend on __iterchainmembers__ or directly on
 	#     _members????
 	def unite(self, *others):
 		'''
@@ -322,7 +322,7 @@ class DictUnion(AbstractDictChainMixin):
 		res = m.pop(index)
 		self._members = tuple(m)
 		return res
-	itermembers = __iteruchainmembers__
+	itermembers = __iterchainmembers__
 	def getcontainerof(self, name):
 		'''
 		'''
@@ -477,8 +477,8 @@ class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
 	'''
 	
 	NOTE: this class was designed as a basic base class (atleast the
-	      __iteruchainmembers__ method should be overloaded).
-	NOTE: do not forget to call the original __iteruchainmembers__.
+	      __iterchainmembers__ method should be overloaded).
+	NOTE: do not forget to call the original __iterchainmembers__.
 	NOTE: this, if used as is will not differ from a dict.
 	'''
 	def __init__(self, *p, **n):
@@ -494,7 +494,7 @@ class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
 		'''
 		'''
 		del self._dct_data[name]
-	def __iteruchainmembers__(self):
+	def __iterchainmembers__(self):
 		'''
 		'''
 		yield self._dct_data
