@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.12'''
-__sub_version__ = '''20050406044155'''
+__version__ = '''0.1.19'''
+__sub_version__ = '''20050824152135'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -190,10 +190,64 @@ def dictcopyunite(*members):
 	return res
 
 
-#-----------------------------------------------------------DictUnion---
-##class DictUnion(mapping.MappingWithMethods):
+#---------------------------------------------------AbstractDictChainMixin---
 # TODO split this into several mix-ins....
-class DictUnion(mapping.Mapping):
+# NOTE: this was not designed to be used directly...
+class AbstractDictChainMixin(mapping.Mapping):
+	'''
+	'''
+	# mapping interface...
+	def __getitem__(self, name):
+		'''
+		'''
+		for m in self.__iteruchainmembers__():
+			if name in m:
+				return m[name]
+		raise KeyError, 'key "%s" is not present in any of the members.' % name
+	def __setitem__(self, name,  value):
+		'''
+		'''
+		# find source...
+		# set
+		raise TypeError, 'can\'t add values to an AbstractDictChainMixin object.'
+	def __delitem__(self, name):
+		'''
+		'''
+		raise TypeError, 'can\'t delete values from an AbstractDictChainMixin object.'
+	def __contains__(self, name):
+		'''
+		'''
+		for m in self.__iteruchainmembers__():
+			if name in m:
+				return True
+		return False
+	def __iter__(self):
+		'''
+		'''
+		seen = []
+		for m in self.__iteruchainmembers__():
+			for n in m:
+				if n not in seen:
+					seen += [n]
+					yield n
+	# AbstractDictChainMixin specific extension interface...
+##	def __iteruchainmembers__(self):
+##		'''
+##		this will yield dicts, elements of the chain.
+##		'''
+##		raise NotImplementedError
+	# AbstractDictChainMixin specific methods...
+	def todict(self):
+		'''
+		this will return a dict copy of the DictUnion object.
+		'''
+		return dict(self.items())
+
+
+#-----------------------------------------------------------DictUnion---
+# XXX might be good to combine this and DictChain... (this will be
+#     quite easy using the itermembers instead of self._members)
+class DictUnion(AbstractDictChainMixin):
 	'''
 	this is a dict like object, that acts as a union of its members but
 	without modifieng its members in any way.
@@ -217,41 +271,15 @@ class DictUnion(mapping.Mapping):
 		members = list(members)
 		members.reverse()
 		self._members = tuple(members)
-	def __getitem__(self, name):
+	# AbstractDictChainMixin specific extension interface...
+	def __iteruchainmembers__(self):
 		'''
 		'''
 		for m in self._members:
-			if name in m:
-				return m[name]
-		raise KeyError, 'key "%s" is not present in any of the members.' % name
-	def __setitem__(self, name,  value):
-		'''
-		'''
-		# find source...
-		# set
-		raise TypeError, 'can\'t add values to a dict union object.'
-	def __delitem__(self, name):
-		'''
-		'''
-		raise TypeError, 'can\'t delete values from a dict union object.'
-	def __contains__(self, name):
-		'''
-		'''
-		for m in self._members:
-			if name in m:
-				return True
-		return False
-	def __iter__(self):
-		'''
-		'''
-		seen = []
-		for m in self._members:
-			for n in m:
-				if n not in seen:
-					seen += [n]
-					yield n
-	# the dict union specific interface...
-	##!!! revise...
+			yield m
+	# the DictUnion specific interface...
+	# XXX should these depend on __iteruchainmembers__ or directly on
+	#     _members????
 	def unite(self, *others):
 		'''
 		add members to the union object.
@@ -262,7 +290,6 @@ class DictUnion(mapping.Mapping):
 		others = list(others)
 		others.reverse()
 		self._members = tuple(others) + self._members
-	##!!! revise...
 	def tailunite(self, *others):
 		'''
 		this is the same as unite but adds low priority members (to the
@@ -286,7 +313,6 @@ class DictUnion(mapping.Mapping):
 		'''
 		'''
 		return self._members
-	##!!! revise...
 	def popmember(self, index=0):
 		'''
 
@@ -296,11 +322,7 @@ class DictUnion(mapping.Mapping):
 		res = m.pop(index)
 		self._members = tuple(m)
 		return res
-	def itermembers(self):
-		'''
-		'''
-		for m in self._members:
-			yield m
+	itermembers = __iteruchainmembers__
 	def getcontainerof(self, name):
 		'''
 		'''
@@ -318,11 +340,6 @@ class DictUnion(mapping.Mapping):
 		if res == []:
 			raise KeyError, '%s does not contain "%s"' % (self, name)
 		return res
-	def todict(self):
-		'''
-		this will return a dict copy of the DictUnion object.
-		'''
-		return dict(self.items())
 
 
 #---------------------------------------------------WritableDictUnion---
@@ -455,11 +472,33 @@ class DictTypeUnion(DictUnion, dict):
 	pass
 
 
-#-------------------------------------------------------DictIntersect---
-##class DictIntersect(object):
-##	'''
-##	'''
-##	pass
+#------------------------------------------------------BasicDictChain---
+class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
+	'''
+	
+	NOTE: this class was designed as a basic base class (atleast the
+	      __iteruchainmembers__ method should be overloaded).
+	NOTE: do not forget to call the original __iteruchainmembers__.
+	NOTE: this, if used as is will not differ from a dict.
+	'''
+	def __init__(self, *p, **n):
+		'''
+		'''
+		self._dct_data = {}
+		super(BasicDictChain, self).__init__(*p, **n)
+	def __setitem__(self, name, value):
+		'''
+		'''
+		self._dct_data[name] = value
+	def __delitem__(self, name):
+		'''
+		'''
+		del self._dct_data[name]
+	def __iteruchainmembers__(self):
+		'''
+		'''
+		yield self._dct_data
+
 
 
 #-----------------------------------------------------------------------
@@ -509,7 +548,7 @@ class ObjectUnion(object):
 	##!!!
 
 
-
+#=======================================================================
 if __name__ == '__main__':
 	d0 = {'a':1, 'b':2}
 	d1 = {'c':'!!!!!', 'b':'x'}

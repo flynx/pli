@@ -1,5 +1,13 @@
-# this file was generated on [200508240339]
+# this file was generated on [200508241522]
 pli changes:
+
+version 0.0.153 (200508241508):
+- refactored pli.logictypes.DictUnion
+- added pli.logictypes.AbstractDictChain
+- added pli.logictypes.BasicDictChain
+
+version 0.0.152 (200508241358):
+- added pli.persistance module (still quite raw...)
 
 version 0.0.143 (200507051502):
 - added pli.event.event.bindcount and pli.event.bindonce...
