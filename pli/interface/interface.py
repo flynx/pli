@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20050827171534'''
+__sub_version__ = '''20050827172432'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -748,7 +748,8 @@ def checkobject(obj, interface=None):
 				raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
 		else:
 			checkattr(obj, n)
-		del o_attrs[n]
+		# remove the attr...
+		o_attrs.pop(n, None)
 	if len(o_attrs) > 0:
 		if '*' not in format:
 			raise InterfaceError, 'excess attributes %s in object %s.' % (o_attrs.keys(), obj)
