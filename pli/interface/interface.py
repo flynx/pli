@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20050705163031'''
+__sub_version__ = '''20050827171534'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -747,13 +747,13 @@ def checkobject(obj, interface=None):
 			if format[n].get('essential', False):
 				raise InterfaceError, 'essential attribute "%s" missing from %s' % (n, obj)
 		else:
-			chackattr(obj, n)
+			checkattr(obj, n)
 		del o_attrs[n]
 	if len(o_attrs) > 0:
 		if '*' not in format:
 			raise InterfaceError, 'excess attributes %s in object %s.' % (o_attrs.keys(), obj)
 		for n in o_attrs:
-			chackattr(obj, n)
+			checkattr(obj, n)
 	return True
 
 
