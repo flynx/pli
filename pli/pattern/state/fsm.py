@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.28'''
-__sub_version__ = '''20050705155549'''
+__version__ = '''0.3.36'''
+__sub_version__ = '''20050830010617'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,9 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 __doc__ = '''\
 This module defines a Finite State Machine framework.
 '''
+
+# TODO add threading support for autostart FSMs...
+# 	   e.g. run start in a seporate context (thread, process, .. etc.)
 
 
 #-----------------------------------------------------------------------
@@ -233,8 +236,10 @@ class FiniteStateMachine(state.State):
 	# if this is set, all state changes without transitions will be
 	# blocked (e.g. raise an exception)...
 	__strict_transitions__ = True
-	# this will enable automatic state changing...
+	# this will enable automatic state changing in a state loop...
 	__auto_change_state__ = True
+	# this if true will start the fsm on init...
+	__auto_start__ = False
 	# this will define the state to which we will auto-change...
 	__next_state__ = None
 
@@ -262,6 +267,9 @@ class FiniteStateMachine(state.State):
 			self.changestate(self.__initial_state__)
 		# create a general fsm stop event...
 		self.onFiniteStateMachineStop = onFiniteStateMachineStop(fsm=self)
+		# autostart?
+		if hasattr(self, '__auto_start__') and self.__auto_start__:
+			self.start()
 	def start(self):
 		'''
 		this is the FSM main loop.
@@ -474,7 +482,7 @@ class BasicState(FiniteStateMachine):
 		'''
 		this will create a transition from the current state to the tostate.
 
-		the condition, if given, is passed the FSM object and if True is returned
+		the condition, if given, is passed the FSM object and if True is returned,
 		the transition is finalized, else the transition is abborted.
 
 		the mode can be:

@@ -1,5 +1,8 @@
-# this file was generated on [200508271727]
+# this file was generated on [200508300107]
 pli changes:
+
+version 0.0.155 (200508300106):
+- added the __auto_start__ option to the pli.pattern.state.fsm.FiniteStateMachine...
 
 version 0.0.153 (200508241508):
 - refactored pli.logictypes.DictUnion
