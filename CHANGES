@@ -1,5 +1,8 @@
-# this file was generated on [200509030046]
+# this file was generated on [200509030105]
 pli changes:
+
+version 0.0.157 (200509030104):
+- moved the StateHistoryProxy from pli.pattern.mixin.monitor to pli.pattern.proxy.history...
 
 version 0.0.156 (200509021731):
 - updated pli.pattern.mixin.monitor (still needs optimisation)...

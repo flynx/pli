@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050903003124'''
+__sub_version__ = '''20050903010547'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -20,7 +20,6 @@ import time
 import copy
 
 import pli.logictypes as logictypes
-import pli.pattern.proxy as proxy
 
 
 #-----------------------------------------------------------------------
@@ -109,7 +108,6 @@ class StateHistoryMixin(object):
 		dct.update(snapshot.todict())
 		
 
-
 #--------------------------------------------------StateHistoryObject---
 class StateHistoryObject(StateHistoryMixin):
 	'''
@@ -122,19 +120,11 @@ class StateHistoryObject(StateHistoryMixin):
 		self.hist_makesnapshot()
 
 
-#---------------------------------------------------StateHistoryProxy---
-class StateHistoryProxy(StateHistoryMixin, proxy.InheritAndOverrideProxy):
-	'''
-	'''
-	def __init__(self, *p, **n):
-		'''
-		'''
-		self.__class__._history_state = logictypes.DictUnion()
-		self.hist_makesnapshot()
-
 
 #=======================================================================
 if __name__ == '__main__':
+
+	from pli.pattern.proxy.history import StateHistoryProxy
 
 	class O(object):
 		pass
@@ -182,6 +172,7 @@ if __name__ == '__main__':
 	a.hist_revert()
 	a.hist_revert()
 	print o.__dict__.keys()
+
 
 
 #=======================================================================
