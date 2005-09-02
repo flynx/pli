@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.36'''
-__sub_version__ = '''20050830010617'''
+__sub_version__ = '''20050831171837'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -16,6 +16,8 @@ This module defines a Finite State Machine framework.
 
 
 #-----------------------------------------------------------------------
+
+import time
 
 import pli.pattern.store.stored as stored
 import pli.event as event
@@ -238,6 +240,12 @@ class FiniteStateMachine(state.State):
 	__strict_transitions__ = True
 	# this will enable automatic state changing in a state loop...
 	__auto_change_state__ = True
+	# if this is set the FSM will block until a transition is
+	# available...
+	__pole_for_next_state__ = False
+	# this if set will determain the time to sleep until the next
+	# pole...
+	__pole_delay__ = None
 	# this if true will start the fsm on init...
 	__auto_start__ = False
 	# this will define the state to which we will auto-change...
@@ -542,31 +550,36 @@ class BasicState(FiniteStateMachine):
 		this will try to next change state.
 		'''
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__:
-			transitions = self._transitions
-			if transitions != None:
-				for tostate, (cond, mode) in transitions.items():
-					try:
-						if mode == AUTO:
-							self.changestate(tostate)
-							return
-					except:
-						##!!!
-						pass
-##			if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
-##				if hasattr(self, '__resolvestatechange__'):
-##					# try to save the day and call the resolve method...
-##					return self.__resolvestatechange__()
-##				# we endup here if there are no exiting transitions
-##				# from a non-terminal state...
-##				# Q: whay do we need a terminal state?
-##				# A: to prevent exiting from it...
-##				raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
-			if (not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__) \
-					and hasattr(self, '__resolvestatechange__'):
-				# try to save the day and call the resolve method...
-				return self.__resolvestatechange__()
-			else:
-				raise FiniteStateMachineStop, 'stop.'
+			while True:
+				transitions = self._transitions
+				if transitions != None:
+					for tostate, (cond, mode) in transitions.items():
+						try:
+							if mode == AUTO:
+								self.changestate(tostate)
+								return
+						except:
+							##!!!
+							pass
+##				if not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__:
+##					if hasattr(self, '__resolvestatechange__'):
+##						# try to save the day and call the resolve method...
+##						return self.__resolvestatechange__()
+##					# we endup here if there are no exiting transitions
+##					# from a non-terminal state...
+##					# Q: whay do we need a terminal state?
+##					# A: to prevent exiting from it...
+##					raise FiniteStateMachineError, 'can\'t exit a non-terminal state %s.' % self
+				if (not hasattr(self, '__is_terminal_state__') or not self.__is_terminal_state__) \
+						and hasattr(self, '__resolvestatechange__'):
+					# try to save the day and call the resolve method...
+					return self.__resolvestatechange__()
+				elif hasattr(self, '__pole_for_next_state__') and self.__pole_for_next_state__:
+					if hasattr(self, '__pole_delay__') and self.__pole_delay__ != None:
+						time.sleep(self.__pole_delay__)
+					continue
+				else:
+					raise FiniteStateMachineStop, 'stop.'
 	# this is here for documentation...
 ##	def __resolvestatechange__(self):
 ##		'''

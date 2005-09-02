@@ -1,5 +1,8 @@
-# this file was generated on [200508300107]
+# this file was generated on [200509021734]
 pli changes:
+
+version 0.0.156 (200509021731):
+- updated pli.pattern.mixin.monitor (still needs optimisation)...
 
 version 0.0.155 (200508300106):
 - added the __auto_start__ option to the pli.pattern.state.fsm.FiniteStateMachine...
