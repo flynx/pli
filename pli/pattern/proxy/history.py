@@ -9,12 +9,12 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 import pli.logictypes as logictypes
 import pli.pattern.proxy as proxy
-import pli.pattern.mixin.monitor as monitor
+import pli.pattern.mixin.history as history
 
 
 #-----------------------------------------------------------------------
 #---------------------------------------------------StateHistoryProxy---
-class StateHistoryProxy(monitor.StateHistoryMixin, proxy.InheritAndOverrideProxy):
+class StateHistoryProxy(history.StateHistoryMixin, proxy.InheritAndOverrideProxy):
 	'''
 	'''
 	def __init__(self, *p, **n):
