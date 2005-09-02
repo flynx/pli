@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050902173342'''
+__sub_version__ = '''20050902233636'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -23,12 +23,7 @@ import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
-
-class IsChanged(object):
-	'''
-	'''
-	pass
-
+#---------------------------------------------------StateHistoryMixin---
 # NOTE: might be good to exclude the '_history_state' attr from
 #       comparisons...
 class StateHistoryMixin(object):
@@ -38,29 +33,15 @@ class StateHistoryMixin(object):
 	__deepcopy_snapshots__ = False
 
 
-	def __init__(self, *p, **n):
+	# TODO add timesamp.....
+	def hist_makesnapshot(self):
 		'''
+		this will save the current state to object history.
 		'''
-		super(StateHistoryMixin, self).__init__(*p, **n)
-		self.makesnapshot()
-	def makesnapshot(self):
+		self._history_state.unite(self.hist_diff())
+	def hist_diff(self):
 		'''
-		'''
-		if not hasattr(self, '_history_state'):
-			self._history_state = logictypes.DictUnion()
-		# TODO add timesamp.....
-		self._history_state.unite(self._diff())
-	# TODO split this to a seporate function.....
-	#      diff(obj1, obj2, ...) -> res
-	#      res format:
-	#      {
-	#      		obj1_id: {
-	#      					???
-	#      				 }
-	#      }
-	#
-	def _diff(self):
-		'''
+		generate the difference dict between the current state and the last snapshot.
 		'''
 		res = {}
 		if not hasattr(self, '_history_state'):
@@ -81,6 +62,7 @@ class StateHistoryMixin(object):
 	# XXX make this faster...
 	def ismodified(self):
 		'''
+		retrurn True if the object is modified since the last snapshot was taken else False.
 		'''
 		if not hasattr(self, '_history_state'):
 			##!!!!
@@ -89,7 +71,7 @@ class StateHistoryMixin(object):
 		return False in [ ( k in snapshot and v == snapshot[k] ) \
 								for k, v in self.__dict__.iteritems() \
 								if k != '_history_state']
-	def compact(self):
+	def hist_compact(self):
 		'''
 		this will flatten the history...
 		'''
@@ -97,28 +79,42 @@ class StateHistoryMixin(object):
 			##!!!!
 			raise 'no snapshot!'
 		self._history_state = logictypes.DictUnion(self._history_state.todict())
-	# TODO add mutable state restore.... (not clone...)
-	#      e.g. take ref from current and use the state of the snapshot
-	#      to modify current....
 	# XXX check for depth...
-	def revert(self, level=0):
+	def hist_revert(self, level=0):
 		'''
+		will revert the state of the object to a given layer in it's history (default 0).
 		'''
 		snapshot = self._history_state
+##		l = snapshot.members() 
+##		if level < len(l):
+##			level = l
 		for i in xrange(level):
 			snapshot.popmember()
-		self.__dict__ = snapshot.todict() 
+		dct = self.__dict__
+		dct.clear()
+		dct.update(snapshot.todict())
 		self._history_state = snapshot
 		
 
 
+#--------------------------------------------------StateHistoryObject---
+class StateHistoryObject(StateHistoryMixin):
+	'''
+	'''
+	def __init__(self, *p, **n):
+		'''
+		'''
+		super(StateHistoryMixin, self).__init__(*p, **n)
+		self._history_state = logictypes.DictUnion()
+		self.hist_makesnapshot()
 
+
+
+#=======================================================================
 if __name__ == '__main__':
 
-	class A(StateHistoryMixin):
-		pass
 
-	a = A()
+	a = StateHistoryObject()
 	print a.ismodified()
 
 	print 'raw:', a.__dict__.keys()
@@ -127,7 +123,7 @@ if __name__ == '__main__':
 	a.b = 2
 	print a.ismodified()
 
-	a.makesnapshot()
+	a.hist_makesnapshot()
 
 	print a.ismodified()
 
@@ -139,11 +135,11 @@ if __name__ == '__main__':
 
 	print 'new state:', a.__dict__.keys()
 
-	a.revert()
+	a.hist_revert()
 
 	print a.ismodified()
 
-	print 'reverted:', a.__dict__.keys()
+	print 'hist_reverted:', a.__dict__.keys()
 
 
 
