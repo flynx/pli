@@ -1,12 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050903010417'''
+__sub_version__ = '''20050903011326'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
+import pli.logictypes as logictypes
 import pli.pattern.proxy as proxy
 import pli.pattern.mixin.monitor as monitor
 
