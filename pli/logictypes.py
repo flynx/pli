@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20050824153947'''
+__sub_version__ = '''20050902235933'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -309,6 +309,10 @@ class DictUnion(AbstractDictChainMixin):
 			self._members = tuple(list(self._members).remove(obj))
 			return
 		raise TypeError, '%s does not contain %s as a member.' % (self, obj)
+	def clearmembers(self):
+		'''
+		'''
+		del self._members[:]
 	def members(self):
 		'''
 		'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050902233636'''
+__sub_version__ = '''20050903003124'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -20,6 +20,7 @@ import time
 import copy
 
 import pli.logictypes as logictypes
+import pli.pattern.proxy as proxy
 
 
 #-----------------------------------------------------------------------
@@ -28,6 +29,12 @@ import pli.logictypes as logictypes
 #       comparisons...
 class StateHistoryMixin(object):
 	'''
+	this mixin provides object history functionality.
+
+	NOTE: the attribute read/write speed will not be affected.
+	NOTE: this depends on an externaly defined _history_state attribute that 
+	      is compatible with the dict union object.
+	NOTE: by default this will not add any new state to the object.
 	'''
 	__copy_snapshot_valuse__ = False
 	__deepcopy_snapshots__ = False
@@ -49,8 +56,8 @@ class StateHistoryMixin(object):
 			raise 'no snapshot!'
 		snapshot = self._history_state
 		for k, v in self.__dict__.iteritems():
-			if k == '_history_state':
-				continue
+##			if k == '_history_state':
+##				continue
 			if k not in snapshot or snapshot[k] != v:
 				if hasattr(self, '__copy_snapshot_valuse__') and not self.__copy_snapshot_valuse__:
 					res[k] = v
@@ -78,22 +85,28 @@ class StateHistoryMixin(object):
 		if not hasattr(self, '_history_state'):
 			##!!!!
 			raise 'no snapshot!'
-		self._history_state = logictypes.DictUnion(self._history_state.todict())
+		snapshot = self._history_state
+		dct = snapshot.todict()
+		# XXX this might not be safe...
+		snapshot.clearmemebers()
+		snapshot.unite(dct)
 	# XXX check for depth...
-	def hist_revert(self, level=0):
+	def hist_revert(self, level=1):
 		'''
-		will revert the state of the object to a given layer in it's history (default 0).
+		will revert the state of the object to a given layer in it's history.
+
+		NOTE: if level is 0 then the object will be reverted only to the last snapshot.
+		NOTE: this will not revert beyond the first snapshot of the object made.
 		'''
 		snapshot = self._history_state
-##		l = snapshot.members() 
-##		if level < len(l):
-##			level = l
-		for i in xrange(level):
-			snapshot.popmember()
+		if level > 0 and self.hist_diff() != {}:
+			level -= 1
+		if len(snapshot.members()) > 1:
+			for i in xrange(level):
+				snapshot.popmember()
 		dct = self.__dict__
 		dct.clear()
 		dct.update(snapshot.todict())
-		self._history_state = snapshot
 		
 
 
@@ -109,12 +122,34 @@ class StateHistoryObject(StateHistoryMixin):
 		self.hist_makesnapshot()
 
 
+#---------------------------------------------------StateHistoryProxy---
+class StateHistoryProxy(StateHistoryMixin, proxy.InheritAndOverrideProxy):
+	'''
+	'''
+	def __init__(self, *p, **n):
+		'''
+		'''
+		self.__class__._history_state = logictypes.DictUnion()
+		self.hist_makesnapshot()
+
 
 #=======================================================================
 if __name__ == '__main__':
 
+	class O(object):
+		pass
 
-	a = StateHistoryObject()
+	o = O()
+
+	o.x = 123
+	o.y = 321
+
+	a = StateHistoryProxy(o)
+
+
+##	a = StateHistoryObject()
+
+
 	print a.ismodified()
 
 	print 'raw:', a.__dict__.keys()
@@ -140,7 +175,13 @@ if __name__ == '__main__':
 	print a.ismodified()
 
 	print 'hist_reverted:', a.__dict__.keys()
+	print o.__dict__.keys()
 
+	a.hist_revert()
+	a.hist_revert()
+	a.hist_revert()
+	a.hist_revert()
+	print o.__dict__.keys()
 
 
 #=======================================================================
