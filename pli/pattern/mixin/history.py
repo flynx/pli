@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050903010547'''
+__sub_version__ = '''20050904061028'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -26,9 +26,9 @@ import pli.logictypes as logictypes
 #---------------------------------------------------StateHistoryMixin---
 # NOTE: might be good to exclude the '_history_state' attr from
 #       comparisons...
-class StateHistoryMixin(object):
+class BasicStateHistoryMixin(object):
 	'''
-	this mixin provides object history functionality.
+	this mixin provides basic object history functionality.
 
 	NOTE: the attribute read/write speed will not be affected.
 	NOTE: this depends on an externaly defined _history_state attribute that 
@@ -77,18 +77,6 @@ class StateHistoryMixin(object):
 		return False in [ ( k in snapshot and v == snapshot[k] ) \
 								for k, v in self.__dict__.iteritems() \
 								if k != '_history_state']
-	def hist_compact(self):
-		'''
-		this will flatten the history...
-		'''
-		if not hasattr(self, '_history_state'):
-			##!!!!
-			raise 'no snapshot!'
-		snapshot = self._history_state
-		dct = snapshot.todict()
-		# XXX this might not be safe...
-		snapshot.clearmemebers()
-		snapshot.unite(dct)
 	# XXX check for depth...
 	def hist_revert(self, level=1):
 		'''
@@ -106,8 +94,46 @@ class StateHistoryMixin(object):
 		dct = self.__dict__
 		dct.clear()
 		dct.update(snapshot.todict())
+
+
+#---------------------------------------------------StateHistoryMixin---
+##!!! REVISE !!!##
+class StateHistoryMixin(BasicStateHistoryMixin):
+	'''
+	this mixin provides extends the BasicStateHistoryMixin (see its docs for moreinfo).
+	'''
+	def hist_compact(self):
+		'''
+		this will flatten the history...
+		'''
+		if not hasattr(self, '_history_state'):
+			##!!!!
+			raise 'no snapshot!'
+		snapshot = self._history_state
+		dct = snapshot.todict()
+		# XXX this might not be safe...
+		snapshot.clearmemebers()
+		snapshot.unite(dct)
+	# XXX it might be good to move this to BasicStateHistoryMixin and
+	#     rewrite hist_revert to use it... (???)
+	def hist_getstate(self, level=1):
+		'''
+		this will return a dict representing the state of the object at a given level.
+		'''
+		snapshot = self._history_state
+		if level > 0 and self.hist_diff() != {}:
+			level -= 1
+		members = snapshot.members()
+		snapshot = logictypes.DictUnion(*members)
+		if len(members) > 1:
+			for i in xrange(level):
+				snapshot.popmember()
+		return snapshot.todict()
+			
 		
 
+#-----------------------------------------------------------------------
+# XXX might be good to move this elsware... (not exactly a mixin!)
 #--------------------------------------------------StateHistoryObject---
 class StateHistoryObject(StateHistoryMixin):
 	'''
