@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050824025710'''
+__sub_version__ = '''20051006182431'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -16,15 +16,25 @@ import pli.pattern.mixin.mapping as mapping
 class SQLShelve(mapping.Mapping):
 	'''
 	'''
+	# TODO make this create a new dict for the id if one is not
+	#      present.... (might be a good idea to use some other id
+	#      method...)
+	#      one alternative id method is to create a root dict that will
+	#      contain names of all the dicts used and their coresponding
+	#      id's...
 	def __init__(self, interface, dict_id=None):
 		'''
 		'''
 		self._interface = interface
+		# if such a name does not exist...
+##		self.sql.select('pyoid', 'py_registry', self.sql.where(name=dict_id)).fetchone()[0]
 		if dict_id is None:
 			d = self._data = {}
 			dict_id = interface.write(d)
 		else:
 			self._data = interface.get(dict_id)
+		##!!! sanity check: if the name refereneces a non-dict or non-dict-like...
+		##!!!
 		self.dict_id = dict_id
 	def __getitem__(self, name):
 		'''

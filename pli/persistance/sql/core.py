@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050824030618'''
+__sub_version__ = '''20051006180904'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -412,9 +412,19 @@ class SQLReader(object):
 		return o
 	# HL interface methods...
 	# XXX make this support the pickle protocols...
+	def get_oid(self, name):
+		'''
+		'''
+		try:
+			return self.sql.select('pyoid', 'py_registry', self.sql.where(name=oid)).fetchone()[0].rstrip()
+		except:
+			return None
+
 	def get(self, oid):
 		'''
 		'''
+		if type(oid) is str:
+			oid = self.sql.select('pyoid', self.sql.where(name=oid)).fetchone()[0].rstrip()
 		t = self.sql.select('type', 'py_object', self.sql.where(pyoid=oid)).fetchone()[0].rstrip()
 		# NOTE: here we compensate for a sideeffect of decorating
 		#       methods while the class is not there yet...

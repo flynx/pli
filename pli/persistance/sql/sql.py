@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050824025606'''
+__sub_version__ = '''20051006182112'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -28,6 +28,22 @@ class SQLError(Exception):
 	pass
 
 
+#--------------------------------------------------------------py2sql---
+def py2sql(value):
+	'''
+	translate a value into an apropriate sql type.
+	'''
+	t = type(value)
+	if t in (int, float, long):
+		return str(value)
+	if t in (str, unicode):
+		##!!! WRONG !!!##
+		return '\'%s\'' % value
+	if value is None:
+		return 'NULL'
+	raise TypeError, 'can\'t convert objects of type %s.' % t
+
+
 #-----------------------------------------------------------------------
 #--------------------------------------------------------------_WHERE---
 ##!!! THINK OF A BETTER WAY TO DO THIS !!!##
@@ -43,7 +59,7 @@ class _WHERE(object):
 		if len(p) == 1 and type(p[0]) is str:
 			self.condition = p[0]
 		if len(p) == 0:
-			self.condition = ' AND '.join([ '"%s" = %s' % (k, v) for k, v in n.items() ])
+			self.condition = ' AND '.join([ '"%s" = %s' % (k, py2sql(v)) for k, v in n.items() ])
 	def __str__(self):
 		'''
 		'''
@@ -76,20 +92,6 @@ class SQL(object):
 		'''
 		'''
 		return '"%s"' % name.replace('"', '\\"')
-	##!!! REWRITE !!!##
-	def py2sql(self, value):
-		'''
-		translate a value into an apropriate sql type.
-		'''
-		t = type(value)
-		if t in (int, float, long):
-			return str(value)
-		if t in (str, unicode):
-			##!!! WRONG !!!##
-			return '\'%s\'' % value
-		if value is None:
-			return 'NULL'
-		raise TypeError, 'can\'t convert objects of type %s.' % t
 	##!!!
 	def sql2py(self, value):
 		'''
@@ -114,7 +116,6 @@ class SQL(object):
 			
 		'''
 		# cahe some names...
-		py2sql = self.py2sql
 		checksqlname = self.checksqlname
 
 		# construct the source...
@@ -178,7 +179,6 @@ class SQL(object):
 				{ DEFAULT VALUES | VALUES ( { expression | DEFAULT } [, ...] ) | query }
 		'''
 		# cahe some names...
-		py2sql = self.py2sql
 		checksqlname = self.checksqlname
 
 		# prepare data...
@@ -213,7 +213,6 @@ class SQL(object):
 		if len(n) == 0:
 			raise SQLError, 'must update at least one column (none given)'
 		# cahe some names...
-		py2sql = self.py2sql
 		checksqlname = self.checksqlname
 
 		# prepare data...
@@ -241,7 +240,6 @@ class SQL(object):
 			DELETE FROM [ ONLY ] table [ WHERE condition ]
 		'''
 		# cahe some names...
-		py2sql = self.py2sql
 		checksqlname = self.checksqlname
 
 		# prepare data...
