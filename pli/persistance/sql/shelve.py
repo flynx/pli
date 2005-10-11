@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051006182431'''
+__sub_version__ = '''20051010153516'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -22,20 +22,19 @@ class SQLShelve(mapping.Mapping):
 	#      one alternative id method is to create a root dict that will
 	#      contain names of all the dicts used and their coresponding
 	#      id's...
-	def __init__(self, interface, dict_id=None):
+	def __init__(self, interface, name):
 		'''
 		'''
 		self._interface = interface
+		self._name = name
 		# if such a name does not exist...
-##		self.sql.select('pyoid', 'py_registry', self.sql.where(name=dict_id)).fetchone()[0]
-		if dict_id is None:
+		try:
+			self._data = interface.get(name)
+		except KeyError:
 			d = self._data = {}
-			dict_id = interface.write(d)
-		else:
-			self._data = interface.get(dict_id)
+			interface.write(name, d)
 		##!!! sanity check: if the name refereneces a non-dict or non-dict-like...
 		##!!!
-		self.dict_id = dict_id
 	def __getitem__(self, name):
 		'''
 		'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051006180904'''
+__sub_version__ = '''20051011102722'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -45,6 +45,7 @@ def registertypehandler(type):
 # TODO make ALL of thefolowing packable into transactions...
 # XXX needs more pedantic checking...
 # XXX add value check for mutable objects... (if value exists then
+# XXX do update...
 #     return old id...)
 class SQLWriter(object):
 	'''
@@ -228,6 +229,7 @@ class SQLWriter(object):
 		return obj_id
 	# HL interface methods...
 	# XXX make this support the pickle protocols...
+	##!!! REVISE
 	def write(self, obj, oid=None):
 		'''
 		'''
@@ -236,6 +238,13 @@ class SQLWriter(object):
 		if handler is None:
 			return self.do_object(obj, oid)
 		return handler(self, obj, oid)
+	##!!! REVISE
+	def writebyname(self, name, obj):
+		'''
+		'''
+		oid = self.write(obj)
+		obj_id = self.sql.insert('py_registry', name=name, pyoid=oid)
+		return oid
 
 
 
@@ -411,15 +420,15 @@ class SQLReader(object):
 		# XXX reconstruct attrs...
 		return o
 	# HL interface methods...
-	# XXX make this support the pickle protocols...
 	def get_oid(self, name):
 		'''
 		'''
 		try:
-			return self.sql.select('pyoid', 'py_registry', self.sql.where(name=oid)).fetchone()[0].rstrip()
+			return self.sql.select('pyoid', 'py_registry', self.sql.where(name=name)).fetchone()[0]
 		except:
 			return None
-
+	
+	# XXX make this support the pickle protocols...
 	def get(self, oid):
 		'''
 		'''
@@ -477,7 +486,7 @@ class AbstractSQLInterface(object):
 		'''
 		##!!!
 		return self.__sql_writer__.write(obj, oid)
-	def __insert__(self, obj):
+	def __insert__(self, a, b=None):
 		'''
 		be stupid and insert.
 
@@ -485,7 +494,10 @@ class AbstractSQLInterface(object):
 
 		WARNING: not intended for direct use.
 		'''
-		return self.__sql_writer__.write(obj)
+		if b == None:
+			return self.__sql_writer__.write(a)
+		##!!!
+		return self.__sql_writer__.writebyname(a, b)
 	def __select__(self, oid):
 		'''
 		be stupid and get.
@@ -496,11 +508,27 @@ class AbstractSQLInterface(object):
 		'''
 		##!!!!!!
 		return self.__sql_reader__.get(oid)
+	def __name2oid__(self, name):
+		'''
+		'''
+		return self.__sql_reader__.get_oid(name)
 	# interface methods
 	# XXX make this simpler!
-	def write(self, obj):
+	def write(self, a, b=None):
 		'''
+
+		this can one of:
+			write(obj) -> OID
+			write(name, obj) -> OID
+
+		NOTE: in case #2 obj can not be None.
 		'''
+		if b == None:
+			obj = a
+			name = b
+		else:
+			obj = b
+			name = a
 		# 1) see if object has a sOID, if yes check if it is locked, if
 		#    not then update...
 		# 2) disect and write/update...
@@ -513,7 +541,11 @@ class AbstractSQLInterface(object):
 			return self.__update__(sOID, obj)
 		else:
 			# write
-			sOID = self.__insert__(obj)
+			if name != None:
+				# insert name to registry...
+				sOID = self.__insert__(name, obj)
+			else:
+				sOID = self.__insert__(obj)
 			self._liveobjects[(sOID, pOID)] = obj
 			return sOID
 	# TODO add hook for live obj condition...
@@ -525,6 +557,14 @@ class AbstractSQLInterface(object):
 		# 2) construct object.
 		# 3) save sOID, pOID, ref in self._liveobjects
 		#
+		name = None
+		# get object id by name...
+		if not self.isoid(sOID):
+			name = sOID
+			sOID = self.__name2oid__(sOID)
+			if sOID == None:
+				raise KeyError, 'object "%s" does not exist in DB.'
+		# get the object...
 		tbl = dict(self._liveobjects.keys())
 		if sOID in tbl.keys():
 			##!!! add hook...
@@ -536,6 +576,11 @@ class AbstractSQLInterface(object):
 		'''
 		'''
 		raise NotImplementedError
+	# registry specific methods...
+	def isoid(self, o):
+		'''
+		'''
+		return type(o) in (int, long)
 
 
 

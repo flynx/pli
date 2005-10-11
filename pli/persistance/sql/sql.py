@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051006182112'''
+__sub_version__ = '''20051010144817'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -13,10 +13,41 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 #-----------------------------------------------------------------------
 #-------------------------------------------------------transactioned---
 # XXX transaction decorator...
-def transactioned():
+def transactioned(meth):
 	'''
 	'''
-	return
+	def _transactioned(*p, **n):
+		'''
+		'''
+		# get connection...
+		##!!!!
+		connection = None
+		res = meth(*p, **n)
+		connection.commit()
+		return res
+	return _transactioned
+
+#-------------------------------------------------------autoreconnect---
+# XXX this will restore the connection if needed...
+def autoreconnect(meth):
+	'''
+	'''
+	def _autoreconnect(self, *p, **n):
+		'''
+		'''
+		# get connection...
+		##!!!!
+		connection = None
+		# get cursor...
+		##!!!!
+		cur = connection.cursor()
+		try:
+			cur.execute('SELECT 1;').fetchone()[0]
+		except:
+			##!!! RECONNECT
+			pass
+		return meth(*p, **n)
+	return _autoreconnect
 
 
 
@@ -82,11 +113,10 @@ class SQL(object):
 	# the condition clause processor...
 	where = _WHERE
 
-	def __init__(self, connection, cursor):
+	def __init__(self, connection):
 		'''
 		'''
 		self.connection = connection
-		self.cursor = cursor
 	# utility methods
 	def checksqlname(self, name):
 		'''
@@ -263,25 +293,25 @@ class SQL(object):
 						order=None, count=None, offset=None):
 		'''
 		'''
-		cur = self.cursor()
+		cur = self.connection.cursor()
 		cur.execute(self.select_sql(columns, source, condition, order, count, offset))
 		return cur
 	def insert(self, table, *p, **n):
 		'''
 		'''
-		cur = self.cursor()
+		cur = self.connection.cursor()
 		cur.execute(self.insert_sql(table, *p, **n))
 		return cur
 	def update(self, table, condition, *p, **n):
 		'''
 		'''
-		cur = self.cursor()
+		cur = self.connection.cursor()
 		cur.execute(self.update_sql(table, condition, *p, **n))
 		return cur
 	def delete(self, table, condition=None):
 		'''
 		'''
-		cur = self.cursor()
+		cur = self.connection.cursor()
 		cur.execute(self.delete_sql(table, condition))
 		return cur
 
