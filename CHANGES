@@ -1,5 +1,13 @@
-# this file was generated on [200510111048]
+# this file was generated on [200510121146]
 pli changes:
+
+version 0.0.160 (200510120807):
+- at last!! the pli.persistance.sql.shelve appears to be working!!! :)
+  still todo:
+  	- auto commit/commit wrappers.
+	- support delete on the LL.
+	- cleaner shelve delitem.
+	- add deflate sql/python function (SQL data GC :) ).
 
 version 0.0.157 (200509030104):
 - moved the StateHistoryProxy from pli.pattern.mixin.monitor to pli.pattern.proxy.history...

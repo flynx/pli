@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051010153516'''
+__sub_version__ = '''20051012080046'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -51,10 +51,14 @@ class SQLShelve(mapping.Mapping):
 		# update the keys dict...
 		data[name] = oid
 		self._interface.write(data)
+	##!!! REWRITE: might be a tad cleaner...
 	def __delitem__(self, name):
 		'''
 		'''
-		return self._interface.delete(self._data.pop(name))
+##		return self._interface.delete(self._data.pop(name))
+		data = self._data
+		data.pop(name)
+		self._interface.write(data)
 	def __iter__(self):
 		'''
 		'''

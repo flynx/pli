@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051011102722'''
+__sub_version__ = '''20051012075723'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -119,6 +119,9 @@ class SQLWriter(object):
 		obj_id = self.sql.insert('py_object', type='py_tuple').lastrowid
 		obj_id = self.sql.select('pyoid', 'py_object', self.sql.where(oid=obj_id)).fetchone()[0]
 		self.sql.insert('py_tuple', pyoid=obj_id)
+		# XXX this might be bad as it will not track the HL object OIDs
+		#     and thus might split some mutable objects in two or more
+		#     independent versions...
 		for i, o in enumerate(tpl):
 			# insert the element...
 			item_id = self.write(o)
@@ -149,6 +152,9 @@ class SQLWriter(object):
 			obj_id = self.sql.select('pyoid', 'py_object', self.sql.where(oid=obj_id)).fetchone()[0]
 			self.sql.insert('py_list', pyoid=obj_id)
 		# insert the list items...
+		# XXX this might be bad as it will not track the HL object OIDs
+		#     and thus might split some mutable objects in two or more
+		#     independent versions...
 		for i, o in enumerate(lst):
 			item_id = self.write(o)
 			self.sql.insert('py_list_item', order=i, pyoid=obj_id, value=item_id)
@@ -177,6 +183,9 @@ class SQLWriter(object):
 			obj_id = self.sql.select('pyoid', 'py_object', self.sql.where(oid=obj_id)).fetchone()[0]
 			self.sql.insert('py_dict', pyoid=obj_id)
 		# insert the items...
+		# XXX this might be bad as it will not track the HL object OIDs
+		#     and thus might split some mutable objects in two or more
+		#     independent versions...
 		for k, v in dct.items():
 			key_id = self.write(k)
 			val_id = self.write(v)
@@ -570,7 +579,9 @@ class AbstractSQLInterface(object):
 			##!!! add hook...
 ##			print 'WARNING: object already open.'
 			return self._liveobjects[(sOID, tbl[sOID])]
-		return self.__select__(sOID)
+		obj = self.__select__(sOID)
+		self._liveobjects[(sOID, id(obj))] = obj
+		return obj
 	##!!!
 	def delete(self, sOID):
 		'''
@@ -581,6 +592,51 @@ class AbstractSQLInterface(object):
 		'''
 		'''
 		return type(o) in (int, long)
+
+
+
+if __name__ == '__main__':
+
+	import psycopg2 as psycopg
+	import sql
+
+	DBHOST = 'localhost'
+##	DBHOST = 'mozg.cis.bigur.ru'
+	DBDATABASE = 'poker'
+	DBUSER = 'f_lynx'
+	PASSWORD = '1234567'
+
+	dbcon = psycopg.connect('host=%s dbname=%s user=%s password=%s' \
+											% (DBHOST, DBDATABASE, DBUSER, PASSWORD))
+
+	sqlobj = sql.SQL(dbcon)
+
+	sqlinterface = AbstractSQLInterface()
+
+	sqlinterface.__sql_reader__ = SQLReader(sqlobj)
+	sqlinterface.__sql_writer__ = SQLWriter(sqlobj)
+
+
+	i = 2985
+	d = sqlinterface.get(i)
+
+##	d = {1:1,2:2,3:3}
+##	#sqlinterface.write('aaaa', d)
+##	i = sqlinterface.write(d)
+##	sqlinterface.__sql_reader__.sql.connection.commit()
+
+	print '>>>', i, sqlinterface.get(i)
+
+	d['xxx'] = 'xxx'
+	d['yyy'] = 'yyy'
+
+	i = sqlinterface.write(d)
+	sqlinterface.__sql_reader__.sql.connection.commit()
+
+	print '>>>', i, sqlinterface.get(i)
+
+	sqlinterface.__sql_reader__.sql.connection.commit()
+
 
 
 
