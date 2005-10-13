@@ -1,5 +1,8 @@
-# this file was generated on [200510121146]
+# this file was generated on [200510131910]
 pli changes:
+
+version 0.0.161 (200510131908):
+- added sf patch #1260933.... ToDo revise :)
 
 version 0.0.160 (200510120807):
 - at last!! the pli.persistance.sql.shelve appears to be working!!! :)

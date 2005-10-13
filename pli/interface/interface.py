@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20050827172432'''
+__sub_version__ = '''20051013190315'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -219,6 +219,11 @@ class _BasicInterface(type, mapping.Mapping):
 			raise InterfaceError, 'interface %s does not have a format defined.' % cls
 		format = cls.__format__
 		for c in cls.__mro__:
+			##!!! REVISE: BEGIN TUKAN HACK
+			# XXX We should go by mro to object, or try to stop earlier?
+			if type(c) == type:
+				raise InterfaceError, 'LIKE argument "%s" is not found in the interface' % (name)
+			##!!! REVISE: END TUKAN HACK
 			if hasattr(c, '__format__') \
 					and c.__format__ != None \
 					and name in c.__format__:
@@ -259,6 +264,9 @@ class _BasicInterface(type, mapping.Mapping):
 		res = res.copy()
 		# resolve the 'LIKE' prop...
 		visited = [res]
+		##!!! WRITTEN BY 2kan (2kan)
+		we_was_in___this_var_was_writtern_by_2kan__thus_I_have_no_idea_what_it_means____RANAME_AS_SOON_AS_POSSIBLE_TO_FIGURE_OUT_THE_ACTUAL_SEMANTICS \
+				= None 
 		while 'LIKE' in res: 
 			if type(res['LIKE']) is str:
 ##				ext_format = cls._getrealprops(res['LIKE']).copy()
@@ -271,7 +279,21 @@ class _BasicInterface(type, mapping.Mapping):
 			else:
 				raise TypeError, 'the argument of "LIKE" attribute option must '\
 						 'either be of type str or dict (got: %s).' % type(res['LIKE'])
-			if res['LIKE'] == name or ext_format in visited:
+##			if res['LIKE'] == name or ext_format in visited:
+			##!!! WRITTEN BY 2kan (+11)
+			if res['LIKE'] == name or \
+					res['LIKE'] == we_was_in___this_var_was_writtern_by_2kan__thus_I_have_no_idea_what_it_means____RANAME_AS_SOON_AS_POSSIBLE_TO_FIGURE_OUT_THE_ACTUAL_SEMANTICS:
+				temp = 1
+				for fmt in cls._realpropiter(res['LIKE']):
+					# NOTE: We always need to do one iteration to go to
+					#       the upper level in mro. 
+					if temp == 1: 
+						temp = 0
+						continue
+					if fmt != None:
+						ext_format = fmt.copy()
+						break
+			if ext_format in visited:
 				# check for conflicts in the chain.... (a conflict is
 				# when a name is present more than once with different
 				# values).
@@ -286,6 +308,8 @@ class _BasicInterface(type, mapping.Mapping):
 						v[k] = d[k]
 				del res['LIKE']
 				break
+			we_was_in___this_var_was_writtern_by_2kan__thus_I_have_no_idea_what_it_means____RANAME_AS_SOON_AS_POSSIBLE_TO_FIGURE_OUT_THE_ACTUAL_SEMANTICS \
+					= res['LIKE']	
 			visited += [ext_format.copy()]
 			del res['LIKE']
 			ext_format.update(res)
