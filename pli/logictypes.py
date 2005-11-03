@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.1.19'''
-__sub_version__ = '''20050902235933'''
+__version__ = '''0.1.21'''
+__sub_version__ = '''20051103161541'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -100,7 +100,7 @@ class Pattern(object):
 
 
 #--------------------------------------------------------------oftype---
-class oftype(Pattern):
+class OfType(Pattern):
 	'''
 	this will create an object that can be used as a predicate to test type, 
 	and it will copare True to objects of that type.
@@ -118,7 +118,8 @@ class oftype(Pattern):
 		return isinstance(other, self._types) is True
 	__eq__ = __call__
 	def __ne__(self, other):
-		return not isinstance(other, self._types) is True
+		return not self(other) 
+##		return not isinstance(other, self._types) is True
 	def __gt__(self, other):
 		return False
 	def __ge__(self, other):
@@ -129,6 +130,51 @@ class oftype(Pattern):
 		return True
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+oftype = OfType
+
+
+#-------------------------------------------------OfTypeWithPredicate---
+class OfTypeWithPredicate(OfType):
+	'''
+	'''
+	def __call__(self, other):
+		'''
+		'''
+		if self.__predicate__(other):
+			return super(OfTypeWithPredicate, self).__call__(other)
+		return False
+	__eq__ = __call__
+	# NOTE: this is intended to be oveloaded... (by default it will
+	#       break the object...)
+	def __predicate__(self, other):
+		'''
+		this will check the object.
+
+		must return True or False.
+		'''
+		raise NotImplementedError
+
+
+#----------------------------------------------OfTypeWithArgPredicate---
+# WARNING: this might not be compatible with CPythons pickle...
+class OfTypeWithArgPredicate(OfTypeWithPredicate):
+	'''
+	'''
+	def __init__(self, *p, **n):
+		'''
+		'''
+		super(OfTypeWithArgPredicate, self).__init__(*p, **n)
+		if 'predicate' in n:
+			self.__predicate__ = n['predicate']
+		else:
+			raise TypeError, 'a predicate must be given.'
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+ofptype = OfTypeWithArgPredicate
+
+
+#-----------------------------------------------------------------------
 # simple type predicates...
 isint = oftype(int)
 isfloat = oftype(float)
@@ -140,6 +186,12 @@ isunicode = oftype(unicode)
 islist = oftype(list)
 istuple = oftype(tuple)
 isdict = oftype(dict)
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# other odd predicates :)
+isodd = ofptype(int, predicate=lambda o: o%2 != 0)
+iseven = ofptype(int, predicate=lambda o: o%2 == 0)
+
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # general type groups predicates...
@@ -565,6 +617,8 @@ if __name__ == '__main__':
 	print d0, d1
 
 	print 'a' in D
+
+	print isodd(3), isodd(6)
 
 
 

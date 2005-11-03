@@ -1,5 +1,14 @@
-# this file was generated on [200510131910]
+# this file was generated on [200511031618]
 pli changes:
+
+version 0.0.162 (200511031616):
+- added the folowing to pli.logictypes:
+	OfType (originaly named oftype. the old name is still there and will likely be used on as an inline constructor)
+	OfTypeWithPredicate
+	OfTypeWithArgPredicate
+
+	isodd
+	iseven
 
 version 0.0.161 (200510131908):
 - added sf patch #1260933.... ToDo revise :)
