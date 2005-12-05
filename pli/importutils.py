@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.19'''
-__sub_version__ = '''20040501170358'''
+__sub_version__ = '''20051130145500'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -144,9 +144,13 @@ def getpackagedepends(package_dir, mod_name, dependency_file='depends.txt', forb
 #---------------------------------------------------importpackageiter---
 # TODO make this return more specific error data (e.g. name, exception,
 #      traceback...).
-def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
-						disabled_packages=None, notimportable=None, \
-						ignore_modules=(), name_prefix=None):
+def importpackageiter(package_dir,\
+						disable_file='disabled.txt',\
+						err_names=None,\
+						disabled_packages=None,\
+						notimportable=None,\
+						ignore_modules=(),\
+						name_prefix=None):
 	'''\
 
 	This is an import iterator. 
@@ -172,15 +176,18 @@ def importpackageiter(package_dir, disable_file='disabled.txt', err_names=None,\
 			yield mod_name, module 
 		elif err_names != None:
 			err_names += [mod_name]
-		
 
 
 #-------------------------------------------importdependspackagesiter---
 # TODO make this a generic dependency checker (objutils ???)
-def importdependspackagesiter(package_dir, disable_file='disabled.txt',\
-								dependency_file='depends.txt', err_names=None,\
-								disabled_packages=None, notimportable=None, \
-								ignore_modules=(), name_prefix=None):
+def importdependspackagesiter(package_dir,\
+								disable_file='disabled.txt',\
+								dependency_file='depends.txt',\
+								err_names=None,\
+								disabled_packages=None,\
+								notimportable=None, \
+								ignore_modules=(),\
+								name_prefix=None):
 	'''\
 	
 	This will import the modules in order of dependency.

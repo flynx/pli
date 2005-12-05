@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20051103161541'''
+__sub_version__ = '''20051104151102'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -189,8 +189,8 @@ isdict = oftype(dict)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # other odd predicates :)
-isodd = ofptype(int, predicate=lambda o: o%2 != 0)
-iseven = ofptype(int, predicate=lambda o: o%2 == 0)
+isodd = ofptype(int, long, predicate=lambda o: o%2 != 0)
+iseven = ofptype(int, long, predicate=lambda o: o%2 == 0)
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

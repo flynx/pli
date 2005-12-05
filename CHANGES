@@ -1,5 +1,8 @@
-# this file was generated on [200511031618]
+# this file was generated on [200512051749]
 pli changes:
+
+version 0.0.164 (200512051748):
+- added pli.apps.pluginloader2...
 
 version 0.0.162 (200511031616):
 - added the folowing to pli.logictypes:
