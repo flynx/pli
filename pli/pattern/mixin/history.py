@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.01'''
-__sub_version__ = '''20050904061028'''
+__version__ = '''0.0.07'''
+__sub_version__ = '''20051209181211'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -23,6 +23,8 @@ import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
+# XXX add history sporation for archiving.... (e.g. split the DictUnion
+#     in two and add the tail to the archive head...)
 #---------------------------------------------------StateHistoryMixin---
 # NOTE: might be good to exclude the '_history_state' attr from
 #       comparisons...
@@ -37,7 +39,6 @@ class BasicStateHistoryMixin(object):
 	'''
 	__copy_snapshot_valuse__ = False
 	__deepcopy_snapshots__ = False
-
 
 	# TODO add timesamp.....
 	def hist_makesnapshot(self):
@@ -78,6 +79,7 @@ class BasicStateHistoryMixin(object):
 								for k, v in self.__dict__.iteritems() \
 								if k != '_history_state']
 	# XXX check for depth...
+	# XXX should this be renamed to hist_stepback???
 	def hist_revert(self, level=1):
 		'''
 		will revert the state of the object to a given layer in it's history.
@@ -100,9 +102,10 @@ class BasicStateHistoryMixin(object):
 ##!!! REVISE !!!##
 class StateHistoryMixin(BasicStateHistoryMixin):
 	'''
-	this mixin provides extends the BasicStateHistoryMixin (see its docs for moreinfo).
+	this mixin extends the BasicStateHistoryMixin (see its docs for moreinfo).
 	'''
-	def hist_compact(self):
+	# XXX add level support...
+	def hist_compact(self, level=0):
 		'''
 		this will flatten the history...
 		'''
@@ -112,7 +115,7 @@ class StateHistoryMixin(BasicStateHistoryMixin):
 		snapshot = self._history_state
 		dct = snapshot.todict()
 		# XXX this might not be safe...
-		snapshot.clearmemebers()
+		snapshot.clearmembers()
 		snapshot.unite(dct)
 	# XXX it might be good to move this to BasicStateHistoryMixin and
 	#     rewrite hist_revert to use it... (???)
@@ -130,7 +133,53 @@ class StateHistoryMixin(BasicStateHistoryMixin):
 				snapshot.popmember()
 		return snapshot.todict()
 			
+
+#----------------------------------------StateHistoryWithArchiveMixin---
+class StateHistoryWithArchiveMixin(BasicStateHistoryMixin):
+	'''
+	this mixin provides support for archiving of history (full or partial).
+	'''
+	def hist_archive(self, level=0):
+		'''
+		this will compact the object history to the given level (default: 0) and 
+		retrurn the truncated list of dicts.
+
+		NOTE: the returned list is usable in hist_restorearchive.
+		'''
+		snapshot = self._history_state
+		levels = snapshot.members()
+
+		# split the history into a tail and a head :)
+		head = levels[:level]
+		tail = levels[level:]
+		# collapse the tail...
+		tail_elem = logictypes.DictUnion(*tail[::-1]).todict()
+		# form a new history...
+		# XXX is there a better way to do this??
+		snapshot.clearmembers()
+		snapshot.tailunite(*head + (tail_elem,))
+		# return the archive history (list of dicts usable in
+		# tailunite...)
+		return tail
+	def hist_restorearchive(self, archive):
+		'''
+		this will restore the objects' history using the archive (returned by
+		the hist_archive method).
+
+		NOTE: this will fail if the archives state differs from the first state
+		      stored in the curent history.
+		NOTE: this will remove the first state in history and replace it with
+		      an expanded version from the archive.
+		'''
+		snapshot = self._history_state
+		levels = snapshot.members()
+		# sanity check...
+		if logictypes.DictUnion(*archive[::-1]).todict() != levels[-1]:
+			raise TypeError, 'inconsistent archive.'
+		snapshot.clearmembers()
+		snapshot.tailunite(*levels[:-1] + archive)
 		
+
 
 #-----------------------------------------------------------------------
 # XXX might be good to move this elsware... (not exactly a mixin!)
@@ -191,13 +240,48 @@ if __name__ == '__main__':
 	print a.ismodified()
 
 	print 'hist_reverted:', a.__dict__.keys()
+
+	del a.x
+
 	print o.__dict__.keys()
+
 
 	a.hist_revert()
 	a.hist_revert()
 	a.hist_revert()
 	a.hist_revert()
 	print o.__dict__.keys()
+
+	print '---'
+	
+	# test the archive...
+	class HistArchProxy(StateHistoryProxy, StateHistoryWithArchiveMixin):
+		'''
+		'''
+		pass
+
+	a = HistArchProxy(o)
+	a.x = 0
+	a.hist_makesnapshot()
+	a.x = 1
+	a.hist_makesnapshot()
+	a.x = 2
+	a.hist_makesnapshot()
+	a.x = 3
+	a.hist_makesnapshot()
+	a.x = 4
+	a.hist_makesnapshot()
+
+	print a._history_state.members()
+
+	arch = a.hist_archive(2)
+
+	print arch
+	print a._history_state.members()
+
+	a.hist_restorearchive(arch)
+
+	print a._history_state.members()
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20051104151102'''
+__sub_version__ = '''20051209022918'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -338,6 +338,8 @@ class DictUnion(AbstractDictChainMixin):
 
 		NOTE: this method will add members to the top of the pririty
 		      stack.
+		NOTE: the elements are added in sequence, thus, the later elements
+		      have higher priority.
 		'''
 		others = list(others)
 		others.reverse()
@@ -346,9 +348,11 @@ class DictUnion(AbstractDictChainMixin):
 		'''
 		this is the same as unite but adds low priority members (to the
 		botom of the priority stack).
+
+		NOTE: the elements are added in sequence, thus, the later elements
+		      have lower priority.
 		'''
 		others = list(others)
-		others.reverse()
 		self._members = self._members + tuple(others)
 	def memberindex(self, obj):
 		'''
@@ -364,7 +368,8 @@ class DictUnion(AbstractDictChainMixin):
 	def clearmembers(self):
 		'''
 		'''
-		del self._members[:]
+##		del self._members[:]
+		self._members = ()
 	def members(self):
 		'''
 		'''
@@ -612,6 +617,8 @@ if __name__ == '__main__':
 	D = WritableDictUnion(d0, d1)
 
 	D['b'] = '*****'
+
+	print D['b']
 
 	print D.todict()
 	print d0, d1

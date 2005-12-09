@@ -1,5 +1,11 @@
-# this file was generated on [200512051808]
+# this file was generated on [200512091809]
 pli changes:
+
+version 0.0.166 (200512090249):
+- added pli.pattern.mixin.history.StateHistoryWithArchiveMixin.
+
+version 0.0.165 (200512082036):
+- fixed a bug in the pli.logictypes.DictUnion.tailunite method...
 
 version 0.0.164 (200512051748):
 - added pli.apps.pluginloader2...
