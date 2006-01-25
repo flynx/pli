@@ -1,13 +1,25 @@
 #=======================================================================
 
 __version__ = '''0.0.07'''
-__sub_version__ = '''20051209181211'''
+__sub_version__ = '''20051210041342'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
 __doc__ = '''\
+this module will define a set of mixins providing the abbility to store and 
+archive object state history, as well as basic operations with this history.
+
+all of the classes bellow use the _history_state attribute to store the 
+history, thus, this attribute must be provided by the context using the mixin(s).
+
+
+NOTE: care must be taken with this set of objects as they will prevent the deletion
+	  of referenced objects even if those objects or references to them are explicitly
+	  deleted. this is due to that the references to them are stored in history.
+
+	  this problem can be dealt with regular archiving and deletion or pickling.
 
 
 this was in part inspired by: http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/302742
@@ -23,11 +35,10 @@ import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
-# XXX add history sporation for archiving.... (e.g. split the DictUnion
-#     in two and add the tail to the archive head...)
 #---------------------------------------------------StateHistoryMixin---
 # NOTE: might be good to exclude the '_history_state' attr from
 #       comparisons...
+# XXX add better, more pedantic error handling...
 class BasicStateHistoryMixin(object):
 	'''
 	this mixin provides basic object history functionality.
@@ -36,6 +47,9 @@ class BasicStateHistoryMixin(object):
 	NOTE: this depends on an externaly defined _history_state attribute that 
 	      is compatible with the dict union object.
 	NOTE: by default this will not add any new state to the object.
+
+	NOTE: care must be taken with this object as it will prevent the deletion
+	      of referenced objects.
 	'''
 	__copy_snapshot_valuse__ = False
 	__deepcopy_snapshots__ = False
@@ -100,6 +114,7 @@ class BasicStateHistoryMixin(object):
 
 #---------------------------------------------------StateHistoryMixin---
 ##!!! REVISE !!!##
+# XXX add better, more pedantic error handling...
 class StateHistoryMixin(BasicStateHistoryMixin):
 	'''
 	this mixin extends the BasicStateHistoryMixin (see its docs for moreinfo).
@@ -135,9 +150,13 @@ class StateHistoryMixin(BasicStateHistoryMixin):
 			
 
 #----------------------------------------StateHistoryWithArchiveMixin---
+# XXX add better, more pedantic error handling...
 class StateHistoryWithArchiveMixin(BasicStateHistoryMixin):
 	'''
 	this mixin provides support for archiving of history (full or partial).
+
+	NOTE: archive restore is checked for consistency, thus, incompatible 
+	      archive restore is avoided. 
 	'''
 	def hist_archive(self, level=0):
 		'''

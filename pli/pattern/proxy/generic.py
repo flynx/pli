@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20050405190239'''
+__sub_version__ = '''20051212004445'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -443,6 +443,17 @@ class _InheritAndOverrideProxyMetaclass(type):
 		return type.__call__(self, *p, **n)
 
 
+#---------------------------------------------------forcecallperproxy---
+def referenceonproxy(meth):
+	'''
+	this decorator will force the mothod to get copied into each subclass
+	of an InheritAndOverrideProxy that is created when proxying, thus, making
+	the method resolve for evry proxy level.
+	'''
+	##!!!
+	return meth
+
+
 #---------------------------------------------InheritAndOverrideProxy---
 # this is the Proxy cache...
 _InheritAndOverrideProxy_cache = weakref.WeakKeyDictionary()
@@ -489,6 +500,12 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 	NOTE: this will only override methods. instance attribute 
 		  substitution can not be done...
 
+	NOTE: when wrapping in multiple but the same proxies the proxied 
+	      methods will not get called multiple times, as they are 
+		  defined in a shared parent class (not in each proxy).
+		  with the current state of CPython I see no way (yet) to 
+		  solve this issue... :(
+
 	Attributes:
 		__proxy__			- the class used to create the proxy.
 		__proxy_base__		- the special baseclass of the proxy.
@@ -509,6 +526,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 		'''
 		'''
 		osetattr = object.__setattr__
+		tsetattr = type.__setattr__
 		cls_name = cls.__name__
 		proxy = cls
 		try:
@@ -542,7 +560,27 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 			cls.__proxy_base__ = cls
 			# name the new class... 
 			cls.__name__ = cls_name
-			# considering that the class we just created is unique we
+
+##
+##			# now we will populate the new class with methods from the
+##			# original proxy to make the called once per proxy level...
+##			##!!! this might pose a danger of calling the method N+1 times
+##			##!!! (n is proxy levels) instead of N as an extra method will 
+##			##!!! still remain in the original class...
+##			##!!!   ...this might be solved by cheating and not doing the 
+##			##!!! NS copy on level 1
+##			# XXX this works, but to make this work correctly we need to 
+##			#     do something with the class passsed super...
+##			#     I hate Python at times like these... super is not
+##			#     ready for code like this...
+##			if isinstance(source, proxy):
+##				# XXX this is quite crude... 
+##				for n, v in proxy.__dict__.items():
+##					if callable(v):
+##						tsetattr(cls, n, v)
+##
+
+			# and because the class we just created is unique we
 			# can use it as a data store... (and we do not want to
 			# polute the targets dict :) )
 			setattr(cls, cls.__proxy_target_attr_name__, source)
@@ -776,14 +814,42 @@ if __name__ == '__main__':
 	# test nested proxies...
 	print '=' * 72
 
+	class TestProxy(InheritAndOverrideProxy):
+		@referenceonproxy
+		def meth(self, arg):
+			print 'proxy!', self
+			super(TestProxy, self).meth(arg)
+
+##	class SecondTestProxy(InheritAndOverrideProxy):
+##		def meth(self, arg):
+##			print 'proxy!', self
+##			super(SecondTestProxy, self).meth(arg)
+
 	x = O()
 	x.xxx = 'some data'
-	xp = InheritAndOverrideProxy(x)
-	xpp = InheritAndOverrideProxy(xp)
+	xp = TestProxy(x)
+	xpp = TestProxy(xp)
+##	xppp = SecondTestProxy(xpp)
+	xppp = TestProxy(xpp)
 
 	print xp
 	print xpp
 	
+	print '-' * 72
+
+	x.meth(1)
+	print '---'
+	xp.meth(1)
+	print '---'
+	xpp.meth(1)
+	print '---'
+	xppp.meth(1)
+
+##	print '---'
+##	print [c.__name__ for c in xp.__class__.__mro__]
+##	print [c.__name__ for c in xpp.__class__.__mro__]
+##	print [c.__name__ for c in xppp.__class__.__mro__]
+
 	print '-' * 72
 	# test picklability for nested proxies...
 	xppp = _reduceproxyobject(xpp)
