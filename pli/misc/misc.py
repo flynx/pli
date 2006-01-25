@@ -1,14 +1,14 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20060125154450'''
+__sub_version__ = '''20060125163136'''
 __copyright__ = '''(c) Timothy N. Tsvetkov'''
 
 
 #-----------------------------------------------------------------------
 
 def bsort(l, cmp=None):
-	if cmp == None:
+	if cmp != None:
 		for i in range(0, len(l)):
 			for j in range(i, len(l)):
 				if cmp(l[i], l[j]) > 0:

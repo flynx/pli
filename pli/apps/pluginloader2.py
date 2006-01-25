@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.02'''
-__sub_version__ = '''20051204044022'''
+__sub_version__ = '''20060125163912'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -17,6 +17,7 @@ import types
 import pli.importutils as importutils
 import pli.event as event
 import pli.misc.extendedtypes as exttypes
+import pli.misc.misc as misc
 
 
 #-----------------------------------------------------------------------
@@ -151,7 +152,9 @@ class Plugins(object):
 		plugins = self.sorted_plugins = self.plugins.values()
 		if plugins == []:
 			return
-		plugins.sort(cmp=self.__cmpplugins__)
+##		plugins.sort(cmp=self.__cmpplugins__)
+		##!! revise !!##
+		plugins = misc.bsort(plugins, cmp=self.__cmpplugins__)
 	
 	# actions....
 	def read(self):
