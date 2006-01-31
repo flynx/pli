@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.02'''
-__sub_version__ = '''20060125163912'''
+__sub_version__ = '''20060131170927'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -154,7 +154,7 @@ class Plugins(object):
 			return
 ##		plugins.sort(cmp=self.__cmpplugins__)
 		##!! revise !!##
-		plugins = misc.bsort(plugins, cmp=self.__cmpplugins__)
+		plugins[:] = misc.bsort(plugins, cmp=self.__cmpplugins__)
 	
 	# actions....
 	def read(self):
@@ -258,13 +258,15 @@ LOOP_ERR = 0
 LOOP_IGNORE = 1
 
 #------------------------------------------------------------itertree---
-def itertree(tree, getchildren=None, mode=WALK_BREADTH, onloop=LOOP_ERR):
+##def itertree(tree, getchildren=None, mode=WALK_BREADTH, onloop=LOOP_ERR):
+def itertree(tree, getchildren, mode=WALK_DEPTH, onloop=LOOP_ERR):
 	'''
 	return a list of nodes of a tree.
 	'''
 	seen = [tree]
 	yield tree
 	l = getchildren(tree)
+	len_l = len(l)
 	while l != []:
 		c = l.pop(0)
 		if c in seen:
@@ -281,7 +283,18 @@ def itertree(tree, getchildren=None, mode=WALK_BREADTH, onloop=LOOP_ERR):
 		if mode == WALK_BREADTH:
 			l += getchildren(c)
 		elif mode == WALK_DEPTH:
-			l[:0] = getchildren(c)
+##			l[:0] = getchildren(c)
+			##!!! revise...
+			l[:0] = getchildren(c)		
+			if len_l > len(l):			
+				tl = len_l-len(l)
+				seen.reverse()
+				if len(seen) > tl:
+					seen[:tl+1] = []
+				else:
+					seen[:tl] = []
+				seen.reverse()
+			len_l = len(l)
 		else:
 			raise TypeError, 'unknown mode (%s).' % mode
 
