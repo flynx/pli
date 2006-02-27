@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051012080046'''
+__sub_version__ = '''20060204024020'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -45,24 +45,42 @@ class SQLShelve(mapping.Mapping):
 	def __setitem__(self, name, value):
 		'''
 		'''
+		interface =  self._interface
 		data = self._data
-		# insert the object...
-		oid = self._interface.write(value)
-		# update the keys dict...
-		data[name] = oid
-		self._interface.write(data)
+		try:
+			# insert the object...
+			oid = interface.write(value)
+			# update the keys dict...
+			data[name] = oid
+			interface.write(data)
+		except:
+##			##!!! rollback...
+##			interface.__sql_reader__.sql.connection.rollback()
+			raise 'oops!'
+		# commit...
+		# XXX make this prittier!
+		interface.__sql_reader__.sql.connection.commit()
 	##!!! REWRITE: might be a tad cleaner...
 	def __delitem__(self, name):
 		'''
 		'''
 ##		return self._interface.delete(self._data.pop(name))
+		interface =  self._interface
 		data = self._data
-		data.pop(name)
-		self._interface.write(data)
+		try:
+			data.pop(name)
+			interface.write(data)
+		except:
+##			##!!! rollback...
+##			interface.__sql_reader__.sql.connection.rollback()
+			raise 'oops!'
+		# commit...
+		# XXX make this prittier!
+		interface.__sql_reader__.sql.connection.commit()
 	def __iter__(self):
 		'''
 		'''
-		for name in self._data:
+		for name in self._data.keys():
 			yield name
 
 

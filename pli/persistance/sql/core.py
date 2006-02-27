@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051012075723'''
+__sub_version__ = '''20060204020843'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -285,6 +285,7 @@ def registertablehandler(table_name):
 # TODO add lazy reconstruction option for mutable and deep objects...
 # TODO make an atomic type handler constructor... (should this be
 #      decoratable??)
+# TODO make the table names configurable....
 class SQLReader(object):
 	'''
 	'''
@@ -526,7 +527,7 @@ class AbstractSQLInterface(object):
 	def write(self, a, b=None):
 		'''
 
-		this can one of:
+		this can be one of:
 			write(obj) -> OID
 			write(name, obj) -> OID
 

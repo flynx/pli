@@ -1,6 +1,11 @@
 SET client_encoding = 'UNICODE';
 -- CREATE DATABASE "poker" WITH TEMPLATE = template0 ENCODING = 'UNICODE';
 
+-- TODO add transaction id's to all objects (and make an object's primery key a combination of the two oid and tid...)
+
+
+
+
 BEGIN;
 
 -- this will provide a way to access objects in the database using simple string names.
