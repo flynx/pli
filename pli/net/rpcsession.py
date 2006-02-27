@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.77'''
-__sub_version__ = '''20060227195221'''
+__sub_version__ = '''20060227201804'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -324,7 +324,9 @@ class RPCSessionManager(object):
 					and hasattr(obj, '_last_accessed') \
 					and (time.time() - obj._last_accessed) > obj.__timeout__:
 				self.close_session(sid)
-			elif self.__timeout__ != None \
+			else:
+				return True
+			if self.__timeout__ != None \
 					and hasattr(obj, '_last_accessed') \
 					and (time.time() - obj._last_accessed) > self.__timeout__:
 				self.close_session(sid)
