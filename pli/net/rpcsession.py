@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.77'''
-__sub_version__ = '''20060227201804'''
+__sub_version__ = '''20060405175151'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -338,8 +338,8 @@ class RPCSessionManager(object):
 		'''
 		'''
 		# system methods...
-		if method in self.__system_methods__ + self.__public_methods__:
-			return getattr(self, method)(*pargs, **nargs)
+		if method[0] in self.__system_methods__ + self.__public_methods__:
+			return getattr(self, method[0])(*pargs, **nargs)
 		# dispatch...
 		else:
 			# dispatch the call to a valid session object...
@@ -444,7 +444,7 @@ class RPCSessionManager(object):
 	def check_sessions(self):
 		'''
 		'''
-		for session in self.__active_sessions__:
+		for session in self.__active_sessions__.keys():
 			if not self.isalive(session):
 				name = self.__active_sessions__[session][0]
 				##!! rewrite (with logger...) !!##

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.36'''
-__sub_version__ = '''20050831171837'''
+__sub_version__ = '''20060627135948'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -13,11 +13,14 @@ This module defines a Finite State Machine framework.
 
 # TODO add threading support for autostart FSMs...
 # 	   e.g. run start in a seporate context (thread, process, .. etc.)
+# TODO add default and conditional error states...
 
 
 #-----------------------------------------------------------------------
 
 import time
+import new
+import types
 
 import pli.pattern.store.stored as stored
 import pli.event as event
@@ -620,7 +623,7 @@ class StateWithAttrPriority(BasicState):
 		'''
 		the resolution order is as folows:
 			1. local object state.
-			2. names defined in __startupfirstattrs__ the in startup class.
+			2. names defined in __startupfirstattrs__ in the startup class.
 			3. current class.
 			4. startup class.
 		'''
@@ -634,7 +637,12 @@ class StateWithAttrPriority(BasicState):
 			if name in getattribute('__startupfirstattrs__'):
 				try:
 					# get startup...
-					return getattr(getattribute('__startup_class__'), name)
+					res = getattr(getattribute('__startup_class__'), name)
+					# XXX implementation dependant.... (is there a
+					#     better way?)
+					if type(res) == new.instancemethod:
+						res = new.instancemethod(res.im_func, self, self.__class__)
+					return res
 				except AttributeError:
 					# get current...
 					return getattribute(name)
@@ -644,7 +652,12 @@ class StateWithAttrPriority(BasicState):
 					return getattribute(name)
 				except AttributeError:
 					# get startup...
-					return getattr(getattribute('__startup_class__'), name)
+					res = getattr(getattribute('__startup_class__'), name)
+					# XXX implementation dependant.... (is there a
+					#     better way?)
+					if type(res) == new.instancemethod:
+						res = new.instancemethod(res.im_func, self, self.__class__)
+					return res
 ##			# get current...
 ##			return getattribute(name)
 		except AttributeError:

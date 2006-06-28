@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20051013190315'''
+__sub_version__ = '''20060418212328'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -830,9 +830,8 @@ def implemments(interface, depth=1):
 	this will add an interface to the object.
 
 	this function is accumulative, thus it can be called many times, and
-	the interfaces will be combined in order reverse to the calls (
-	maximum prcidence/priority is the last added), this also could be called 
-	head addition.
+	the interfaces will be combined in order reverse to the calls (maximum
+	prcidence/priority is the last added).
 	Example:
 		implemments(IA)
 		implemments(IB)

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20051010162832'''
+__sub_version__ = '''20060204023432'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -51,7 +51,7 @@ class PGConnection(SQLConnection):
 	def connect(self):
 		'''
 		'''
-		self._connection = psycopg.connect('host=%s dbname=%s user=%s password=%s' \
+		con = self._connection = psycopg.connect('host=%s dbname=%s user=%s password=%s' \
 											% (self._host, self._db, self._user, self._passwd))
 	##!!! REVISE !!!##
 	def disconnect(self):
@@ -83,6 +83,14 @@ class PGConnection(SQLConnection):
 			self._connection.commit()
 		except:
 			raise ConnectionError, 'connection lost. cannot commit!'
+	def rollback(self):
+		'''
+		'''
+		self._connection.rollback()
+##		try:
+##			self._connection.rollback()
+##		except:
+##			raise ConnectionError, 'connection lost. cannot commit!'
 
 
 
