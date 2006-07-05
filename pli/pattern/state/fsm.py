@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.36'''
-__sub_version__ = '''20060627135948'''
+__sub_version__ = '''20060705143925'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -171,9 +171,10 @@ class onEnterState(event.InstanceEvent):
 	'''
 	__suppress_exceptions__ = False
 
-	def __init__(self, state_name):
+	def __init__(self, state_name, source):
 		'''
 		'''
+		self.source = source
 		self.state_name = state_name
 		super(onEnterState, self).__init__()
 
@@ -185,9 +186,10 @@ class onExitState(event.InstanceEvent):
 	'''
 	__suppress_exceptions__ = False
 
-	def __init__(self, state_name):
+	def __init__(self, state_name, source):
 		'''
 		'''
+		self.source = source
 		self.state_name = state_name
 		super(onExitState, self).__init__()
 
@@ -342,7 +344,7 @@ class FiniteStateMachine(state.State):
 			for evt_name, evt_cls in (('onEnter' + state_name, self.__state_enter_event__),
 									  ('onExit' + state_name, self.__state_exit_event__)): 
 				if not hasattr(self, evt_name):
-					setattr(self, evt_name, evt_cls(state_name))
+					setattr(self, evt_name, evt_cls(state_name, self))
 			# the stop event...
 			if isterminal(state):
 				setattr(self, 'onStop' + state_name, onFiniteStateMachineStop(state_name))
