@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.36'''
-__sub_version__ = '''20060705143925'''
+__sub_version__ = '''20060711003342'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -174,7 +174,7 @@ class onEnterState(event.InstanceEvent):
 	def __init__(self, state_name, source):
 		'''
 		'''
-		self.source = source
+		self.event_source = source
 		self.state_name = state_name
 		super(onEnterState, self).__init__()
 
@@ -189,7 +189,7 @@ class onExitState(event.InstanceEvent):
 	def __init__(self, state_name, source):
 		'''
 		'''
-		self.source = source
+		self.event_source = source
 		self.state_name = state_name
 		super(onExitState, self).__init__()
 
