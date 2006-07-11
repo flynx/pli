@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.40'''
-__sub_version__ = '''20060711202606'''
+__version__ = '''0.3.41'''
+__sub_version__ = '''20060712001024'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -220,12 +220,6 @@ class onFiniteStateMachineStop(event.InstanceEvent):
 # TODO error state handler...
 # TODO "Sub-FSMs"
 #
-# TODO name resolution through the fsm.... (as a default to the startup
-#      state...)
-#      this should look like the FSM subclass is mixed-in (or a
-#      superclass of every state) to the originil FSM, yet not touching
-#      the original...
-#
 class FiniteStateMachine(state.State):
 	'''
 	this is the base FSM class.
@@ -355,7 +349,6 @@ class FiniteStateMachine(state.State):
 			self.__next_state__ = tostate
 		else:
 			self._changestate(tostate)
-	##!!!
 	def _changestate(self, tostate):
 		'''
 		'''
@@ -373,15 +366,17 @@ class FiniteStateMachine(state.State):
 		if hasattr(self, evt_name):
 			getattr(self, evt_name).fire()
 		# run the post init method...
+		e = None
 		try:
 			if hasattr(self, '__onafterstatechange__'):
 				self.__onafterstatechange__()
-		except FiniteStateMachineStop:
-			if hasattr(self, '__onenterstate__'):
-				self.__onenterstate__()
-			raise
+		except FiniteStateMachineStop, e:
+			pass
 		if hasattr(self, '__onenterstate__'):
 			self.__onenterstate__()
+		# if a stop condition occurred, pass it on...
+		if e != None:
+			raise e
 
 
 #--------------------------------------------------------------_State---
@@ -417,7 +412,6 @@ class _StoredState(stored._StoredClass):
 # TODO error state handler...
 # TODO "Sub-FSMs"
 # TODO revise magic method names and function...
-# XXX __onenterstate__ is bad in case of auto state change... (???)
 class BasicState(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
