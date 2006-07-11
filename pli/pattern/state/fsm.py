@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.36'''
-__sub_version__ = '''20060711003342'''
+__version__ = '''0.3.40'''
+__sub_version__ = '''20060711202606'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -373,9 +373,13 @@ class FiniteStateMachine(state.State):
 		if hasattr(self, evt_name):
 			getattr(self, evt_name).fire()
 		# run the post init method...
-		if hasattr(self, '__onafterstatechange__'):
-			self.__onafterstatechange__()
-		##!!! this is bad !!!##
+		try:
+			if hasattr(self, '__onafterstatechange__'):
+				self.__onafterstatechange__()
+		except FiniteStateMachineStop:
+			if hasattr(self, '__onenterstate__'):
+				self.__onenterstate__()
+			raise
 		if hasattr(self, '__onenterstate__'):
 			self.__onenterstate__()
 
@@ -550,6 +554,7 @@ class BasicState(FiniteStateMachine):
 	iternextstates = classmethod(iternextstates)
 	# this method is called after the state is finalized (e.g. after the
 	# __onstatechange__ is called and the onEnter event is processed).
+	##!!!!! might be wrong: check the situations where FiniteStateMachineStop is raised... (especially on FSM init)
 	def __onafterstatechange__(self):
 		'''
 		this will try to next change state.
