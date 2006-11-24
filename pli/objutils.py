@@ -1,13 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20040729152425'''
+__sub_version__ = '''20061124145342'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-from __future__ import generators
+##from __future__ import generators
 import types
 import new
 

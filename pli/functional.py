@@ -1,13 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.5.14'''
-__sub_version__ = '''20050331025621'''
+__sub_version__ = '''20061124145258'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-from __future__ import generators
+##from __future__ import generators
 import new
 
 ##import pli.pattern.proxy as proxy

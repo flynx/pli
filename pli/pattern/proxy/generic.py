@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20051212004445'''
+__sub_version__ = '''20060718234014'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,9 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 # TODO solve the infinite recursion problem when trying to call the
 #      parents __call__ method (may not be the only one affected) from
 #      a recursive proxy...
+# TODO might be a good idea to split this in two:
+#      generic.py	- will contain the generic proxy interface.
+#      inherit.py	- will contain the inherit proxy infrastructure.
 
 __doc__ = '''\
 this module will define a set of utilities and classes to be used to build
@@ -200,7 +203,7 @@ class ComparibleProxyMixin(AbstractProxy):
 	proxy mixin. this will transfer the rich comparison calls directly 
 	to the target...
 	'''
-	__proxy_target_attr_name__ = 'proxy_target'
+##	__proxy_target_attr_name__ = 'proxy_target'
 
 	# these cant be avoided without eval...
 	def __eq__(self, other):
@@ -252,7 +255,7 @@ class CachedProxyMixin(AbstractProxy):
 			cls._setcache(source, obj)
 			return obj
 		return super(CachedProxyMixin, cls).__new__(cls, source, *p, **n)
-##	@classmethod
+	@classmethod
 	def _getcached(cls, source):
 		'''
 		'''
@@ -260,14 +263,12 @@ class CachedProxyMixin(AbstractProxy):
 				and source in cls.__proxy_cache__:
 			return cls.__proxy_cache__[source]
 		return None
-	_getcached = classmethod(_getcached)
-##	@classmethod
+	@classmethod
 	def _setcache(cls, source, obj):
 		'''
 		'''
 		if hasattr(cls, '__proxy_cache__') and cls.__proxy_cache__ != None:
 			cls.__proxy_cache__[source] = obj
-	_setcache = classmethod(_setcache)
 
 
 #---------------------------------------------------GetattrProxyMixin---

@@ -1,13 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.1.47'''
-__sub_version__ = '''20040323153531'''
+__sub_version__ = '''20061124145351'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-from __future__ import generators
+##from __future__ import generators
 import types
 
 import pli.functional as func 

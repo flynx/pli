@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.41'''
-__sub_version__ = '''20060712001024'''
+__sub_version__ = '''20060731164833'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -286,42 +286,49 @@ class FiniteStateMachine(state.State):
 ##			raise FiniteStateMachineError, 'can\'t start a raw FSM object (change to a valid state).'
 		# start the loop...
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__:
-			if hasattr(self, '_running') and self._running:
+			if hasattr(self, '_fsm_running') and self._fsm_running:
 				raise FiniteStateMachineError, 'the %s FSM is already running.' % self
-			self._running = True
 			try:
-				while True:
-					# break on terminal state...
-					if isterminal(self):
-						# fire the state stop event...
-						evt_name = 'onStop' + self.__class__.__name__
-						if hasattr(self, evt_name):
-							getattr(self, evt_name).fire()
-						# exit...
-						break
-##					# handle stops...
-##					if self._running == False:
-##						if self._stop_exception != None:
-##							raise self._stop_exception, self._stop_reason
-##						return self._stop_reason
-					if self.__next_state__ != None:
-						# change state...
-						tostate = self.__next_state__
-						self.__next_state__ = None
-						self._changestate(tostate)
-			except FiniteStateMachineStop:
-				pass
-			self._running = False
+				self._fsm_running = True
+				try:
+					while True:
+						# break on terminal state...
+						if isterminal(self):
+							# fire the state stop event...
+							evt_name = 'onStop' + self.__class__.__name__
+							if hasattr(self, evt_name):
+								getattr(self, evt_name).fire()
+							# exit...
+							break
+##						# handle stops...
+##						if self._fsm_running == False:
+##							if self._stop_exception != None:
+##								raise self._stop_exception, self._stop_reason
+##							return self._stop_reason
+						if self.__next_state__ != None:
+							# change state...
+							tostate = self.__next_state__
+							self.__next_state__ = None
+							self._changestate(tostate)
+				except FiniteStateMachineStop:
+					pass
+			finally:
+				self._fsm_running = False
 			# fire the fsm stop event...
 			self.onFiniteStateMachineStop.fire()
 		else:
 			raise FiniteStateMachineError, 'can\'t start a manual (non-auto-change-state) FSM.'
+##	def step(self):
+##		'''
+##		this will step through the fsm.
+##		'''
+##		pass
 ##	def stop(self, reason=None, exception=None):
 ##		'''
 ##		'''
 ##		self._stop_exception = exception
 ##		self._stop_reason = reason
-##		self._running = False
+##		self._fsm_running = False
 	# TODO automaticly init newly added states per FSM object on their
 	#      (event) addition to the FSM class...
 	#      ...or do a lazy init (as in RPG.action)
@@ -412,6 +419,7 @@ class _StoredState(stored._StoredClass):
 # TODO error state handler...
 # TODO "Sub-FSMs"
 # TODO revise magic method names and function...
+# XXX see if this need a redesign...
 class BasicState(FiniteStateMachine):
 	'''
 	this is the base state class for the FSM framwork.	
@@ -534,7 +542,7 @@ class BasicState(FiniteStateMachine):
 		# restart the fsm if __auto_change_state__ is set and we are
 		# not running...
 		if hasattr(self, '__auto_change_state__') and self.__auto_change_state__ \
-				and not self._running:
+				and not self._fsm_running:
 			self.start()
 	def iternextstates(self):
 		'''
