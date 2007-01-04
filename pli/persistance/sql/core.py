@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.01'''
-__sub_version__ = '''20060901194810'''
+__version__ = '''0.0.05'''
+__sub_version__ = '''20070105020543'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -210,8 +210,12 @@ class SQLWriter(object):
 			# insert the element...
 ##			name_id = self.write(n)
 ##			self.sql.insert('py_object_attribute', pyoid=obj_id, name=name_id, value=val_id)
-			val_id = self.write(getattr(obj, n))
-			self.sql.insert('py_object_attribute', pyoid=obj_id, name=n, value=val_id)
+			# the if here is to avoid special cases like None and Guido
+			# knows what that may not have a special attr like __dict__
+			# in the case of None.... #$%^&* 
+			if hasattr(obj, n):
+				val_id = self.write(getattr(obj, n))
+				self.sql.insert('py_object_attribute', pyoid=obj_id, name=n, value=val_id)
 		return obj_id
 	# pickle handlers...
 	@registertypehandler(type)
@@ -220,6 +224,10 @@ class SQLWriter(object):
 		'''
 		obj_id = self.sql.insert('py_object', type='py_pickled_class').lastrowid
 		obj_id = self.sql.select('pyoid', 'py_object', self.sql.where(oid=obj_id)).fetchone()[0]
+
+		# for some reason pickle can't pickle NoneType....
+		if cls == types.NoneType:
+			cls = None
 
 		self.sql.insert('py_pickled_class', 
 							pyoid=obj_id, 
@@ -400,6 +408,9 @@ class SQLReader(object):
 		for n, v in dct.items():
 			dct[n] = self.get(v)
 		cls = dct.pop('__class__')
+		# there is only one None object and it is already created...
+		if cls in (types.NoneType, None):
+			return None
 		# generate the object...
 		o = Object()
 		for n, v in dct.items():
@@ -416,6 +427,9 @@ class SQLReader(object):
 		# get the object...
 		o = self.sql.select('pickle', 'py_pickled_class', self.sql.where(pyoid=oid)).fetchone()[0]
 		o = pickle.loads(o)
+		# NoneType is represented as None...
+		if o == None:
+			return types.NoneType
 		# XXX reconstruct attrs...
 		return o
 	@registertablehandler('py_pickled_function')
