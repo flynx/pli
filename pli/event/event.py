@@ -3,7 +3,7 @@
 #-----------------------------------------------------------------------
 
 __version__ = '''0.3.23'''
-__sub_version__ = '''20050705153243'''
+__sub_version__ = '''20070121195422'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -290,7 +290,7 @@ class InstanceEvent(AbstractEvent):
 								  options).
 								  if this is not defined, one must fire 
 								  the event manually.
-		unsourse()				: this is an optional uninstall method.
+		unsource()				: this is an optional uninstall method.
 								  this is called to uninstall the event 
 								  and cleanup (reverse of source).
 								  (see the __auto_uninstall__).
@@ -316,7 +316,7 @@ class InstanceEvent(AbstractEvent):
 		clear()					: this method will remove all handlers of the
 								  event (to the exception of class-level 
 								  handlers).
-								  NOTE: this will call the unsourse method
+								  NOTE: this will call the unsource method
 								        if it is enabled.
 		__callhook__(hook, evt, *p, **n)
 								: an optional hook wrapper. this is called
@@ -505,6 +505,7 @@ class InstanceEvent(AbstractEvent):
 		if hasattr(self, '__auto_uninstall__') and self.__auto_uninstall__ and \
 				hasattr(self, 'unsource'):
 			self.unsource()
+	clear = objutils.classinstancemethod(clear)
 
 	
 #--------------------------------------------------------------_ClassEvent---

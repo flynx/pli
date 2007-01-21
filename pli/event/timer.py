@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20040331000551'''
+__sub_version__ = '''20070121200547'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -11,6 +11,14 @@ import thread
 import time
 
 import event
+
+
+#-----------------------------------------------------------------------
+
+class TimerEventError(Exception):
+	'''
+	'''
+	pass
 
 
 #-----------------------------------------------------------------------
@@ -40,7 +48,7 @@ class Timer(object):
 		'''
 		t = list(self.__callbacks__)
 		t.remove(hook_func)
-		self.__callbacks__ = t
+		self.__callbacks__ = tuple(t)
 		##!!! check for stop...
 	def start(self):
 		'''
@@ -76,21 +84,40 @@ globaltimer = Timer()
 
 
 #------------------------------------------------------BaseTimerEvent---
-class BaseTimerEvent(event.Event):
+class AbstractTimerEvent(event.AbstractEvent):
 	'''
 	'''
-	__inherit_source__ = True
 	# this will define the timer object to be used as the event
 	# initiator....
 	__timer__ = globaltimer
+
+	def source(self):
+		'''
+		'''
+		self.__timer__.installhook(self.fire)
+
+
+#------------------------------------------------------BaseTimerEvent---
+class BaseTimerEvent(AbstractTimerEvent, event.Event):
+	'''
+	'''
+	__inherit_source__ = True
 
 	def source(cls):
 		'''
 		'''
 		if cls.__name__ == 'BaseTimerEvent':
 			raise TypeError, 'can\'t bind to "BaseTimerEvent".'
-		cls.__timer__.installhook(cls.fire)
+		return super(BaseTimerEvent, self).source()
+		
+	
 
+
+#----------------------------------------------BaseInstanceTimerEvent---
+class BaseInstanceTimerEvent(AbstractTimerEvent, event.InstanceEvent):
+	'''
+	'''
+	pass
 
 
 #-----------------------------------------------------------------------
@@ -133,6 +160,71 @@ class Daily(BaseTimerEvent):
 		if last == cls.__hour__:
 			return True
 		return False
+
+
+#--------------------------------------------------------------InSecs---
+class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
+	'''
+	this will create an event that will fire after a given number of 
+	seconds.
+	afrer this is fired it will be recycled (e.g. all handlers unbound)
+	'''
+	__timer__ = globaltimer
+
+	_fire_at = None
+	_hook = None
+	timer_enabled = True
+
+	def __init__(self, seconds):
+		'''
+		'''
+		self._fire_in = seconds
+		# calculate the tame at which we need to be fired...
+		self.start()
+
+	def source(self):
+		'''
+		'''
+		hook = self._hook = self.fire
+		self.__timer__.installhook(hook)
+	def unsource(self):
+		'''
+		'''
+		hook = self._hook
+		self.__timer__.uninstallhook(hook)
+		self._hook = None
+	def predicate(self, *p, **n):
+		'''
+		'''
+		if self.timer_enabled == True \
+				and self._fire_at != None \
+				and time.time() >= self._fire_at:
+			self.reset()
+			return True
+		return False
+
+	def reset(self):
+		'''
+		reset the event.
+		'''
+		self._fire_at = None 
+
+	def start(self):
+		'''
+		start the timer.
+
+		NOTE: if the fire time is passed
+		'''
+		if self._fire_at == None:
+			self._fire_at = time.time() + float(self._fire_in)
+			self.timer_enabled = True
+		else:
+			raise TimerEventError, 'can\'t start a running event (reset first).' 
+	def stop(self):
+		'''
+		stop the timer (the event will not fire).
+		'''
+		self.timer_enabled = False
 		
 
 

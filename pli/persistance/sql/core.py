@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.05'''
-__sub_version__ = '''20070105020543'''
+__sub_version__ = '''20070108034905'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -218,6 +218,7 @@ class SQLWriter(object):
 				self.sql.insert('py_object_attribute', pyoid=obj_id, name=n, value=val_id)
 		return obj_id
 	# pickle handlers...
+	##!!! check if the object is a class with a metaclass other than type...
 	@registertypehandler(type)
 	def do_class(self, cls, oid=None):
 		'''
@@ -246,6 +247,10 @@ class SQLWriter(object):
 		return obj_id
 	# HL interface methods...
 	# XXX make this support the pickle protocols...
+	# XXX might be good to make this less strict and not use the
+	#     explicit class of the object but rather test for subclass...
+	#     ...might be good to make this a multi level test... first
+	#     strict, then less strict... etc.
 	##!!! REVISE
 	def write(self, obj, oid=None):
 		'''
@@ -253,6 +258,7 @@ class SQLWriter(object):
 		t = type(obj)
 		handler = self._typehandlers.get(t, None)
 		if handler is None:
+			##!!! do a less strict test...
 			return self.do_object(obj, oid)
 		return handler(self, obj, oid)
 	##!!! REVISE
