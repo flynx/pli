@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20070122021815'''
+__sub_version__ = '''20070122022820'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -108,7 +108,8 @@ class BaseTimerEvent(AbstractTimerEvent, event.Event):
 		'''
 		if cls.__name__ == 'BaseTimerEvent':
 			raise TypeError, 'can\'t bind to "BaseTimerEvent".'
-		return super(BaseTimerEvent, cls).source()
+		cls.__timer__.installhook(cls.fire)
+##		return super(BaseTimerEvent, cls).source()
 		
 	
 
