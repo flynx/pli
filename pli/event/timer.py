@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20070122022820'''
+__sub_version__ = '''20070122025233'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -76,7 +76,11 @@ class Timer(object):
 			time.sleep(_res)
 			# if there is a callback call it...
 			for f in self.__callbacks__:
-				f()
+				##!!! revise...
+				try:
+					f()
+				except:
+					pass
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # create a global timer object...
