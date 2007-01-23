@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20070122025233'''
+__sub_version__ = '''20070124021359'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -172,7 +172,9 @@ class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
 	'''
 	this will create an event that will fire after a given number of 
 	seconds.
-	afrer this is fired it will be recycled (e.g. all handlers unbound)
+	afrer this is fired it will be recycled (e.g. the event is fired once)
+
+	NOTE: the accuracy of this depends on the timer resolution.
 	'''
 	__timer__ = globaltimer
 
@@ -186,7 +188,6 @@ class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
 		self._fire_in = seconds
 		# calculate the tame at which we need to be fired...
 		self.start()
-
 	def source(self):
 		'''
 		'''
@@ -207,13 +208,12 @@ class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
 			self.reset()
 			return True
 		return False
-
+	# user interface methods...
 	def reset(self):
 		'''
 		reset the event.
 		'''
 		self._fire_at = None 
-
 	def start(self):
 		'''
 		start the timer.
@@ -230,6 +230,18 @@ class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
 		stop the timer (the event will not fire).
 		'''
 		self.timer_enabled = False
+	def resume(self):
+		'''
+		resume the timer.
+
+		NOTE: if this is called after the time has passed the event will
+		      be fired right away.
+		'''
+		self.timer_enabled = True
+		if self._fire_at != None \
+				and time.time() >= self._fire_at:
+			self.fire()
+			self.reset()
 		
 
 
