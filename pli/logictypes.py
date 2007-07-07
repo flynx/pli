@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20051209022918'''
+__sub_version__ = '''20070707174650'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -430,7 +430,7 @@ WRITE_DISABLED = 16
 DELETE_LAST = 0
 # delete the first occurance of key...
 DELETE_FIRST = 32 
-# enable ocal key delete...
+# enable local key delete...
 DELETE_LOCAL = 64
 # disable deletion of anything but local keys...
 DELETE_LOCAL_ONLY = 128
@@ -456,7 +456,10 @@ class WritableDictUnion(DictUnion):
 		'''
 		props = getattr(self, '__modify_props__', 0)
 		if props & GET_LOCAL_FIRST:
-			return self._locals.get(name, super(WritableDictUnion, self).__getitem__(name))
+			if name in self._locals:
+				return self._locals[name]
+			else:
+				return super(WritableDictUnion, self).__getitem__(name)
 		try:
 			return super(WritableDictUnion, self).__getitem__(name)
 		except KeyError:
@@ -478,6 +481,7 @@ class WritableDictUnion(DictUnion):
 				else:
 					self.getallcontainersof(name)[-1][name] = value
 			except KeyError:
+				##!!! problem if there are no memebers... raise an apropriate error...
 				if props & WRITE_NEW_TO_FIRST:
 					self.members()[0][name] = value
 				else:

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.02'''
-__sub_version__ = '''20060131170927'''
+__sub_version__ = '''20070702022438'''
 __copyright__ = '''(c) Alex A. Nannou 2004'''
 
 __doc__ = '''\
@@ -43,6 +43,8 @@ class onPluginLoad(event.Event):
 # TODO more docs...
 # TODO cleanup code...
 #-------------------------------------------------------------Plugins---
+# XXX might be a good idea to add plugin level operation like:
+#     combination...
 class Plugins(object):
 	'''
 	'''

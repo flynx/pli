@@ -2,7 +2,7 @@
 #=======================================================================
 
 __version__ = '''0.1.12'''
-__sub_version__ = '''20051130205504'''
+__sub_version__ = '''20070707181343'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -75,6 +75,7 @@ setup(
 				  'pli.interface',
 				  'pli.misc',
 				  'pli.net',
+				  'pli.tags',
 ##				  'pli.unit',
 				  'pli.pattern',
 				  'pli.pattern.proxy',
