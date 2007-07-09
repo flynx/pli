@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070707230607'''
+__sub_version__ = '''20070709052252'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -11,15 +11,23 @@ import re
 
 import pli.pattern.mixin.mapping as mapping
 import pli.pattern.proxy.utils as putils
+import pli.event as event
 
 
 #-----------------------------------------------------------------------
 # XXX might be a good idea to transfer these to sets...
 # XXX add class tagging...
+# XXX add onUpdate event to tags... (might be good to make this
+#     structuraly a sub event of the tagset...)
+# XXX write and use specific error classes...
+#
 #----------------------------------------------------------------Tags---
+# XXX add onUpdate event...
 ##!!! make this clean... (all set methods should work as expected)
 class Tags(set):
 	'''
+
+	NOTE: it is not yet safe to use this directly for modification.
 	'''
 	def __init__(self, obj, tagdb):
 		'''
@@ -120,6 +128,7 @@ class TaggableWithDFLTags(Taggable):
 
 
 #-----------------------------------------------------------------Tag---
+# XXX add onUpdate event...
 ##class Tag(Taggable):
 class Tag(TaggableWithDFLTags):
 	'''
@@ -183,6 +192,8 @@ def getbytags(tagdb, *tags, **opts):
 
 #----------------------------------------------------------iterbytags---
 # XXX think of a better way to do this... (inificient memory-wise)
+# XXX might be a good idea to sort this by tag usage (least used first)
+#     ...this will give a substantial speedup...
 def iterbytags(tagdb, *tags, **opts):
 	'''
 	iterate through all the objects from tagdb that are tagged with the given tags.
@@ -222,9 +233,10 @@ def iterbytags(tagdb, *tags, **opts):
 
 #-----------------------------------------------------------------------
 #---------------------------------------------------------------TagSet---
-# this is the tag database...
+# XXX add onUpdate event...
 class TagSet(mapping.Mapping):
 	'''
+	basic tag database.
 	'''
 	__tag_constructor__ = Tag
 	# all the objects that are tagged...
@@ -249,7 +261,7 @@ class TagSet(mapping.Mapping):
 				self._data = dict([ (k, v) for k, v in tagdb.items() ])
 			else:
 				self._data = dict([ (k, tagdb[k]) for k in available ])
-	##!!! might be good to check for tag type here...
+	##!!! might be good to check for tag (value) type here...
 	def __setitem__(self, name, value):
 		'''
 		'''
@@ -270,8 +282,8 @@ class TagSet(mapping.Mapping):
 	getbytags = getbytags
 
 
-#------------------------------------------------TagSetWithAttrAccess---
-class TagSetWithAttrAccess(TagSet):
+#------------------------------------------------TagTreeWithAttrNodes---
+class TagTreeWithAttrNodes(TagSet):
 	'''
 	'''
 	__tagname__ = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
@@ -282,7 +294,7 @@ class TagSetWithAttrAccess(TagSet):
 		'''
 		if not self.isvalidtagname(name):
 			raise TypeError, 'bad tag name ("%s").' % name
-		return super(TagSetWithAttrAccess, self).__setitem__(name, value)
+		return super(TagTreeWithAttrNodes, self).__setitem__(name, value)
 	def __getattr__(self, name):
 		'''
 		'''
@@ -296,13 +308,55 @@ class TagSetWithAttrAccess(TagSet):
 		return False
 
 
+#-----------------------------------------TagTreeWithAttrNodesCaching---
+##!!! needs an onUpdate event on tags to work properly...
+# XXX needs to be safely piclable...
+# XXX might be good to make this a mixin
+class TagTreeWithAttrNodesCaching(TagTreeWithAttrNodes):
+	'''
+	'''
+	_tag_cache = None
+
+	##!!! REMOVE THIS AS SOON AS THIS IS DONE...
+	def __new__(*p, **n):
+		raise NotImplementedError, 'this class is not yet ready for use.'
+
+	def cachetag(self, tag):
+		'''
+		'''
+		##!!! this must check if such a tag is already cached...
+		if tag in self._tag_cache:
+			##!!! do an update???
+			return
+		if self._tag_cache == None:
+			self._tag_cache = {}
+		f = self._getupdater(tag)
+		o = self._tag_cache[tag] = (getattr(self, tag), f)
+		event.bind(self.__tagdb__[tag].onUpdate, f)
+	def uncachetag(self, tag):
+		'''
+		'''
+		if tag not in self._tag_cache:
+			return
+		event.unbind(self.__tagdb__[tag].onUpdate, self._tag_cache[tag][1])
+		del self._tag_cache[tag]
+		if self._tag_cache == {}:
+			del self._tag_cache
+	##!!! update all caches down that depend on this tag...
+	def _getupdater(self, tag):
+		'''
+		'''
+		def updater(evt, *p, **n):
+			self.cachetag(tag)
+		return updater
+
 
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
 ##	tdb = TagSet()
-	tdb = TagSetWithAttrAccess(None, 'xxx', 'yyy')
+	tdb = TagTreeWithAttrNodes(None, 'xxx', 'yyy')
 
 	class A(TaggableWithDFLTags):
 		'''
