@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070709052252'''
+__sub_version__ = '''20070714132153'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -20,6 +20,8 @@ import pli.event as event
 # XXX add onUpdate event to tags... (might be good to make this
 #     structuraly a sub event of the tagset...)
 # XXX write and use specific error classes...
+# XXX make this generic enough to be able to tag ANY object (not just a
+#     Taggable object)...
 #
 #----------------------------------------------------------------Tags---
 # XXX add onUpdate event...
@@ -239,7 +241,7 @@ class TagSet(mapping.Mapping):
 	basic tag database.
 	'''
 	__tag_constructor__ = Tag
-	# all the objects that are tagged...
+##	# all the objects that are tagged...
 	tagged = None
 
 	def __init__(self, tagdb=None, *tags):
