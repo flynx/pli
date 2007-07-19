@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070717172409'''
+__sub_version__ = '''20070720011023'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -290,7 +290,7 @@ def select(tagdb, tag, *tags):
 	l.sort(lambda a, b: cmp(len(tagdb[a]), len(tagdb[b])))
 	tag, tags = l[0], l[1:]
 	# now do the real work...
-	visited = set()
+	visited = set(l)
 	res = set(tagdb[tag])
 	# this does the folowing:
 	# - for each tag select all the tagged objects.
@@ -298,7 +298,7 @@ def select(tagdb, tag, *tags):
 	# - remove all the tags of the path (XXX not sure if this should be
 	#   done at this stage...)
 	for t in tags:
-		visited.update(t)
+##		visited.update(t)
 		res.intersection_update(tagdb[t])
 	return res.difference(visited)
 
