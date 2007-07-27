@@ -1,5 +1,9 @@
-# this file was generated on [200707272120]
+# this file was generated on [200707280026]
 pli changes:
+
+version 0.0.195 (200707280022):
+- added new suff to pli.event.decorator...
+
 
 version 0.0.194 (200707261656):
 - replaced the tag OO inteface... may not be stable yet..
