@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20041018182000'''
+__sub_version__ = '''20070725023041'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -58,7 +58,7 @@ def strhelp(obj):
 
 
 #-----------------------------------------------------------------------
-# TODO make it possible to change the __implemments__ attr name...
+# TODO make it possible to change the __implements__ attr name...
 #---------------------------------------------ObjectWithInterfaceInit---
 class ObjectWithInterfaceInit(object):
 	'''
@@ -66,14 +66,14 @@ class ObjectWithInterfaceInit(object):
 	'''
 	# this defines the objects' interface.
 	# NOTE: if this is None interface support will be disabled.
-	__implemments__ = None
+	__implements__ = None
 
 	def __new__(cls, *p, **n):
 		'''
 		'''
 		obj = object.__new__(cls, *p, **n)
 		ogetattribute = object.__getattribute__
-		_interface = obj.__implemments__
+		_interface = obj.__implements__
 		if _interface != None:
 			ogetattribute(obj, '__dict__').update(interface.createdictusing(obj, _interface))
 		return obj
@@ -88,22 +88,22 @@ class ObjectWithInterface(ObjectWithInterfaceInit):
 	'''
 	# this defines the objects' interface.
 	# NOTE: if this is None interface support will be disabled.
-	__implemments__ = None
+	__implements__ = None
 
 	def __getattribute__(self, name):
 		'''
 		'''
-		if name in ('__implemments__',) or \
-				not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if name in ('__implements__',) or \
+				not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.isreadable(self, name):
 			return super(ObjectWithInterface, self).__getattribute__(name)
 		raise interface.InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
 		'''
 		'''
-##		if name in ('__implemments__',):
+##		if name in ('__implements__',):
 ##			return super(ObjectWithInterface, self).__setattr__(name, value)
-		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 ##			return super(ObjectWithInterface, self).__setattr__(name, value)
 			return super(ObjectWithInterface, self).__setattr__(name, interface.getvalue(self, name, value))
@@ -111,7 +111,7 @@ class ObjectWithInterface(ObjectWithInterfaceInit):
 	def __delattr__(self, name):
 		'''
 		'''
-		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.isdeletable(self, name):
 			return super(ObjectWithInterface, self).__delattr__(name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
@@ -135,7 +135,7 @@ class AbstractInterfaceProxy(proxy.AbstractProxy):
 class ProxyWithInterface(AbstractInterfaceProxy):
 	'''
 	'''
-	__implemments__ = None
+	__implements__ = None
 
 	__source__ = None
 
@@ -146,16 +146,16 @@ class ProxyWithInterface(AbstractInterfaceProxy):
 	def __getattr__(self, name):
 		'''
 		'''
-		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.isreadable(self, name):
 			return getattr(self.__source__, name)
 		raise interface.InterfaceError, 'can\'t read attribute "%s".' % name
 	def __setattr__(self, name, value):
 		'''
 		'''
-		if name in ('__source__', '__implemments__'):
+		if name in ('__source__', '__implements__'):
 			return super(ProxyWithInterface, self).__setattr__(name, value)
-		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.iswritable(self, name) and interface.isvaluecompatible(self, name, value):
 ##			return setattr(self.__source__, name, value)
 			source = self.__source__
@@ -164,7 +164,7 @@ class ProxyWithInterface(AbstractInterfaceProxy):
 	def __delattr__(self, name):
 		'''
 		'''
-		if not hasattr(self, '__implemments__') or self.__implemments__ == None or \
+		if not hasattr(self, '__implements__') or self.__implements__ == None or \
 				interface.isdeletable(self, name):
 			delattr(self.__source__, name)
 		raise interface.InterfaceError, 'can\'t delete attribute "%s".' % name
@@ -182,9 +182,9 @@ class InterfaceProxy(ProxyWithInterface):
 ##		super(InterfaceProxy, self).__init__(source)
 		self.__source__ = source
 		if interface != None:
-			self.__implemments__ = interface
-		elif hasattr(source, '__implemments__'):
-			self.__implemments__ = source.__implemments__
+			self.__implements__ = interface
+		elif hasattr(source, '__implements__'):
+			self.__implements__ = source.__implements__
 
 
 #---------------------------------------------RecursiveInterfaceProxy---
@@ -239,8 +239,8 @@ if __name__ == '__main__':
 
 	print o.xxx
 
-	print hasattr(o, '__implemments__')
-	print hasattr(O, '__implemments__')
+	print hasattr(o, '__implements__')
+	print hasattr(O, '__implements__')
 
 	o.f()
 

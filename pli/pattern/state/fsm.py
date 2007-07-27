@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.41'''
-__sub_version__ = '''20060731164833'''
+__sub_version__ = '''20070725023520'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -623,7 +623,7 @@ class StateWithAttrPriority(BasicState):
 	__ignore_registration__ = True
 	__startupfirstattrs__ = (
 				# interface specific...
-				'__implemments__',
+				'__implements__',
 			)
 
 	# XXX this will make attr resolution quite slow... (find a better

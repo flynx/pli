@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070720011023'''
+__sub_version__ = '''20070726182715'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -26,7 +26,7 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 #     modules...
 #
 #
-# TODO add an OO extension... (replace the current tag.py)
+# TODO add an iterative select...
 #
 #
 #
@@ -301,6 +301,17 @@ def select(tagdb, tag, *tags):
 ##		visited.update(t)
 		res.intersection_update(tagdb[t])
 	return res.difference(visited)
+
+
+#-------------------------------------------------------------iselect---
+def iselect(tagdb, tag, **tags):
+	'''
+	an iterative version of select.
+
+	NOTE: this is slower per-item than select(), thus if the whole set 
+	      is needed use the non itarative version.
+	'''
+	raise NotImplementedError
 
 
 

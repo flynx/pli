@@ -1,5 +1,9 @@
-# this file was generated on [200707200201]
+# this file was generated on [200707272120]
 pli changes:
+
+version 0.0.194 (200707261656):
+- replaced the tag OO inteface... may not be stable yet..
+- several typos and minor bugs fixed...
 
 version 0.0.189 (200707171720):
 - created pli.tags.generic tag engine ...prepating to move the pli.tags.tag to the new engine...

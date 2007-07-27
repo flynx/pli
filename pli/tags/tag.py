@@ -1,430 +1,268 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070714132153'''
+__sub_version__ = '''20070726182016'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
 #-----------------------------------------------------------------------
 
-import re
-
-import pli.pattern.mixin.mapping as mapping
-import pli.pattern.proxy.utils as putils
-import pli.event as event
+import pli.tags.generic as tags
 
 
 #-----------------------------------------------------------------------
-# XXX might be a good idea to transfer these to sets...
-# XXX add class tagging...
-# XXX add onUpdate event to tags... (might be good to make this
-#     structuraly a sub event of the tagset...)
-# XXX write and use specific error classes...
-# XXX make this generic enough to be able to tag ANY object (not just a
-#     Taggable object)...
-#
-#----------------------------------------------------------------Tags---
-# XXX add onUpdate event...
-##!!! make this clean... (all set methods should work as expected)
-class Tags(set):
+##!!! do an iterative select...
+#------------------------------------------------------AbstractTagSet---
+class AbstractTagSet(object):
 	'''
-
-	NOTE: it is not yet safe to use this directly for modification.
 	'''
-	def __init__(self, obj, tagdb):
+	# tagset inteface...
+	def tag(self, obj, *tags):
 		'''
 		'''
-		self.__tagdb__ = tagdb
-		self._obj = obj
-	##!!! add support for tag chains...
-	def addtags(self, *names):
+		raise NotImplementedError
+	def untag(self, obj, *tags):
 		'''
 		'''
-		tagdb = self.__tagdb__
-		Tag = tagdb.__tag_constructor__
-		for name in names:
-			if type(name) in (str, unicode):
-				# skip multiple tags...
-				if name in self:
-					continue
-				if name not in tagdb:
-					t = Tag(name, tagdb)
-				else:
-					t = tagdb[name]
-				t.tagged.update([self._obj])
-				tagdb.tagged.update([self._obj])
-				self.update([name])
-			elif type(name) in (list, set):
-				raise NotImplementedError, 'tag chains are not yet suported...'
-			else:
-				raise TypeError, 'unsopported tag type of %s (%s)' % (name, type(name))
-	##!!! add support for tag chains...
-	##!!! do we remove unused tag objrcts???
-	def removetags(self, *names):
+		raise NotImplementedError
+	def select(self, *tags):
 		'''
 		'''
-		tagdb = self.__tagdb__
-		for name in names:
-			if type(name) in (str, unicode):
-				if name not in tagdb:
-					raise TypeError, 'can\'t remove a non-existant tag "%s".' % name
-				else:
-					t = tagdb[name]
-				if name not in self:
-					raise TypeError, 'not tagged by "%s"' % name
-				self.remove(name)
-				if self._obj in t.tagged and name not in self:
-					t.tagged.remove(self._obj)
-				if len(self) == 0:
-					tagdb.tagged.remove(self._obj)
-				##!!! do we remove unused tags???
-			elif type(name) in (list, set):
-				raise NotImplementedError, 'tag chains are not yet suported...'
-			else:
-				raise TypeError, 'unsopported tag type of %s (%s)' % (name, type(name))
+		raise NotImplementedError
 
 
 
 #-----------------------------------------------------------------------
-#------------------------------------------------------------Taggable---
-# XXX make this inherit tags form the class...
-class Taggable(object):
+# the folowing functions use the tagset interface instead of directly
+# accessing the _tag and _untag functions.
+#-----------------------------------------------------------------tag---
+def tag(tagset, obj, *tags):
 	'''
 	'''
-	__tagdb__ = None
-
-	tags = None
-
-	def tag(self, *names):
-		'''
-		'''
-		if self.tags == None:
-			self.tags = Tags(self, self.__tagdb__)
-		self.tags.addtags(*names)
-	def untag(self, *names):
-		'''
-		'''
-		if self.tags == None and names != ():
-			raise TypeError, 'no tags to remove.'
-		self.tags.removetags(*names)
+	if not isinstance(tagset, AbstractTagSet):
+		raise TypeError, 'the tagset must be a decendant of AbstractTagSet.'
+	return tagset.tag(obj, *tags)
 
 
-#-------------------------------------------------TaggableWithDFLTags---
-class TaggableWithDFLTags(Taggable):
+#---------------------------------------------------------------untag---
+def untag(tagset, obj, *tags):
 	'''
 	'''
-	__dfl_tags__ = None
-
-	def __init__(self, *p, **n):
-		'''
-		'''
-		self.inherittags()
-		super(TaggableWithDFLTags, self).__init__(*p, **n)
-	def inherittags(self):
-		'''
-		'''
-		tags = self.__dfl_tags__
-		if type(tags) in (list, set, tuple):
-			self.tag(*tags)
-
-
-
-#-----------------------------------------------------------------Tag---
-# XXX add onUpdate event...
-##class Tag(Taggable):
-class Tag(TaggableWithDFLTags):
-	'''
-	'''
-	# all tags are tagged with the "tag" tag by default...
-	__dfl_tags__ = (
-			'tag',
-			)
-
-	def __init__(self, name, tagdb, *p, **n):
-		'''
-		this will avoid the creation of duplicate tags in one tag db...
-		'''
-		self.__tagdb__ = tagdb
-		tagdb[name] = self
-		self.name = name
-		self.tagged = set()
-		super(Tag, self).__init__(name, tagdb, *p, **n)
+	if not isinstance(tagset, AbstractTagSet):
+		raise TypeError, 'the tagset must be a decendant of AbstractTagSet.'
+	return tagset.untag(obj, *tags)
 
 
 
 #-----------------------------------------------------------------------
-#-----------------------------------------------------------getbytags---
-# NOTE: this should be quite fast as the main work-hourses here a
-#       builtin types...
-def getbytags(tagdb, *tags, **opts):
+#--------------------------------------------------------------TagSet---
+class TagSet(AbstractTagSet, dict):
 	'''
-	retrun all the objects from tagdb that are tagged with the given tags.
+	this provides a direct and light inteface the the generic tag 
+	engine (or a similar inteface).
 
-	if no tags are given, this will return all the objects.
-
-	if a keyword argument "exclude" is given, it's value is used as tags by 
-	which objects will be excluded form the results.
-
-	NOTE: excusion may be slow compared to clean incusive search.
+	NOTE: this is a pure extension to the dict interface.
+	NOTE: it is not very safe to use the dict interface for editing 
+	      here directly.
 	'''
-	if 'exclude' in opts:
-		exclude = set(opts['exclude'])
-		if len(set(tags).intersection(exclude)) > 0:
-			raise TypeError, 'inclusion and exclusion tags intersect in: %s.' \
-					% (tuple(set(tags).intersection(exclude)),)
-	else:
-		exclude = set()
-	if not set(tags).union(exclude).issubset(tagdb):
-		raise TypeError, 'all given tags must be valid (not tags: %s).' \
-				% (tuple(set(tags).union(exclude).difference(tagdb)),)
+	##!!! is this pretty?
+	__tag_engine__ = tags
 
-	tags_left = list(tags)
-	res = set(tagdb.tagged)
+	# XXX do we need the __XXX__ customization methods here??
 
-	while len(tags_left) > 0:
-		tag = tagdb[tags_left.pop(0)]
-		res = set(tag.tagged).intersection(res)
+	# tagset inteface...
+	def tag(self, obj, *tags):
+		'''
+		'''
+		return self.__tag_engine__.tag(self, obj, *tags)
+	def untag(self, obj, *tags):
+		'''
+		'''
+		return self.__tag_engine__.untag(self, obj, *tags)
+	def select(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.select(self, *tags)
+	
+	# XXX add store management inteface...
+##	def isconsistent(self):
+##		'''
+##		'''
+##		pass
+##	def fixgaps(self):
+##		'''
+##		'''
+##		pass
 
-	if len(exclude) > 0:
-		for o in res.copy():
-			if len(o.tags.intersection(exclude)) > 0:
-				res.remove(o)
-	return res
 
-
-#----------------------------------------------------------iterbytags---
-# XXX think of a better way to do this... (inificient memory-wise)
-# XXX might be a good idea to sort this by tag usage (least used first)
-#     ...this will give a substantial speedup...
-def iterbytags(tagdb, *tags, **opts):
+#------------------------------------------------TagSetWithSplitStore---
+# in geniral this should generate a unique string id for each stored
+# object and use that id in the tag store while storing the objects by
+# id in a seporate dict...
+# XXX might be a good idea to split this into several specific
+#     intefaces....
+# XXX make this a mapping... (???)
+class TagSetWithSplitStore(AbstractTagSet):
 	'''
-	iterate through all the objects from tagdb that are tagged with the given tags.
-
-	if no tags are given, this will return all the objects.
-
-	if a keyword argument "exclude" is given, it's value is used as tags by 
-	which objects will be excluded form the results.
-
-	NOTE: excusion may be slow compared to clean incusive search.
+	this will manage two stores for objects and tags.
 	'''
-	if 'exclude' in opts:
-		exclude = set(opts['exclude'])
-		if len(set(tags).intersection(exclude)) > 0:
-			raise TypeError, 'inclusion and exclusion tags intersect in: %s.' \
-					% (tuple(set(tags).intersection(exclude)),)
-	else:
-		exclude = set()
-	if not set(tags).union(exclude).issubset(tagdb):
-		raise TypeError, 'all given tags must be valid (not tags: %s).' \
-				% (tuple(set(tags).union(exclude).difference(tagdb)),)
+	##!!! is this pretty?
+	__tag_engine__ = tags
 
-	tags_left = list(tags)
-	res = set(tagdb.tagged)
+	__tag_store__ = None
+	__object_store__ = None
 
-	# XXX this may consume quite a bit of memory... (the whole inclusive 
-	#	  set of data will live through the lifespan of the iterator)
-	while len(tags_left) > 0:
-		tag = tagdb[tags_left.pop(0)]
-		res = set(tag.tagged).intersection(res)
+	# specific inteface...
+	##!!! this is the function of the object store, move there...
+	def _getoid(self, obj):
+		'''
+		get a unique ID for an object (OID).
 
-	if exclude != None:
-		for o in res:
-			if len(o.tags.intersection(exclude)) == 0:
-				yield o
+		NOTE: preferably this should return a stable and interpreter 
+		      instance independent string, uniquely identifying a 
+			  particular object.
+		NOTE: this will not work for persistent stores.
+		'''
+		##!!! this is by far not the best way to go!!
+		return str(hash(obj))
+	def _getbyoid(self, oid):
+		'''
+		'''
+		return self.__object_store__[oid]
+	
+	# specific public inteface...
+	##!!!
+	def remove(self, obj):
+		'''
+		remove the object form the store.
+		'''
+		pass
+	
+	# tagset inteface...
+	def tag(self, obj, *tags):
+		'''
+		'''
+		oid = self._getoid(obj)
+		if oid not in self.__object_store__:
+			# add the object to the store...
+			self.__object_store__[oid] = obj
+		# XXX make this a super call...
+		return self.__tag_engine__.tag(self.__tag_store__, oid, *tags)
+	def untag(self, obj, *tags):
+		'''
+		'''
+		oid = self._getoid(obj)
+		if oid not in self.__object_store__:
+			raise TypeError, 'object is not in this tagset.'
+		# XXX make this a super call...
+		return self.__tag_engine__.untag(self.__tag_store__, oid, *tags)
+	def select(self, *tags):
+		'''
+		'''
+		# XXX make this a super call...
+		res = self.__tag_engine__.select(self.__tag_store__, 'tag', *tags)
+		# XXX make this a super call...
+		oids = self.__tag_engine__.select(self.__tag_store__, 'object', *tags)
+
+		# replace all oids in res with objets form the object store...
+		for oid in oids:
+			##!!! HACK !!!##
+			if oid not in ('tag', 'object'):
+				o = self._getbyoid(oid)
+			res.update((o,))
+			# remove border cases (enteties that are both tags and
+			# objecte)
+			if oid in res:
+				res.remove(oid)
+		return res
+
 
 
 #-----------------------------------------------------------------------
-#---------------------------------------------------------------TagSet---
-# XXX add onUpdate event...
-class TagSet(mapping.Mapping):
+##!!! should we create tag-specific interfaces??
+#-------------------------------------------------------TaggableMixin---
+class TaggableMixin(object):
 	'''
-	basic tag database.
+	provides an object-specific interface to the tagset...
 	'''
-	__tag_constructor__ = Tag
-##	# all the objects that are tagged...
-	tagged = None
+	# this is the only pice of data needed here, thus this mixin is
+	# store specific...
+	# defines the tagset to use...
+	__tagset__ = None
 
-	def __init__(self, tagdb=None, *tags):
+	@property
+	def tags(self):
 		'''
 		'''
-		self._parent = tagdb
-		if tagdb == None:
-			self.tagged = set()
-			self._data = {}
-			for t in tags:
-				self.__tag_constructor__(t, self)
-		else:
-			available = set()
-			for o in iterbytags(tagdb, *tags):
-				available = available.union(o.tags)
+		# select all the tags that tag self...
+		return self.__tagset__.select(self, 'tag')
+	
+	# NOTE: the foloeing are not a direct transfer, thus can't use the
+	#       proxy utils...
+	def tag(self, *tags):
+		'''
+		'''
+		return self.__tagset__.tag(self, *tags)
+	def untag(self, *tags):
+		'''
+		'''
+		return self.__tagset__.untag(self, *tags)
 
-			self.tagged = getbytags(tagdb, *tags)
-			if available == ():
-				self._data = dict([ (k, v) for k, v in tagdb.items() ])
-			else:
-				self._data = dict([ (k, tagdb[k]) for k in available ])
-	##!!! might be good to check for tag (value) type here...
-	def __setitem__(self, name, value):
-		'''
-		'''
-		if name in self:
-			raise TypeError, 'no duplicate tags allowed ("%s").' % name
-		self._data[name] = value
-
-	putils.proxymethods(
-		(
-			'__getitem__',
-			'__delitem__',
-			'__contains__',
-			'__iter__',
-		),
-		'_data'
-	)
-	iterbytags = iterbytags
-	getbytags = getbytags
-
-
-#------------------------------------------------TagTreeWithAttrNodes---
-class TagTreeWithAttrNodes(TagSet):
-	'''
-	'''
-	__tagname__ = re.compile('^[a-zA-Z][a-zA-Z0-9_]*$')
-
-
-	def __setitem__(self, name, value):
-		'''
-		'''
-		if not self.isvalidtagname(name):
-			raise TypeError, 'bad tag name ("%s").' % name
-		return super(TagTreeWithAttrNodes, self).__setitem__(name, value)
-	def __getattr__(self, name):
-		'''
-		'''
-		return self.__class__(self, name)
-
-	def isvalidtagname(self, tag):
-		'''
-		'''
-		if self.__tagname__.match(tag):
-			return True
-		return False
-
-
-#-----------------------------------------TagTreeWithAttrNodesCaching---
-##!!! needs an onUpdate event on tags to work properly...
-# XXX needs to be safely piclable...
-# XXX might be good to make this a mixin
-class TagTreeWithAttrNodesCaching(TagTreeWithAttrNodes):
-	'''
-	'''
-	_tag_cache = None
-
-	##!!! REMOVE THIS AS SOON AS THIS IS DONE...
-	def __new__(*p, **n):
-		raise NotImplementedError, 'this class is not yet ready for use.'
-
-	def cachetag(self, tag):
-		'''
-		'''
-		##!!! this must check if such a tag is already cached...
-		if tag in self._tag_cache:
-			##!!! do an update???
-			return
-		if self._tag_cache == None:
-			self._tag_cache = {}
-		f = self._getupdater(tag)
-		o = self._tag_cache[tag] = (getattr(self, tag), f)
-		event.bind(self.__tagdb__[tag].onUpdate, f)
-	def uncachetag(self, tag):
-		'''
-		'''
-		if tag not in self._tag_cache:
-			return
-		event.unbind(self.__tagdb__[tag].onUpdate, self._tag_cache[tag][1])
-		del self._tag_cache[tag]
-		if self._tag_cache == {}:
-			del self._tag_cache
-	##!!! update all caches down that depend on this tag...
-	def _getupdater(self, tag):
-		'''
-		'''
-		def updater(evt, *p, **n):
-			self.cachetag(tag)
-		return updater
 
 
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
-##	tdb = TagSet()
-	tdb = TagTreeWithAttrNodes(None, 'xxx', 'yyy')
+	ts = TagSet()
 
-	class A(TaggableWithDFLTags):
-		'''
-		'''
-		__tagdb__ = tdb
-		__dfl_tags__ = (
-				'object',
-				)
+	class Obj(object): pass
 
-		def __init__(self, n):
-			'''
-			'''
-			self.name = n
-			super(A, self).__init__(n)
+	o0 = Obj()
+	o1 = Obj()
+	o2 = Obj()
+	o3 = Obj()
 
-	a = A('aaaa')
-	b = A('bbbb')
-	c = A('cccc')
+	ts.tag(o0, '0', 'a', 'data')
+	ts.tag(o1, '1', 'b', 'data')
+	ts.tag(o2, '2', 'a', 'data')
+	ts.tag(o3, '3', 'data')
 
-	a.tag('a')
-	b.tag('a', 'x', 'y')
-	print a.tags
-	print b.tags
-
-	b.untag('y')
-
-	print b.tags
-
+	print ts.select('tag')
+	print ts.select('tag', 'a')
+	print ts.select('tag', 'a', '0')
+	print
+	print ts.select('object')
+	print
+	print ts['tag']
+	print ts['object']
+	print
 	print
 
-	print tdb.keys()
-	print tdb['a']
-	print [o.name for o in tdb['a'].tagged]
 
+	class TSWSS(TagSetWithSplitStore):
+		__tag_store__ = {}
+		__object_store__ = {}
+
+	tss = TSWSS()
+
+	tss.tag(o0, '0', 'a', 'data')
+	tss.tag(o1, '1', 'b', 'data')
+	tss.tag(o2, '2', 'a', 'data')
+	tss.tag(o3, '3', 'data')
+
+	print tss.select('tag')
+	print tss.select('tag', 'a')
+	print tss.select('tag', 'a', '0')
+	print
+	print tss.select('object')
+	print
+	print tss.__tag_store__.keys()
+	print tss.__object_store__.keys()
+	print
 	print
 
-	print tdb
-	print tdb['tag'].tagged
-
-##	# duplicate tags are not allowed...
-##	Tag('tag', tdb)
-
-	print
-
-	print [o.name for o in getbytags(tdb)]
-	print [o.name for o in getbytags(tdb, 'a')]
-	print [o.name for o in getbytags(tdb, 'tag')]
-	print [o.name for o in getbytags(tdb, 'object')]
-	print [o.name for o in getbytags(tdb, 'object', 'a')]
-	print [o.name for o in getbytags(tdb, 'object', 'a', 'x')]
-	print [o.name for o in getbytags(tdb, 'object', 'a', 'x', 'tag')]
-
-	print [o.name for o in tdb.iterbytags('object', 'a', exclude=('x',))]
-	print
-	print [o.name for o in tdb.iterbytags(exclude=('tag',))]
-
-
-	print 
-
-	print tdb.keys()
-	print [o.name for o in tdb.tagged]
-	print tdb.object.keys()
-	print [o.name for o in tdb.object.tagged]
-	print tdb.object.a.x.keys()
-	print [o.name for o in tdb.object.a.x.tagged]
-
+	
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.00'''
-__sub_version__ = '''20030717142905'''
+__sub_version__ = '''20070725015812'''
 
 
 #-----------------------------------------------------------------------
@@ -22,7 +22,7 @@ import sys
 # 	    for the original post see:
 # 		  <http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/202234>
 # 	    the original function was modified by me (on: 20030619170645).
-# NOTE: this will return the list of values (right sede of the =
+# NOTE: this will return the list of values (right side of the =
 #       operator)
 #
 def set(**kw):

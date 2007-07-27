@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.77'''
-__sub_version__ = '''20060405175151'''
+__sub_version__ = '''20070725021043'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -32,6 +32,7 @@ class SessionError(Exception):
 # TODO persistent session objects...
 # TODO revise security settings!!!
 # TODO revise mix-in criteria...
+# TODO move the path retreval functionality to a mixin...
 class Session(object):
 	'''
 	this is the generic RPC session class.

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20060418212328'''
+__sub_version__ = '''20070725022641'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -25,7 +25,7 @@ import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
-# TODO make it possible to change the __implemments__ attr name...
+# TODO make it possible to change the __implements__ attr name...
 # TODO write an InterfaceUnion class.... (e.g. an interface composed of
 #      several interfaces, that will support the "interface" interface)
 #
@@ -392,7 +392,7 @@ class Interface(object):
 		type		- value type or superclass.
 		default		- this is the default value of the option.
 		predicate	- this will get the option value as argument and
-					  test its compliance (if the will return False
+					  test its compliance (if this will return False
 					  InterfaceError will be raised).
 		essential	- this if true will guarantee the options'
 					  existence in the created object.
@@ -452,13 +452,13 @@ def getinterfaces(obj):
 	'''
 	this will return a tuuple containing the supported by the object interfaces.
 	'''
-	if not hasattr(obj, '__implemments__') or obj.__implemments__ is None:
+	if not hasattr(obj, '__implements__') or obj.__implements__ is None:
 		return ()
 	# get objects interface...
-	if type(obj.__implemments__) in (list, tuple):
-		return tuple(obj.__implemments__)
+	if type(obj.__implements__) in (list, tuple):
+		return tuple(obj.__implements__)
 	else:
-		return (obj.__implemments__,)
+		return (obj.__implements__,)
 
 
 #-------------------------------------------------------------getdata---
@@ -704,7 +704,7 @@ def iscompatible(obj, name, interface=None):
 #-----------------------------------------------------createdictusing---
 def createdictusing(obj, interface=None):
 	'''
-	this will create a dict populated by values created usin the interface given.
+	this will create a dict populated by values created using the interface given.
 
 	NOTE: the interface can either be a tuple of interfaces or a single interface.
 	NOTE: the object is needed in case there is a handler defined for an 
@@ -824,8 +824,8 @@ def getdoc(obj, name=None, interface=None):
 
 
 #-----------------------------------------------------------------------
-#---------------------------------------------------------implemments---
-def implemments(interface, depth=1):
+#----------------------------------------------------------implements---
+def implements(interface, depth=1):
 	'''
 	this will add an interface to the object.
 
@@ -833,40 +833,40 @@ def implemments(interface, depth=1):
 	the interfaces will be combined in order reverse to the calls (maximum
 	prcidence/priority is the last added).
 	Example:
-		implemments(IA)
-		implemments(IB)
-		implemments(IC)		# maximum priority
+		implements(IA)
+		implements(IB)
+		implements(IC)		# maximum priority
 
 		is equivalent to:
 
-		__implemments__ = (IC, IB, IA)
+		__implements__ = (IC, IB, IA)
 
 
 	NOTE: this is a (almost) shorthand for: 
-			__implemments__ = interface + __implemments__
+			__implements__ = interface + __implements__
 		  ...it differs in that it handles existane checks for the 
-		  __implemments__ name.
+		  __implements__ name.
 	NOTE: this does not see inherited interfaces, thus they shold 
 	      be *passed on* by hand before this is used.
 		  Example:
 		  	---cut---
 			class A(object):
-				implemments(IA)
+				implements(IA)
 
 			class B(A):
 				# this must be done if we want the A's interface to be 
 				# combined with B's...
-				__implemments__ = A.__implemments__
-				implemments(IA)
+				__implements__ = A.__implements__
+				implements(IA)
 
 			--uncut--
 		  but this should not be an issue as one should combine interfaces
 		  by inheritance instead of combining them explicitly in the object.
 	'''
 	f_locals = sys._getframe(depth).f_locals
-	res = f_locals.get('__implemments__', None)
+	res = f_locals.get('__implements__', None)
 	if res == None:
-		f_locals['__implemments__'] = interface
+		f_locals['__implements__'] = interface
 		return
 	# some sort of interface already exists...
 	if type(res) is tuple:
@@ -879,7 +879,7 @@ def implemments(interface, depth=1):
 			res = interface + (res,)
 		else:
 			res = (interface, res) 
-	f_locals['__implemments__'] = res
+	f_locals['__implements__'] = res
 
 
 #-------------------------------------------------------------inherit---
@@ -900,7 +900,7 @@ def inherit(*classes, **options):
 	depth = options.pop('depth', 1)
 	# create a class...
 	inter = _Interface(name, classes, {'__interface_writable__': True})
-	implemments(inter, depth+1)
+	implements(inter, depth+1)
 	
 
 
@@ -923,12 +923,12 @@ def add(name, **options):
 	depth = options.pop('depth', 1)
 	force = options.pop('force_addition', False)
 	f_locals = sys._getframe(depth).f_locals
-	if '__implemments__' not in f_locals:
+	if '__implements__' not in f_locals:
 		raise InterfaceError, 'can\'t add name %s, no interface is defined.' % name
-	interface = f_locals['__implemments__']
+	interface = f_locals['__implements__']
 	if type(interface) is tuple:
 		raise InterfaceError, 'can\'t add name %s to an interface combination. '\
-					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
+					'(use pli.interface.inherit(...) instead of __implements__ = (...)).' % name
 ##	if not interface.__interface_writable__:
 ##		raise interface.InterfaceError, 'can\'t write value "%s" to attribute "%s".' % (value, name)
 	d = interface.get(name, {})
@@ -949,12 +949,12 @@ def hide(name, **options):
 	'''
 	depth = options.pop('depth', 1)
 	f_locals = sys._getframe(depth).f_locals
-	if '__implemments__' not in f_locals:
+	if '__implements__' not in f_locals:
 		raise InterfaceError, 'can\'t hide name %s, no interface is defined.' % name
-	interface = f_locals['__implemments__']
+	interface = f_locals['__implements__']
 	if type(interface) is tuple:
 		raise InterfaceError, 'can\'t hide name %s from an interface combination. '\
-					'(use pli.interface.inherit(...) instead of __implemments__ = (...)).' % name
+					'(use pli.interface.inherit(...) instead of __implements__ = (...)).' % name
 	interface[name] = None
 
 
