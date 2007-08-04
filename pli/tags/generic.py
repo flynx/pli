@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070804185617'''
+__sub_version__ = '''20070804203341'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -195,11 +195,6 @@ def link(tagdb, obj, *tags):
 
 	for t in tt:
 		if t in tagdb:
-##			##!!! this appears to be a MAJOR bottleneck and slows everything down...
-##			##!!! most of the time is spent in union (at least this is what the profiler is showing)
-##			##!!! ...appears to take exponentially more time...
-##			tagdb[t] = tagdb[t].union(tt)
-			# XXX this appears to make this about 3 orders of magnitude faster @ ~1M objects... odd!
 			tagdb[t].update(tt)
 		else:
 			tagdb[t] = tt.copy()
@@ -229,9 +224,6 @@ def unlink(tagdb, obj, *tags):
 
 #-----------------------------------------------------------------------
 # user interface functions...
-#
-# XXX should add a function to return the other related tags...
-#
 #-----------------------------------------------------------------tag---
 # XXX what should this return??
 def tag(tagdb, obj, *tags):
@@ -260,7 +252,12 @@ def tag(tagdb, obj, *tags):
 	if 'object' not in tagdb.get(obj, ()):
 		link(tagdb, obj, 'object')
 		if 'tag' not in tagdb.get('object', ()):
-			link(tagdb, 'object', 'tag')
+			link(tagdb, 'tag', 'tag')
+			# XXX the probem here is that 'object' is a tag but the
+			#     'tag' is not an object... the current store does not
+			#     support assymetric linking.
+##			link(tagdb, 'object', 'tag')
+
 ##	# no do the work that the user actually requested... 
 ##	# XXX revise! (see above..)
 ##	link(tagdb, obj, *tags)
@@ -284,7 +281,7 @@ def untag(tagdb, obj, *tags):
 
 
 #---------------------------------------------------------relatedtags---
-# XXX should this return the objects??
+# XXX seam relatively straightforward.... revise for efficiency...
 def relatedtags(tagdb, tag, *tags):
 	'''
 	return the related tags to the given.
@@ -295,10 +292,13 @@ def relatedtags(tagdb, tag, *tags):
 	NOTE: to get all the objects use "select(tagdb, tag, tags, 'object')"
 	      with the same tags...
 	'''
+	# get all the valid data...
 	objs = select(tagdb, tag, 'object', *tags)
 	res = set()
+	# gather all the related tags...
 	for o in objs:
 		res.update(tagdb[o])
+	# remove the objects and input tags...
 	res.difference_update((tag, 'object') + tags + tuple(objs))
 	return res
 
@@ -310,6 +310,9 @@ def select(tagdb, tag, *tags):
 
 	NOTE: this will return both tags and tagged objects. to control this
 	      use the "tag" and "object" tags...
+	NOTE: the 'tag' and 'object' tags are related thus 'tag' is also an 
+	      object. (this can be resolved, but the solution will introduce 
+		  an inconsistency).
 	'''
 	# a small optimisation: order the tags to cut out as mach as
 	# possible as early as possible... (XXX check for better strategies)
@@ -357,10 +360,13 @@ if __name__ == '__main__':
 	# inter-tag relations)...
 	tag(ts1, 'Y', 'a', 'b', 'c')
 
+	print istagsconsistent(ts1)
 
 	# XXX the two results should be the same...
 	print select(ts1, 'a', 'b')
 
+	print 
+	print select(ts1, 'tag')
 	print 
 	print relatedtags(ts1, 'object')
 	print relatedtags(ts1, 'a')
