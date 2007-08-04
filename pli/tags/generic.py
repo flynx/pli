@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070726182715'''
+__sub_version__ = '''20070804185617'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -183,11 +183,11 @@ def filltaggaps(tagdb):
 
 #-----------------------------------------------------------------------
 # low-level "naive" functions...
-#----------------------------------------------------------------_tag---
+#----------------------------------------------------------------link---
 # XXX what should this return??
 # XXX shows signs of exponential time increase on very large sets of
 #     data... need to revise.
-def _tag(tagdb, obj, *tags):
+def link(tagdb, obj, *tags):
 	'''
 	add the tags to store.
 	'''
@@ -205,11 +205,11 @@ def _tag(tagdb, obj, *tags):
 			tagdb[t] = tt.copy()
 
 
-#--------------------------------------------------------------_untag---
+#--------------------------------------------------------------unlink---
 ##!!! test !!!##
 # XXX what should this return??
 # XXX should this remove orphaned tags???
-def _untag(tagdb, obj, *tags):
+def unlink(tagdb, obj, *tags):
 	'''
 	remove tags from store.
 	'''
@@ -229,6 +229,9 @@ def _untag(tagdb, obj, *tags):
 
 #-----------------------------------------------------------------------
 # user interface functions...
+#
+# XXX should add a function to return the other related tags...
+#
 #-----------------------------------------------------------------tag---
 # XXX what should this return??
 def tag(tagdb, obj, *tags):
@@ -249,14 +252,18 @@ def tag(tagdb, obj, *tags):
 	# the tag tag...
 	for t in tags:
 		if 'tag' not in tagdb.get(t, ()):
-			_tag(tagdb, t, 'tag')
+			link(tagdb, t, 'tag')
+		# XXX revise: there should be a better and faster way to do this...
+		# link the object and tag...
+		link(tagdb, obj, t)
 	# the object tag...
 	if 'object' not in tagdb.get(obj, ()):
-		_tag(tagdb, obj, 'object')
+		link(tagdb, obj, 'object')
 		if 'tag' not in tagdb.get('object', ()):
-			_tag(tagdb, 'object', 'tag')
-	# no do the work that the user actually requested... 
-	_tag(tagdb, obj, *tags)
+			link(tagdb, 'object', 'tag')
+##	# no do the work that the user actually requested... 
+##	# XXX revise! (see above..)
+##	link(tagdb, obj, *tags)
 
 
 #---------------------------------------------------------------untag---
@@ -273,7 +280,27 @@ def untag(tagdb, obj, *tags):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
 	##!!!
 	# now remove the chain...
-	_untag(tagdb, obj, *tags)
+	unlink(tagdb, obj, *tags)
+
+
+#---------------------------------------------------------relatedtags---
+# XXX should this return the objects??
+def relatedtags(tagdb, tag, *tags):
+	'''
+	return the related tags to the given.
+
+	two tags are related if they both tag the same object. thus this will 
+	return the tags sutable for further specialization.
+
+	NOTE: to get all the objects use "select(tagdb, tag, tags, 'object')"
+	      with the same tags...
+	'''
+	objs = select(tagdb, tag, 'object', *tags)
+	res = set()
+	for o in objs:
+		res.update(tagdb[o])
+	res.difference_update((tag, 'object') + tags + tuple(objs))
+	return res
 
 
 #--------------------------------------------------------------select---
@@ -312,6 +339,33 @@ def iselect(tagdb, tag, **tags):
 	      is needed use the non itarative version.
 	'''
 	raise NotImplementedError
+
+
+
+#-----------------------------------------------------------------------
+if __name__ == '__main__':
+	ts1 = {}
+
+	# this will make object-tag relations only..
+	tag(ts1, 'X', 'a')
+	tag(ts1, 'X', 'b')
+	tag(ts1, 'X', 'c')
+
+	print ts1
+
+	# this will creat relations between ALL the elements (including
+	# inter-tag relations)...
+	tag(ts1, 'Y', 'a', 'b', 'c')
+
+
+	# XXX the two results should be the same...
+	print select(ts1, 'a', 'b')
+
+	print 
+	print relatedtags(ts1, 'object')
+	print relatedtags(ts1, 'a')
+	print relatedtags(ts1, 'a', 'c')
+	print select(ts1, 'a', 'c', 'object')
 
 
 
