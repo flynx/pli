@@ -1,16 +1,23 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070726182016'''
+__sub_version__ = '''20070808110508'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
 #-----------------------------------------------------------------------
 
 import pli.tags.generic as tags
+import pli.pattern.mixin.mapping as mapping
 
 
 #-----------------------------------------------------------------------
+#
+# add severela tag types:
+# 	- Unique		: no other object is tagged with this.
+# 	- One Of		: a set of tags is defined and the object is tagged
+#				 	  with one and only one of the tags in set.
+#
 ##!!! do an iterative select...
 #------------------------------------------------------AbstractTagSet---
 class AbstractTagSet(object):
@@ -83,6 +90,10 @@ class TagSet(AbstractTagSet, dict):
 		'''
 		'''
 		return self.__tag_engine__.select(self, *tags)
+	def relatedtags(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.relatedtags(self, *tags)
 	
 	# XXX add store management inteface...
 ##	def isconsistent(self):
@@ -99,18 +110,30 @@ class TagSet(AbstractTagSet, dict):
 # in geniral this should generate a unique string id for each stored
 # object and use that id in the tag store while storing the objects by
 # id in a seporate dict...
+# XXX might be good to make this a mapping (OID is key and object is
+#     also unique)...
 # XXX might be a good idea to split this into several specific
-#     intefaces....
+#     intefaces.... (split out the oid stuff...)
 # XXX make this a mapping... (???)
+# XXX make split stores by taging a generic feature...
+##class TagSetWithSplitStore(AbstractTagSet, mapping.Mapping):
 class TagSetWithSplitStore(AbstractTagSet):
 	'''
 	this will manage two stores for objects and tags.
 	'''
-	##!!! is this pretty?
+	# XXX is this pretty?
 	__tag_engine__ = tags
 
 	__tag_store__ = None
 	__object_store__ = None
+	
+	# index the store-defining tags. if an object has one of these tags
+	# it will be sotred in the coresponding store and not in the index.
+	# format: {<tag>: <store>, ...}
+	# XXX what to do if an object has more than one of those?
+	# XXX we will need some generic OID system to use here...
+	# XXX after this is implemented, kill the __object_store__!
+##	__object_store_index__ = None
 
 	# specific inteface...
 	##!!! this is the function of the object store, move there...
@@ -136,7 +159,7 @@ class TagSetWithSplitStore(AbstractTagSet):
 		'''
 		remove the object form the store.
 		'''
-		pass
+		raise NotImplementedError
 	
 	# tagset inteface...
 	def tag(self, obj, *tags):
@@ -156,25 +179,24 @@ class TagSetWithSplitStore(AbstractTagSet):
 			raise TypeError, 'object is not in this tagset.'
 		# XXX make this a super call...
 		return self.__tag_engine__.untag(self.__tag_store__, oid, *tags)
+	# XXX how will this work for cases when an object acts as a tag?
 	def select(self, *tags):
 		'''
 		'''
-		# XXX make this a super call...
-		res = self.__tag_engine__.select(self.__tag_store__, 'tag', *tags)
-		# XXX make this a super call...
+		# get the clean objects...
 		oids = self.__tag_engine__.select(self.__tag_store__, 'object', *tags)
+		# get all the non-objects...
+		res = self.__tag_engine__.select(self.__tag_store__, *tags).difference(oids)
 
 		# replace all oids in res with objets form the object store...
 		for oid in oids:
-			##!!! HACK !!!##
-			if oid not in ('tag', 'object'):
-				o = self._getbyoid(oid)
+			o = self._getbyoid(oid)
 			res.update((o,))
-			# remove border cases (enteties that are both tags and
-			# objecte)
-			if oid in res:
-				res.remove(oid)
 		return res
+	def relatedtags(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.relatedtags(self, *tags)
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070804203341'''
+__sub_version__ = '''20070808015716'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -27,6 +27,7 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 #
 #
 # TODO add an iterative select...
+# TODO generic methods to check for tags, or if a tag exists... etc.
 #
 #
 #
@@ -187,11 +188,13 @@ def filltaggaps(tagdb):
 # XXX what should this return??
 # XXX shows signs of exponential time increase on very large sets of
 #     data... need to revise.
-def link(tagdb, obj, *tags):
+def link(tagdb, obj, *objs):
 	'''
-	add the tags to store.
+	link the given objects.
+
+	NOTE: this will also link each object to itself.
 	'''
-	tt = set((obj,) + tags)
+	tt = set((obj,) + objs)
 
 	for t in tt:
 		if t in tagdb:
@@ -204,11 +207,11 @@ def link(tagdb, obj, *tags):
 ##!!! test !!!##
 # XXX what should this return??
 # XXX should this remove orphaned tags???
-def unlink(tagdb, obj, *tags):
+def unlink(tagdb, obj, *objs):
 	'''
-	remove tags from store.
+	remove the links between objects.
 	'''
-	tt = set((obj,) + tags)
+	tt = set((obj,) + objs)
 
 	for t in tt:
 		if t not in tagdb:
@@ -282,7 +285,7 @@ def untag(tagdb, obj, *tags):
 
 #---------------------------------------------------------relatedtags---
 # XXX seam relatively straightforward.... revise for efficiency...
-def relatedtags(tagdb, tag, *tags):
+def relatedtags(tagdb, *tags):
 	'''
 	return the related tags to the given.
 
@@ -293,18 +296,18 @@ def relatedtags(tagdb, tag, *tags):
 	      with the same tags...
 	'''
 	# get all the valid data...
-	objs = select(tagdb, tag, 'object', *tags)
+	objs = select(tagdb, 'object', *tags)
 	res = set()
 	# gather all the related tags...
 	for o in objs:
 		res.update(tagdb[o])
 	# remove the objects and input tags...
-	res.difference_update((tag, 'object') + tags + tuple(objs))
+	res.difference_update(('object',) + tags + tuple(objs))
 	return res
 
 
 #--------------------------------------------------------------select---
-def select(tagdb, tag, *tags):
+def select(tagdb, *tags):
 	'''
 	select a set of data using tags.
 
@@ -314,9 +317,12 @@ def select(tagdb, tag, *tags):
 	      object. (this can be resolved, but the solution will introduce 
 		  an inconsistency).
 	'''
+	# if no tags are given return evrything we've got! :)
+	if len(tags) == 0:
+		return tagdb.keys()
 	# a small optimisation: order the tags to cut out as mach as
 	# possible as early as possible... (XXX check for better strategies)
-	l = [tag] + list(tags)
+	l = list(tags)
 	l.sort(lambda a, b: cmp(len(tagdb[a]), len(tagdb[b])))
 	tag, tags = l[0], l[1:]
 	# now do the real work...
@@ -334,7 +340,7 @@ def select(tagdb, tag, *tags):
 
 
 #-------------------------------------------------------------iselect---
-def iselect(tagdb, tag, **tags):
+def iselect(tagdb, *tags):
 	'''
 	an iterative version of select.
 
@@ -366,13 +372,14 @@ if __name__ == '__main__':
 	print select(ts1, 'a', 'b')
 
 	print 
+	# show all the tags except for 'tag' as it particepates in the
+	# request...
 	print select(ts1, 'tag')
 	print 
 	print relatedtags(ts1, 'object')
 	print relatedtags(ts1, 'a')
 	print relatedtags(ts1, 'a', 'c')
 	print select(ts1, 'a', 'c', 'object')
-
 
 
 
