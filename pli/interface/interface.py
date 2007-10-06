@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.2.37'''
-__sub_version__ = '''20070725022641'''
+__sub_version__ = '''20071006153421'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -207,7 +207,8 @@ class _BasicInterface(type, mapping.Mapping):
 			for c in cls.__mro__:
 				try:
 					for d in c.__format__.itervalues():
-						if d != None and 'LIKE' in d and d['LIKE'] == name:
+##						if d != None and 'LIKE' in d and d['LIKE'] == name:
+						if d != None and d.get('LIKE', None) == name:
 							return True
 				except AttributeError:
 					pass
@@ -219,11 +220,13 @@ class _BasicInterface(type, mapping.Mapping):
 			raise InterfaceError, 'interface %s does not have a format defined.' % cls
 		format = cls.__format__
 		for c in cls.__mro__:
-			##!!! REVISE: BEGIN TUKAN HACK
-			# XXX We should go by mro to object, or try to stop earlier?
-			if type(c) == type:
-				raise InterfaceError, 'LIKE argument "%s" is not found in the interface' % (name)
-			##!!! REVISE: END TUKAN HACK
+##			##!!! REVISE: BEGIN TUKAN HACK
+##			# XXX We should go by mro to object, or try to stop earlier?
+##			if type(c) == type:
+##				return
+##				##!!! we do not know anthing about like on this level...
+##				##raise InterfaceError, 'LIKE argument "%s" is not found in the interface' % (name)
+##			##!!! REVISE: END TUKAN HACK
 			if hasattr(c, '__format__') \
 					and c.__format__ != None \
 					and name in c.__format__:
@@ -898,6 +901,15 @@ def inherit(*classes, **options):
 	'''
 	name = options.pop('iname', 'Unnamed')
 	depth = options.pop('depth', 1)
+##	if classes == (None,):
+##		# empty interface...
+##		classes = ()
+##	elif classes == ():
+##		# inherit interface implicitly from the bases...
+##		context = sys._getframe(depth)
+##		##!!! there appears no reliable way to get the bases BEFORE the class is created.
+##		##!!!
+##		print context.f_globals.keys()
 	# create a class...
 	inter = _Interface(name, classes, {'__interface_writable__': True})
 	implements(inter, depth+1)

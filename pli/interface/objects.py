@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20070725023041'''
+__sub_version__ = '''20071006154418'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -18,6 +18,7 @@ import pli.pattern.proxy.generic as proxy
 #-----------------------------------------------------------------------
 #-------------------------------------------------------------strhelp---
 ##!!! ugly... revise!
+# XXX need a better output formater...
 # Q: should this be in this module??
 def strhelp(obj):
 	'''
@@ -37,6 +38,14 @@ def strhelp(obj):
 				t = 'Any type'
 		elif hasattr(t, '__name__'):
 			t = t.__name__
+		elif type(t) is tuple:
+			tt = ()
+			for tp in t:
+				if hasattr(tp, '__name__'):
+					tt += (tp.__name__,)
+				else:
+					tt += (str(tp),)
+			t = ', '.join(tt)
 		if d.get('essential', False):
 			e_res += [ '    %s (%s):\t\t%s\n' % (n, t, d.get('doc', 'no doc.')) ]
 		else:
@@ -71,7 +80,8 @@ class ObjectWithInterfaceInit(object):
 	def __new__(cls, *p, **n):
 		'''
 		'''
-		obj = object.__new__(cls, *p, **n)
+##		obj = object.__new__(cls, *p, **n)
+		obj = super(ObjectWithInterfaceInit, cls).__new__(cls, *p, **n)
 		ogetattribute = object.__getattribute__
 		_interface = obj.__implements__
 		if _interface != None:
@@ -203,6 +213,7 @@ class RecursiveInterfaceProxy(proxy.GetattrRecursiveProxyMixin, InterfaceProxy):
 if __name__ == '__main__':
 
 	class O(ObjectWithInterface):
+
 		interface.inherit(iname='IO')
 		interface.add('xxx', type=int, default=0)
 		interface.add('xx0', type=int, default=0)
@@ -217,7 +228,7 @@ if __name__ == '__main__':
 		interface.add('xx9', type=int, default=0)
 
 ##		interface.hide('xxx')
-		interface.hide('xx0')
+##		interface.hide('xx0')
 
 		interface.add('*')
 
