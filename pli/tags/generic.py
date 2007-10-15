@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071015035751'''
+__sub_version__ = '''20071016030302'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -137,7 +137,9 @@ def itertaggaps(tagdb):
 		# check for missing symetric relations...
 		##!!! can this be faster? ...is there a better algorithm?
 		for r in rel:
-			if tag not in tagdb[r]:
+##			if tag not in tagdb[r]:
+			if r not in tagdb or tag not in tagdb[r]:
+				##!!! this may return duplicate with the above data...
 				yield tag, set([r])
 
 
@@ -185,19 +187,22 @@ def filltaggaps(tagdb):
 #----------------------------------------------------------------link---
 # XXX shows signs of exponential time increase on very large sets of
 #     data... need to revise.
+# XXX this may go bad with a very large number of args...
 def link(tagdb, obj, *objs):
 	'''
 	link the given objects.
-
-	NOTE: this will also link each object to itself.
 	'''
-	tt = set((obj,) + objs)
+	tt = [obj] + list(objs)
 
-	for t in tt:
+	for t in set(tt):
+		# remove one occurrence of self...
+		tt_c = tt[:]
+		tt_c.remove(t)
+
 		if t in tagdb:
-			tagdb[t].update(tt)
+			tagdb[t].update(tt_c)
 		else:
-			tagdb[t] = tt.copy()
+			tagdb[t] = set(tt_c)
 	return tagdb
 
 
@@ -207,15 +212,20 @@ def link(tagdb, obj, *objs):
 def unlink(tagdb, obj, *objs):
 	'''
 	remove the links between objects.
+
+	NOTE: if an element is present more than once then remove the self link too.
 	'''
-	tt = set((obj,) + objs)
+	tt = [obj] + list(objs)
 
 	for t in tt:
 		if t not in tagdb:
 			# ignore invalid tags... (XXX should we complain here?)
 			continue
+		# remove one occurrence of self...
+		tt_c = tt[:]
+		tt_c.remove(t)
 		# remove the reqired tags...
-		tagdb[t].difference_update(tt)
+		tagdb[t].difference_update(tt_c)
 		# remove tag if it has no relations... (XXX)
 		if len(tagdb[t]) == 0:
 			del tagdb[t]
@@ -288,9 +298,10 @@ def untag(tagdb, obj, *tags):
 	# can't manually use the tag and object tags...
 	if 'tag' in tags or 'object' in tags or obj in ('tag', 'object'):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
-	##!!! this may remove inter-tag links...
-	# now remove the chain...
-	unlink(tagdb, obj, *tags)
+	# now remove the links...
+	for tag in tags:
+		print '--', obj, tag
+		unlink(tagdb, obj, tag)
 	return tagdb
 
 
@@ -374,6 +385,9 @@ def iselect(tagdb, *tags):
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
+
+	from pprint import pprint
+	
 	ts1 = {}
 
 	# this will make object-tag relations only..
@@ -422,6 +436,14 @@ if __name__ == '__main__':
 	print ts1['a']
 	print ts1['tag']
 	print istagsconsistent(ts1)
+
+	pprint(ts1)
+	untag(ts1, 'X', 'a')
+	pprint(ts1)
+	untag(ts1, 'a', 'a')
+	pprint(ts1)
+	print istagsconsistent(ts1)
+	
 
 
 
