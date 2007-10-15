@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070808104206'''
+__sub_version__ = '''20071015022744'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -15,10 +15,12 @@ import pli.tags.path as path
 #-----------------------------------------------------------------------
 # XXX this needs to get cleaned, partially re-written and possibly
 #     split into several other modules...
+# XXX might be a good idea to mirror the __getattr__ with __getitem__
+#     for "bad" tag name support...
 # XXX write doc and examples...
 #
 # TODO generate an ID for each object in store!!! (do as a mixin and
-#      bossibly not here...)
+#      possibly not here...)
 #
 #-----------------------------------------------------------------------
 #--------------------------------------------------------------public---
@@ -66,17 +68,17 @@ class NodeConstructor(object):
 
 
 #-----------------------------------------------------------------------
-#----------------------------------------------------TagTreePathProxy---
-class TagTreePathProxy(path.RecursiveAttrPathProxy):
+class BaseTagTreePathProxy(path.RecursiveAttrPathProxy):
 	'''
 	'''
 	def __getattr__(self, name):
 		'''
 		'''
+		# constructor support...
 		if ('constructor', name) in self._root:
 			# XXX is this safe??? (constructors should be unique!)
 			return tuple(self._root.select(('constructor', name)))[0]
-		return super(TagTreePathProxy, self).__getattr__(name)
+		return super(BaseTagTreePathProxy, self).__getattr__(name)
 	
 	# public interface...
 	# in general, this will form the args and call the corresponding
@@ -88,32 +90,10 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		return self._root.relatedtags(*self._path + tags)
 	##!!! OID !!!##
 	# XXX add efficient counting...
-	# XXX split this into two levels... one to return objects and
-	#     another to format them into attrs... (???)
-	@public
-##	def list(self, form=None, to=None, count=None, *attrs):
-	def list(self, *attrs):
+	def list(self):
 		'''
-		list the data form the objects in this subtree.
 		'''
-		res = []
-		# XXX make this iterative...
-		objs = self._root.select('object', *self._path)
-		for o in objs:
-			##!!! the id here is a stub !!!##
-##			data = {'oid': self._root._getoid(o)}
-			data = {'oid': id(o)}
-			res += [data]
-			for a in attrs:
-				# skip the oid as we added it already...
-				if a == 'oid':
-					continue
-				# skip attrs that do not exist in the object...
-				if not hasattr(o, a):
-					continue
-				# XXX this is a good spot for ACL check...
-				data[a] = getattr(o, a)
-		return res
+		return self._root.select('object', *self._path)
 
 	##!!!
 	##!!! OID !!!##
@@ -150,6 +130,38 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 ##		delete an object.
 ##		'''
 ##		pass
+
+
+#----------------------------------------------------TagTreePathProxy---
+##!!! may need a more specific name...
+class TagTreePathProxy(BaseTagTreePathProxy):
+	'''
+	'''
+	@public
+##	def list(self, form=None, to=None, count=None, *attrs):
+	def list(self, *attrs):
+		'''
+		list the data form the objects in this subtree.
+		'''
+		res = []
+		# XXX make this iterative...
+##		objs = self._root.select('object', *self._path)
+		objs = super(TagTreePathProxy, self).list()
+		for o in objs:
+			##!!! the id here is a stub !!!##
+##			data = {'oid': self._root._getoid(o)}
+			data = {'oid': id(o)}
+			res += [data]
+			for a in attrs:
+				# skip the oid as we added it already...
+				if a == 'oid':
+					continue
+				# skip attrs that do not exist in the object...
+				if not hasattr(o, a):
+					continue
+				# XXX this is a good spot for ACL check...
+				data[a] = getattr(o, a)
+		return res
 	
 
 

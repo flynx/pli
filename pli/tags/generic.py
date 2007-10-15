@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20070808015716'''
+__sub_version__ = '''20071015035751'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -106,23 +106,14 @@ by tag or object.
 # - all tags in relations are present in store keys.
 # - if no orphan tags are allowed (???) each tag in keys MUST also be
 #   present in relations (related to).
-#
-# algorithm:
-#	union of all relations must be a subset of the union of all keys.
-#
-# NOTE: use strict equality to check for orphans...
-#
-# XXX should this ignore orphaned tags???
+# - if all relations are symetrical.
 def istagsconsistent(tagdb):
 	'''
 	'''
-	rel = set()
-	for r in tagdb.values():
-		rel.update(r)
-	# XXX ignore orphans... (to check for them use strict equality)
-	if rel.issubset(set(tagdb.keys())):
-		return True
-	return False
+	for i in itertaggaps(tagdb):
+		# if we get in here, it means that we have a problem...
+		return False
+	return True
 
 
 #---------------------------------------------------------itertaggaps---
@@ -139,8 +130,15 @@ def itertaggaps(tagdb):
 	'''
 	keys = set(tagdb.keys())
 	for tag, rel in tagdb.items():
+		# XXX ignore orphans... (to check for them use strict equality)
+		# check for gaps (missing tagdb keys)...
 		if not keys.issuperset(rel):
 			yield tag, rel.difference(keys)
+		# check for missing symetric relations...
+		##!!! can this be faster? ...is there a better algorithm?
+		for r in rel:
+			if tag not in tagdb[r]:
+				yield tag, set([r])
 
 
 #---------------------------------------------------------filltaggaps---
@@ -162,7 +160,7 @@ def filltaggaps(tagdb):
 	# NOTE: this is split in two so as to not iterate and modify the
 	#       store at the same time...
 	tdb_diff = {}
-	# bild the diff correcting the errors...
+	# build the diff correcting the errors...
 	for key, dif in itertaggaps(tagdb):
 		for k in dif:
 			if k in tdb_diff:
@@ -185,7 +183,6 @@ def filltaggaps(tagdb):
 #-----------------------------------------------------------------------
 # low-level "naive" functions...
 #----------------------------------------------------------------link---
-# XXX what should this return??
 # XXX shows signs of exponential time increase on very large sets of
 #     data... need to revise.
 def link(tagdb, obj, *objs):
@@ -201,11 +198,11 @@ def link(tagdb, obj, *objs):
 			tagdb[t].update(tt)
 		else:
 			tagdb[t] = tt.copy()
+	return tagdb
 
 
 #--------------------------------------------------------------unlink---
 ##!!! test !!!##
-# XXX what should this return??
 # XXX should this remove orphaned tags???
 def unlink(tagdb, obj, *objs):
 	'''
@@ -222,13 +219,30 @@ def unlink(tagdb, obj, *objs):
 		# remove tag if it has no relations... (XXX)
 		if len(tagdb[t]) == 0:
 			del tagdb[t]
+	return tagdb
+
+
+#---------------------------------------------------------------links---
+def links(tagdb, obj):
+	'''
+	return all the links to the object.
+
+	NOTE: this is the same as tagdb[obj].
+	'''
+##	# sanity check...
+##	if obj not in tagdb:
+##		raise KeyError, 'object %s not in tagdb (%s).' % (obj, tagdb)
+	return tagdb[obj]
 
 
 
 #-----------------------------------------------------------------------
 # user interface functions...
 #-----------------------------------------------------------------tag---
-# XXX what should this return??
+# XXX this has two effects that might be wrong:
+# 		1) an object is tagged by itself (the problem is link())
+# 		2) all tags (relations) are symetrical... (might need to have
+# 		   exceptions like 'object' and 'tag') 
 def tag(tagdb, obj, *tags):
 	'''
 	tag an object...
@@ -260,15 +274,11 @@ def tag(tagdb, obj, *tags):
 			#     'tag' is not an object... the current store does not
 			#     support assymetric linking.
 ##			link(tagdb, 'object', 'tag')
-
-##	# no do the work that the user actually requested... 
-##	# XXX revise! (see above..)
-##	link(tagdb, obj, *tags)
+	return tagdb
 
 
 #---------------------------------------------------------------untag---
-# XXX what should this return??
-##!!! test !!!##
+##!!! test: appears to be broken !!!##
 ##!!! what should we do here with the special tags here???
 def untag(tagdb, obj, *tags):
 	'''
@@ -278,9 +288,20 @@ def untag(tagdb, obj, *tags):
 	# can't manually use the tag and object tags...
 	if 'tag' in tags or 'object' in tags or obj in ('tag', 'object'):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
-	##!!!
+	##!!! this may remove inter-tag links...
 	# now remove the chain...
 	unlink(tagdb, obj, *tags)
+	return tagdb
+
+
+#----------------------------------------------------------------tags---
+def tags(tagdb, obj):
+	'''
+	return the tags tagging the object.
+
+	NOTE: this removes all the relations that are not tags.
+	'''
+	return links(tagdb, obj).intersection(tagdb['tag'].union(['object']))
 
 
 #---------------------------------------------------------relatedtags---
@@ -380,6 +401,27 @@ if __name__ == '__main__':
 	print relatedtags(ts1, 'a')
 	print relatedtags(ts1, 'a', 'c')
 	print select(ts1, 'a', 'c', 'object')
+
+	print
+
+	print tags(ts1, 'X')
+	print links(ts1, 'X')
+
+	print
+
+	print istagsconsistent(ts1)
+	print ts1['a']
+	print ts1['tag']
+	print 'removing tags...'
+	ts1['a'].remove('tag')
+	print ts1['a']
+	print ts1['tag']
+	print istagsconsistent(ts1)
+	print list(itertaggaps(ts1))
+	print filltaggaps(ts1)
+	print ts1['a']
+	print ts1['tag']
+	print istagsconsistent(ts1)
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070807142002'''
+__sub_version__ = '''20071015022637'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,6 +10,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
+#----------------------------------------------RecursiveAttrPathProxy---
 class RecursiveAttrPathProxy(object):
 	'''
 	'''
@@ -45,7 +46,6 @@ class RecursiveAttrPathProxy(object):
 
 
 
-
 #-----------------------------------------------------------------------
 if __name__ == "__main__":
 	
@@ -55,7 +55,7 @@ if __name__ == "__main__":
 		def __getattr__(self, name):
 			'''
 			'''
-			return getattr(RecursiveAttrPathProxy(self, (), self._printpath), name)
+			return getattr(BaseRecursiveAttrPathProxy(self, (), self._printpath), name)
 		def _printpath(self, root, path, *p, **n):
 			'''
 			'''

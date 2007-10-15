@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20070808110508'''
+__sub_version__ = '''20071014144649'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -180,6 +180,7 @@ class TagSetWithSplitStore(AbstractTagSet):
 		# XXX make this a super call...
 		return self.__tag_engine__.untag(self.__tag_store__, oid, *tags)
 	# XXX how will this work for cases when an object acts as a tag?
+	# XXX can we make an iterator out of this? (an iterative algorithm?)
 	def select(self, *tags):
 		'''
 		'''
