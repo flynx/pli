@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071016030302'''
+__sub_version__ = '''20071016214837'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -300,7 +300,6 @@ def untag(tagdb, obj, *tags):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
 	# now remove the links...
 	for tag in tags:
-		print '--', obj, tag
 		unlink(tagdb, obj, tag)
 	return tagdb
 
