@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071014144649'''
+__sub_version__ = '''20071031134659'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -185,7 +185,7 @@ class TagSetWithSplitStore(AbstractTagSet):
 		'''
 		'''
 		# get the clean objects...
-		oids = self.__tag_engine__.select(self.__tag_store__, 'object', *tags)
+		oids = self.__tag_engine__.select(self.__tag_store__, self.__tag_engine__.OBJECT_TAG, *tags)
 		# get all the non-objects...
 		res = self.__tag_engine__.select(self.__tag_store__, *tags).difference(oids)
 
@@ -218,7 +218,7 @@ class TaggableMixin(object):
 		'''
 		'''
 		# select all the tags that tag self...
-		return self.__tagset__.select(self, 'tag')
+		return self.__tagset__.select(self, self.__tag_engine__.TAG_TAG)
 	
 	# NOTE: the foloeing are not a direct transfer, thus can't use the
 	#       proxy utils...
@@ -241,6 +241,9 @@ if __name__ == '__main__':
 
 	class Obj(object): pass
 
+	TAG = tags.TAG_TAG
+	OBJECT = tags.OBJECT_TAG
+
 	o0 = Obj()
 	o1 = Obj()
 	o2 = Obj()
@@ -251,14 +254,14 @@ if __name__ == '__main__':
 	ts.tag(o2, '2', 'a', 'data')
 	ts.tag(o3, '3', 'data')
 
-	print ts.select('tag')
-	print ts.select('tag', 'a')
-	print ts.select('tag', 'a', '0')
+	print ts.select(TAG)
+	print ts.select(TAG, 'a')
+	print ts.select(TAG, 'a', '0')
 	print
-	print ts.select('object')
+	print ts.select(OBJECT)
 	print
-	print ts['tag']
-	print ts['object']
+	print ts[TAG]
+	print ts[OBJECT]
 	print
 	print
 
@@ -274,11 +277,11 @@ if __name__ == '__main__':
 	tss.tag(o2, '2', 'a', 'data')
 	tss.tag(o3, '3', 'data')
 
-	print tss.select('tag')
-	print tss.select('tag', 'a')
-	print tss.select('tag', 'a', '0')
+	print tss.select(TAG)
+	print tss.select(TAG, 'a')
+	print tss.select(TAG, 'a', '0')
 	print
-	print tss.select('object')
+	print tss.select(OBJECT)
 	print
 	print tss.__tag_store__.keys()
 	print tss.__object_store__.keys()

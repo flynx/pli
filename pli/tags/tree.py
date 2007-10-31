@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071015022744'''
+__sub_version__ = '''20071031133738'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -93,7 +93,7 @@ class BaseTagTreePathProxy(path.RecursiveAttrPathProxy):
 	def list(self):
 		'''
 		'''
-		return self._root.select('object', *self._path)
+		return self._root.select(generic.OBJECT_TAG, *self._path)
 
 	##!!!
 	##!!! OID !!!##
@@ -145,7 +145,7 @@ class TagTreePathProxy(BaseTagTreePathProxy):
 		'''
 		res = []
 		# XXX make this iterative...
-##		objs = self._root.select('object', *self._path)
+##		objs = self._root.select(generic.OBJECT_TAG, *self._path)
 		objs = super(TagTreePathProxy, self).list()
 		for o in objs:
 			##!!! the id here is a stub !!!##

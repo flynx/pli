@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071016214837'''
+__sub_version__ = '''20071031133629'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -28,6 +28,8 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 #
 # TODO add an iterative select...
 # TODO generic methods to check for tags, or if a tag exists... etc.
+# TODO make the TAG_TAG and OBJECT_TAG tags optional...
+# TODO make the TAG_TAG and OBJECT_TAG tags confugurable...
 #
 #
 #
@@ -98,6 +100,14 @@ by tag or object.
 
 
 '''
+
+#-----------------------------------------------------------------------
+
+##!!! find a better way to deal with this!
+TAG_TAG = 'TAG'
+OBJECT_TAG = 'OBJECT'
+
+
 
 #-----------------------------------------------------------------------
 # store-level functions...
@@ -252,7 +262,7 @@ def links(tagdb, obj):
 # XXX this has two effects that might be wrong:
 # 		1) an object is tagged by itself (the problem is link())
 # 		2) all tags (relations) are symetrical... (might need to have
-# 		   exceptions like 'object' and 'tag') 
+# 		   exceptions like OBJECT_TAG and TAG_TAG) 
 def tag(tagdb, obj, *tags):
 	'''
 	tag an object...
@@ -266,24 +276,24 @@ def tag(tagdb, obj, *tags):
 	'''
 	# do special tags...
 	# can't manually use the tag and object tags...
-	if 'tag' in tags or 'object' in tags or obj in ('tag', 'object'):
+	if TAG_TAG in tags or OBJECT_TAG in tags or obj in (TAG_TAG, OBJECT_TAG):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
 	# the tag tag...
 	for t in tags:
-		if 'tag' not in tagdb.get(t, ()):
-			link(tagdb, t, 'tag')
+		if TAG_TAG not in tagdb.get(t, ()):
+			link(tagdb, t, TAG_TAG)
 		# XXX revise: there should be a better and faster way to do this...
 		# link the object and tag...
 		link(tagdb, obj, t)
 	# the object tag...
-	if 'object' not in tagdb.get(obj, ()):
-		link(tagdb, obj, 'object')
-		if 'tag' not in tagdb.get('object', ()):
-			link(tagdb, 'tag', 'tag')
-			# XXX the probem here is that 'object' is a tag but the
-			#     'tag' is not an object... the current store does not
+	if OBJECT_TAG not in tagdb.get(obj, ()):
+		link(tagdb, obj, OBJECT_TAG)
+		if TAG_TAG not in tagdb.get(OBJECT_TAG, ()):
+			link(tagdb, TAG_TAG, TAG_TAG)
+			# XXX the probem here is that OBJECT_TAG is a tag but the
+			#     TAG_TAG is not an object... the current store does not
 			#     support assymetric linking.
-##			link(tagdb, 'object', 'tag')
+##			link(tagdb, OBJECT_TAG, TAG_TAG)
 	return tagdb
 
 
@@ -296,7 +306,7 @@ def untag(tagdb, obj, *tags):
 	'''
 	# do special tags...
 	# can't manually use the tag and object tags...
-	if 'tag' in tags or 'object' in tags or obj in ('tag', 'object'):
+	if TAG_TAG in tags or OBJECT_TAG in tags or obj in (TAG_TAG, OBJECT_TAG):
 		raise TypeError, 'can\'t use either "object" or "tag" tags manually.'
 	# now remove the links...
 	for tag in tags:
@@ -311,7 +321,7 @@ def tags(tagdb, obj):
 
 	NOTE: this removes all the relations that are not tags.
 	'''
-	return links(tagdb, obj).intersection(tagdb['tag'].union(['object']))
+	return links(tagdb, obj).intersection(tagdb[TAG_TAG].union([OBJECT_TAG]))
 
 
 #---------------------------------------------------------relatedtags---
@@ -323,17 +333,17 @@ def relatedtags(tagdb, *tags):
 	two tags are related if they both tag the same object. thus this will 
 	return the tags sutable for further specialization.
 
-	NOTE: to get all the objects use "select(tagdb, tag, tags, 'object')"
+	NOTE: to get all the objects use "select(tagdb, tag, tags, OBJECT_TAG)"
 	      with the same tags...
 	'''
 	# get all the valid data...
-	objs = select(tagdb, 'object', *tags)
+	objs = select(tagdb, OBJECT_TAG, *tags)
 	res = set()
 	# gather all the related tags...
 	for o in objs:
 		res.update(tagdb[o])
 	# remove the objects and input tags...
-	res.difference_update(('object',) + tags + tuple(objs))
+	res.difference_update((OBJECT_TAG,) + tags + tuple(objs))
 	return res
 
 
@@ -344,7 +354,7 @@ def select(tagdb, *tags):
 
 	NOTE: this will return both tags and tagged objects. to control this
 	      use the "tag" and "object" tags...
-	NOTE: the 'tag' and 'object' tags are related thus 'tag' is also an 
+	NOTE: the TAG_TAG and OBJECT_TAG tags are related thus TAG_TAG is also an 
 	      object. (this can be resolved, but the solution will introduce 
 		  an inconsistency).
 	'''
@@ -406,14 +416,14 @@ if __name__ == '__main__':
 	print select(ts1, 'a', 'b')
 
 	print 
-	# show all the tags except for 'tag' as it particepates in the
+	# show all the tags except for TAG_TAG as it particepates in the
 	# request...
-	print select(ts1, 'tag')
+	print select(ts1, TAG_TAG)
 	print 
-	print relatedtags(ts1, 'object')
+	print relatedtags(ts1, OBJECT_TAG)
 	print relatedtags(ts1, 'a')
 	print relatedtags(ts1, 'a', 'c')
-	print select(ts1, 'a', 'c', 'object')
+	print select(ts1, 'a', 'c', OBJECT_TAG)
 
 	print
 
@@ -424,16 +434,16 @@ if __name__ == '__main__':
 
 	print istagsconsistent(ts1)
 	print ts1['a']
-	print ts1['tag']
+	print ts1[TAG_TAG]
 	print 'removing tags...'
-	ts1['a'].remove('tag')
+	ts1['a'].remove(TAG_TAG)
 	print ts1['a']
-	print ts1['tag']
+	print ts1[TAG_TAG]
 	print istagsconsistent(ts1)
 	print list(itertaggaps(ts1))
 	print filltaggaps(ts1)
 	print ts1['a']
-	print ts1['tag']
+	print ts1[TAG_TAG]
 	print istagsconsistent(ts1)
 
 	pprint(ts1)
