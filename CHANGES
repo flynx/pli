@@ -1,5 +1,8 @@
-# this file was generated on [200710311350]
+# this file was generated on [200710311814]
 pli changes:
+
+version 0.0.201 (200710311812):
+- added decorator support for pli.pattern.proxy.utils.proxymethod and proxymethods...
 
 version 0.0.199 (200710311349):
 changed the default tags for the pli.tags.generic... (not yet final)

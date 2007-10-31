@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20040911234403'''
+__sub_version__ = '''20071031180154'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -50,7 +50,7 @@ def createmethodwrappers(source_dict, method_list, wrapper, target_dict=None):
 
 #-----------------------------------------------------------------------
 #--------------------------------------------------genericproxymethod---
-def proxymethod(method_name, source_attr, depth=1):
+def proxymethod(method_name, source_attr, depth=1, decorators=()):
 	'''
 	this will create a proxy to the method name in the containing namespace.
 
@@ -68,16 +68,18 @@ proxy = %(method_name)s'''
 	# execute the above code...
 	exec (txt % {'method_name': method_name, 'source_attr': source_attr})
 	# update the NS...
+	for d in decorators:
+		proxy = d(proxy)
 	sys._getframe(depth).f_locals[method_name] = proxy
 
 
 #--------------------------------------------------------proxymethods---
-def proxymethods(names, source_attr):
+def proxymethods(names, source_attr, decorators):
 	'''
 	this will generate a direct proxy for each name.
 	'''
 	for name in names:
-		proxymethod(name, source_attr, depth=2)
+		proxymethod(name, source_attr, depth=2, decorators=decorators)
 
 
 
