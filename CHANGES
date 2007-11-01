@@ -1,5 +1,8 @@
-# this file was generated on [200711011306]
+# this file was generated on [200711011609]
 pli changes:
+
+version 0.0.203 (200711011608):
+- merged pli.tags.tree with the version from another project of mine... (still needs cleaning).
 
 version 0.0.201 (200710311812):
 - added decorator support for pli.pattern.proxy.utils.proxymethod and proxymethods...

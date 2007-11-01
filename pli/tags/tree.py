@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071031133738'''
+__sub_version__ = '''20071101155903'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -10,19 +10,27 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 import pli.tags.generic as generic
 import pli.tags.tag as tag
 import pli.tags.path as path
+import pli.objutils as objutils
+
+##import oid
 
 
 #-----------------------------------------------------------------------
 # XXX this needs to get cleaned, partially re-written and possibly
 #     split into several other modules...
-# XXX might be a good idea to mirror the __getattr__ with __getitem__
-#     for "bad" tag name support...
 # XXX write doc and examples...
 #
 # TODO generate an ID for each object in store!!! (do as a mixin and
 #      possibly not here...)
 #
 #-----------------------------------------------------------------------
+##!!! move somewhere and revise !!!##
+def getoid(obj):
+	'''
+	'''
+	return 'OID_%s' % str(id(obj)).replace('-', 'X')
+
+
 #--------------------------------------------------------------public---
 ##!!! STUB
 def public(meth):
@@ -40,17 +48,20 @@ class NodeConstructor(object):
 	'''
 	'''
 	# most likely will not need to be changed manualy...
-	__object_tag__ = 'instance'
+##	__object_tags__ = ('instance',)
+	__object_tags__ = ()
 
 	__tagset__ = None
 
-	##!!! need a name...
+	type = 'constructor'
+
+	# XXX move the defaults out of the code...
 	def __init__(self, name, constructor, *tags):
 		'''
 		'''
 		if ('constructor', name) in self.__tagset__:
 			raise TypeError, 'constructor id must be unique, id "%s" already exists!' % name
-		self._name = name
+		self.constructor_name = name
 		self._constructor = constructor
 		self._tags = tags
 		# tag self...
@@ -62,23 +73,64 @@ class NodeConstructor(object):
 		'''
 		'''
 		res = self.__dict__['_constructor'](*p, **n)
-		self.__tagset__.tag(res, self.__object_tag__, *self._tags)
+		self.__tagset__.tag(res, *(self.__object_tags__ + self._tags))
 		return res
+	def __getattr__(self, name):
+		'''
+		'''
+		return getattr(self._constructor, name)
+
+
+#-----------------------------------NodeConstructorWithOIDReturnMixin---
+##!!! IMO this functionality should be in the serializer... (if can't 
+##!!! serialize an object then return it's OID...)
+class NodeConstructorWithOIDReturnMixin(object):
+	'''
+	'''
+	def __call__(self, *p, **n):
+		'''
+		'''
+		return {'oid': getoid(super(NodeConstructorWithOIDReturnMixin, self).__call__(*p, **n))}
+
+
+#----------------------------------------------DynamicNodeConstructor---
+class DynamicNodeConstructor(NodeConstructor):
+	'''
+	'''
+	def __init__(self, tagset, name, constructor, common_tags=(), object_tags=()):
+		'''
+		'''
+		self.__tagset__ = tagset
+		self.__object_tags__ = object_tags
+
+		super(DynamicNodeConstructor, self).__init__(name, constructor, *common_tags)
+
+
+#---------------------------------DynamicNodeConstructorWithOIDReturn---
+##!!! does this need to get reorgonized?
+class DynamicNodeConstructorWithOIDReturn(NodeConstructorWithOIDReturnMixin, DynamicNodeConstructor):
+	'''
+	'''
+	pass
 
 
 
 #-----------------------------------------------------------------------
-class BaseTagTreePathProxy(path.RecursiveAttrPathProxy):
+#----------------------------------------------------TagTreePathProxy---
+# XXX add direct interface...
+class TagTreePathProxy(path.RecursiveAttrPathProxy):
 	'''
 	'''
 	def __getattr__(self, name):
 		'''
 		'''
-		# constructor support...
+		if name.startswith('OID_'):
+			return self._getobject(name)
 		if ('constructor', name) in self._root:
 			# XXX is this safe??? (constructors should be unique!)
-			return tuple(self._root.select(('constructor', name)))[0]
-		return super(BaseTagTreePathProxy, self).__getattr__(name)
+			##!!! WARNING: here the select also returns "tag".... check this out!
+			return [ o for o in self._root.select(('constructor', name)) if o != generic.TAG_TAG][0]
+		return super(TagTreePathProxy, self).__getattr__(name)
 	
 	# public interface...
 	# in general, this will form the args and call the corresponding
@@ -90,53 +142,8 @@ class BaseTagTreePathProxy(path.RecursiveAttrPathProxy):
 		return self._root.relatedtags(*self._path + tags)
 	##!!! OID !!!##
 	# XXX add efficient counting...
-	def list(self):
-		'''
-		'''
-		return self._root.select(generic.OBJECT_TAG, *self._path)
-
-	##!!!
-	##!!! OID !!!##
-	@public
-	def view(self, oid):
-		'''
-		view object data.
-		'''
-		# get the object...
-		##!!!
-		# get the object format...
-		##!!!
-		# get object data using it's format...
-		##!!!
-		raise NotImplementedError
-	##!!!
-	##!!! OID !!!##
-	@public
-	def update(self, oid, **attrs):
-		'''
-		update an object.
-		'''
-		# get the object...
-		##!!!
-		# check attrs with format... (???)
-		##!!!
-		# update object data...
-		##!!!
-		raise NotImplementedError
-##	##!!! OID !!!##
-##	@public
-##	def delete(self, oid):
-##		'''
-##		delete an object.
-##		'''
-##		pass
-
-
-#----------------------------------------------------TagTreePathProxy---
-##!!! may need a more specific name...
-class TagTreePathProxy(BaseTagTreePathProxy):
-	'''
-	'''
+	# XXX split this into two levels... one to return objects and
+	#     another to format them into attrs... (???)
 	@public
 ##	def list(self, form=None, to=None, count=None, *attrs):
 	def list(self, *attrs):
@@ -145,12 +152,12 @@ class TagTreePathProxy(BaseTagTreePathProxy):
 		'''
 		res = []
 		# XXX make this iterative...
-##		objs = self._root.select(generic.OBJECT_TAG, *self._path)
-		objs = super(TagTreePathProxy, self).list()
+		objs = self._root.select(generic.OBJECT_TAG, *self._path)
 		for o in objs:
 			##!!! the id here is a stub !!!##
 ##			data = {'oid': self._root._getoid(o)}
-			data = {'oid': id(o)}
+##			data = {'oid': 'OID_%s' % str(id(o)).replace('-', 'X')}
+			data = {'oid': getoid(o)}
 			res += [data]
 			for a in attrs:
 				# skip the oid as we added it already...
@@ -162,6 +169,30 @@ class TagTreePathProxy(BaseTagTreePathProxy):
 				# XXX this is a good spot for ACL check...
 				data[a] = getattr(o, a)
 		return res
+	
+	# object interface...
+	def _getobject(self, oid):
+		'''
+		'''
+		##!!! STUB... do a better direct object by oid select !!!##
+		objs = self._root.select(generic.OBJECT_TAG, *self._path)
+		for o in objs:
+			##!!! the id here is a stub !!!##
+##			if ('OID_%s' % str(id(o)).replace('-', 'X')) == oid:
+			if getoid(o) == oid:
+				return o
+		raise TypeError, 'non-existant object id: %s' % oid
+	
+	# shorthand object interface...
+	@objutils.classinstancemethod
+	def view(self, oid, *attrs):
+		'''
+		'''
+		return self._getobject(oid).view(*attrs)
+	def update(self, oid, **attrs):
+		'''
+		'''
+		return self._getobject(oid).update(**attrs)
 	
 
 
@@ -196,20 +227,91 @@ class TagTree(tag.TagSet):
 
 
 
+#-----------------------------------------------------------------------
+# XXX this can be considered app-level code... most likely should be
+#     elsware...
+#--------------------------------------------------BaseTagTreeHandler---
+class BaseTagTreeHandler(object):
+	'''
+	this provides administrative tree handling, without affecting the tree itself.
+	'''
+	__tree_constructor__ = None
+	__node_constructor_wrapper__ = None
+
+	__constructor_tags__ = ()
+	__instance_tags__ = ()
+
+	tree = None
+
+	# XXX might be good to be able to thread some args to the tree
+	#     constructor...
+	def __init__(self, constructor_tags=(), instance_tags=()):
+		'''
+		'''
+		self.__constructor_tags__ += constructor_tags
+		self.__instance_tags__ += instance_tags
+
+		self.tree = self.__tree_constructor__()
+	def constructor(self, name, constructor, constructor_tags=(), instance_tags=(), ignore_default_constructor_tags=False, ignore_default_instance_tags=False):
+		'''
+		create a custom constructor.
+		'''
+		# construct tag lists...
+		if ignore_default_constructor_tags:
+			c_tags = constructor_tags
+		else:
+			c_tags = self.__constructor_tags__ + constructor_tags 
+		if ignore_default_instance_tags:
+			i_tags = instance_tags
+		else:
+			i_tags = self.__instance_tags__ + instance_tags 
+		# do the call...
+		return self.__node_constructor_wrapper__(self.tree, name, constructor, 
+								common_tags=c_tags, 
+								object_tags=i_tags)
+
+
+#------------------------------------------------------TagTreeHandler---
+class TagTreeHandler(BaseTagTreeHandler):
+	'''
+	'''
+	__tree_constructor__ = TagTree
+##	__node_constructor_wrapper__ = DynamicNodeConstructor
+	__node_constructor_wrapper__ = DynamicNodeConstructorWithOIDReturn
+
+	# XXX this is currently not needed as the NodeConstructor class 
+	#     takes care of this internally.... (should be customisable!)
+##	__constructor_tags__ = ('constructor',)
+	__instance_tags__ = ('instance',)
+
+	# XXX this is currently not needed as the NodeConstructor class 
+	#     takes care of this internally.... (should be customisable!)
+##	def constructor(self, name, constructor, constructor_tags=(), instance_tags=()):
+##		'''
+##		'''
+##		return super(TagTreeHandler, self).constructor(
+##							name, 
+##							constructor, 
+##							(name, ('constructor', name)) + constructor_tags, 
+##							instance_tags)
+
+
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
-	tree = TagTree()
+	handler = TagTreeHandler()
+	tree = handler.tree
+	
+	def constructor(name, constructor, *tags):
+		return handler.constructor(name, constructor, tags)
 
-	class constructor(NodeConstructor):
-		__tagset__ = tree
 
-	#
 	class A(object):
 		attr = 123
-	class B(object): pass
-
+	class B(object):
+		pass
+	
 	constructor('A', A, 'some_tag')
 	constructor('B', B, 'some_other_tag')
 
