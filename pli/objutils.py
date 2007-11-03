@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20071017141129'''
+__sub_version__ = '''20071103163830'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -9,6 +9,63 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 import types
 import new
+
+
+#-----------------------------------------------------------------------
+#-----------------------------------------------------------termsuper---
+class termsuper(super):
+	'''
+	this is a terminated super.
+
+	to be used when the object has no emidiate superclass but may participate 
+	in an inheritance tree where relaying calls to the next member in the mro 
+	chain is needed.
+
+	this is equivalent to:
+
+		class X(object):
+			def meth(self, arg):
+				try:
+					super(X, self).meth(arg)
+				except AttributeError:
+					pass
+
+		# and using the termsuper...
+		class Y(object):
+			def meth(self, arg):
+				termsuper(Y, self).meth(arg)
+
+
+	super will fail when X is used "stand-alone" but may be needed in complex 
+	cases, as shown here:
+
+		class Z(X, Y):
+			def meth(self, arg):
+				super(Z, self).meth(arg)
+
+		z = Z()
+
+		z.meth(123) # needs to call both X.meth and Y.meth... (if no 
+		            # termination was used then only the first in the
+					# MRO chain would have been called).
+
+
+	in the instance of a Z class both the methods of X and Y need to be called.
+
+	NOTE: it is recommended to use termsuper only when it is explicitly 
+	      needed (hence, it is not used in Z).
+	NOTE: it is usually cusomary not to write any super calls in cases like X, 
+	      but, this may result in problems down the road.
+		  thus, if writing library code intended for inheritance use, it is 
+		  reccomended to allways either terminate the super call or warn that 
+		  manual calling is in order.
+	'''
+	def __getattr__(self, name, *p, **n):
+		try:
+			super(terminatedsuper, self).__getattr__(name, *p, **n)
+		except AttributeError:
+			pass
+
 
 
 #-----------------------------------------------------------------------

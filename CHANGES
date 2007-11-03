@@ -1,5 +1,8 @@
-# this file was generated on [200711011609]
+# this file was generated on [200711031639]
 pli changes:
+
+version 0.0.205 (200711031638):
+- added pli.objutils.termsuper (see doc for details).
 
 version 0.0.203 (200711011608):
 - merged pli.tags.tree with the version from another project of mine... (still needs cleaning).
