@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071101155903'''
+__sub_version__ = '''20071106142034'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -71,6 +71,7 @@ class NodeConstructor(object):
 	#     too generic)
 	def __call__(self, *p, **n):
 		'''
+		create an object.
 		'''
 		res = self.__dict__['_constructor'](*p, **n)
 		self.__tagset__.tag(res, *(self.__object_tags__ + self._tags))
@@ -93,6 +94,26 @@ class NodeConstructorWithOIDReturnMixin(object):
 		return {'oid': getoid(super(NodeConstructorWithOIDReturnMixin, self).__call__(*p, **n))}
 
 
+#------------------------------------NodeConstructorWithCallbackMixin---
+class NodeConstructorWithCallbackMixin(object):
+	'''
+	'''
+	# defines the name of the inteface method called when the object is
+	# created.
+	# signature:
+	# 	<method-name>(tagset, tags)
+	__node_constructor_callback_name__ = '__ontreenodecreate__'
+
+	def __call__(self, *p, **n):
+		'''
+		'''
+		res = super(NodeConstructorWithOIDReturnMixin, self).__call__(*p, **n)
+		# call the interface method...
+		if hasattr(res, self.__node_constructor_callback_name__):
+			getattr(res, self.__node_constructor_callback_name__)(self.__tagset__, self.__object_tags__)
+		return res
+
+
 #----------------------------------------------DynamicNodeConstructor---
 class DynamicNodeConstructor(NodeConstructor):
 	'''
@@ -113,6 +134,14 @@ class DynamicNodeConstructorWithOIDReturn(NodeConstructorWithOIDReturnMixin, Dyn
 	'''
 	pass
 
+
+#------------------------DynamicNodeConstructorWithOIDReturnNCallback---
+class DynamicNodeConstructorWithOIDReturnNCallback(NodeConstructorWithCallbackMixin, 
+													NodeConstructorWithOIDReturnMixin, 
+													DynamicNodeConstructor):
+	'''
+	'''
+	pass
 
 
 #-----------------------------------------------------------------------
@@ -277,7 +306,8 @@ class TagTreeHandler(BaseTagTreeHandler):
 	'''
 	__tree_constructor__ = TagTree
 ##	__node_constructor_wrapper__ = DynamicNodeConstructor
-	__node_constructor_wrapper__ = DynamicNodeConstructorWithOIDReturn
+##	__node_constructor_wrapper__ = DynamicNodeConstructorWithOIDReturn
+	__node_constructor_wrapper__ = DynamicNodeConstructorWithOIDReturnNCallback
 
 	# XXX this is currently not needed as the NodeConstructor class 
 	#     takes care of this internally.... (should be customisable!)

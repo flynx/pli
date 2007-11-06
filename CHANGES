@@ -1,5 +1,8 @@
-# this file was generated on [200711031639]
+# this file was generated on [200711061428]
 pli changes:
+
+version 0.0.205 (200711061427):
+- added callback interface to pli.tags.tree.NodeConstructor* as a mixin...
 
 version 0.0.205 (200711031638):
 - added pli.objutils.termsuper (see doc for details).
