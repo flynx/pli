@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071106142034'''
+__sub_version__ = '''20071106200528'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -11,6 +11,7 @@ import pli.tags.generic as generic
 import pli.tags.tag as tag
 import pli.tags.path as path
 import pli.objutils as objutils
+import pli.pattern.mixin.mapping as mapping
 
 ##import oid
 
@@ -224,12 +225,42 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		return self._getobject(oid).update(**attrs)
 	
 
+#----------------------------------------TagTreePathProxyMappingMixin---
+# XXX make this a tad more efficient...
+class TagTreePathProxyMappingMixin(mapping.Mapping):
+	'''
+	'''
+	def __getitem__(self, name):
+		'''
+		'''
+		return self._getobject(name)
+	def __setitem__(self, name, val):
+		'''
+		'''
+		raise NotImplementedError
+	def __delitem__(self, name):
+		'''
+		'''
+		raise NotImplementedError
+	def __iter__(self, name):
+		'''
+		'''
+		for o in self.list():
+			yield o
+
+
+#---------------------------------------------TagTreePathProxyMapping---
+class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
+	'''
+	'''
+	pass
+
 
 #-------------------------------------------------------------TagTree---
 class TagTree(tag.TagSet):
 	'''
 	'''
-	__node_path_proxy__ = TagTreePathProxy
+	__node_path_proxy__ = TagTreePathProxyMapping
 	
 	def __getattr__(self, name):
 		'''
