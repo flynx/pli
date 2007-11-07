@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071107044841'''
+__sub_version__ = '''20071107073226'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -102,7 +102,7 @@ class NodeConstructorWithCallbackMixin(object):
 	# defines the name of the inteface method called when the object is
 	# created.
 	# signature:
-	# 	<method-name>(tagset, tags)
+	# 	<method-name>(oid, tagset, tags)
 	__node_constructor_callback_name__ = '__ontreenodecreate__'
 
 	def __call__(self, *p, **n):
@@ -111,7 +111,7 @@ class NodeConstructorWithCallbackMixin(object):
 		res = super(NodeConstructorWithOIDReturnMixin, self).__call__(*p, **n)
 		# call the interface method...
 		if hasattr(res, self.__node_constructor_callback_name__):
-			getattr(res, self.__node_constructor_callback_name__)(self.__tagset__, self.__object_tags__)
+			getattr(res, self.__node_constructor_callback_name__)(getoid(res), self.__tagset__, self.__object_tags__)
 		return res
 
 
