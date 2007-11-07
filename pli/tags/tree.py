@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071106200528'''
+__sub_version__ = '''20071107044841'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -242,11 +242,11 @@ class TagTreePathProxyMappingMixin(mapping.Mapping):
 		'''
 		'''
 		raise NotImplementedError
-	def __iter__(self, name):
+	def __iter__(self):
 		'''
 		'''
 		for o in self.list():
-			yield o
+			yield o['oid']
 
 
 #---------------------------------------------TagTreePathProxyMapping---
