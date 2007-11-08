@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071031133629'''
+__sub_version__ = '''20071108071533'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -258,6 +258,14 @@ def links(tagdb, obj):
 
 #-----------------------------------------------------------------------
 # user interface functions...
+def addtags(tagdb, *tags):
+	'''
+	add empty tags to tag store.
+	'''
+	for tag in tags:
+		tagdb[tag] = set()
+
+
 #-----------------------------------------------------------------tag---
 # XXX this has two effects that might be wrong:
 # 		1) an object is tagged by itself (the problem is link())

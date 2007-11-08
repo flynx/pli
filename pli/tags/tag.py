@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071031134659'''
+__sub_version__ = '''20071108071512'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -42,6 +42,15 @@ class AbstractTagSet(object):
 #-----------------------------------------------------------------------
 # the folowing functions use the tagset interface instead of directly
 # accessing the _tag and _untag functions.
+#--------------------------------------------------------------addtag---
+def addtag(tagset, *tags):
+	'''
+	'''
+	if not isinstance(tagset, AbstractTagSet):
+		raise TypeError, 'the tagset must be a decendant of AbstractTagSet.'
+	return tagset.addtag(obj, *tags)
+
+
 #-----------------------------------------------------------------tag---
 def tag(tagset, obj, *tags):
 	'''
