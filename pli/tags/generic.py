@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071108071533'''
+__sub_version__ = '''20071108073420'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -263,7 +263,8 @@ def addtags(tagdb, *tags):
 	add empty tags to tag store.
 	'''
 	for tag in tags:
-		tagdb[tag] = set()
+		if tag not in tagdb:
+			tagdb[tag] = set()
 
 
 #-----------------------------------------------------------------tag---
@@ -460,6 +461,9 @@ if __name__ == '__main__':
 	untag(ts1, 'a', 'a')
 	pprint(ts1)
 	print istagsconsistent(ts1)
+
+	addtags(ts1, 'aaa', 'bbb')
+	print ts1['aaa']
 	
 
 

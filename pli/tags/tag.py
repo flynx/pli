@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071108071512'''
+__sub_version__ = '''20071108073639'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -42,13 +42,13 @@ class AbstractTagSet(object):
 #-----------------------------------------------------------------------
 # the folowing functions use the tagset interface instead of directly
 # accessing the _tag and _untag functions.
-#--------------------------------------------------------------addtag---
-def addtag(tagset, *tags):
+#-------------------------------------------------------------addtags---
+def addtags(tagset, *tags):
 	'''
 	'''
 	if not isinstance(tagset, AbstractTagSet):
 		raise TypeError, 'the tagset must be a decendant of AbstractTagSet.'
-	return tagset.addtag(obj, *tags)
+	return tagset.addtags(obj, *tags)
 
 
 #-----------------------------------------------------------------tag---
@@ -87,6 +87,10 @@ class TagSet(AbstractTagSet, dict):
 	# XXX do we need the __XXX__ customization methods here??
 
 	# tagset inteface...
+	def addtags(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.addtags(self, *tags)
 	def tag(self, obj, *tags):
 		'''
 		'''
@@ -171,6 +175,11 @@ class TagSetWithSplitStore(AbstractTagSet):
 		raise NotImplementedError
 	
 	# tagset inteface...
+	##!!! revise... (should this always add to the index?)
+	def addtags(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.addtags(self.__tag_store__, *tags)
 	def tag(self, obj, *tags):
 		'''
 		'''
@@ -273,6 +282,7 @@ if __name__ == '__main__':
 	print ts[OBJECT]
 	print
 	print
+	print ts.addtags('x', 'y', 'z')
 
 
 	class TSWSS(TagSetWithSplitStore):
@@ -296,6 +306,7 @@ if __name__ == '__main__':
 	print tss.__object_store__.keys()
 	print
 	print
+	print tss.addtags('x', 'y', 'z')
 
 	
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071107073226'''
+__sub_version__ = '''20071108073717'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -396,6 +396,9 @@ if __name__ == '__main__':
 	print
 	print tree.relatedtags()
 	print tree.some_other_tag.relatedtags()
+
+	print tree.addtags('xxx', 'yyy')
+	print tree.xxx.keys()
 		
 
 
