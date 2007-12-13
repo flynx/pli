@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071108073420'''
+__sub_version__ = '''20071213162000'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -26,10 +26,22 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 #     modules...
 #
 #
-# TODO add an iterative select...
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#
+# TODO add an iterative select that goes good on memeory (different
+#      algorithm)...
 # TODO generic methods to check for tags, or if a tag exists... etc.
-# TODO make the TAG_TAG and OBJECT_TAG tags optional...
-# TODO make the TAG_TAG and OBJECT_TAG tags confugurable...
+# TODO make the TAG_TAG and OBJECT_TAG tags optional and/or 
+#      confugurable...
+#      the problem here is the lack of ability to control these tags;
+#      in cases it might be usefull to be able to add a third system
+#      tag or remove one...
+#      ....this may be done as a seporate layer
+#
+# TODO add more basic tag operations:
+# 		intersect		- select(...) 			done.
+# 		unite			- ???
+# 		exclude			- 						done but not here.
 #
 #
 #
@@ -110,6 +122,22 @@ OBJECT_TAG = 'OBJECT'
 
 
 #-----------------------------------------------------------------------
+# helpers...
+#--------------------------------------------------------------getset---
+def getset(tagdb):
+	'''
+	get the set constructor form the tagdb.
+
+	the tagdb can control which constructor is used to create internal 
+	sets via the "__stored_set_constructor__" attribute.
+
+	default constructor is set.
+	'''
+	return getattr(tagdb, '__stored_set_constructor__', set)
+
+
+
+#-----------------------------------------------------------------------
 # store-level functions...
 #----------------------------------------------------istagsconsistent---
 # a store is consistent if:
@@ -172,13 +200,14 @@ def filltaggaps(tagdb):
 	# NOTE: this is split in two so as to not iterate and modify the
 	#       store at the same time...
 	tdb_diff = {}
+	tdbset = getset(tagdb)
 	# build the diff correcting the errors...
 	for key, dif in itertaggaps(tagdb):
 		for k in dif:
 			if k in tdb_diff:
 				tdb_diff[k].update((key,))
 			else:
-				tdb_diff[k] = set((key,))
+				tdb_diff[k] = tdbset((key,))
 	# apply the diff created above...
 	for k, rel in tdb_diff.items():
 		# add a link to self (XXX this should be in _iter_store_gaps)
@@ -203,6 +232,7 @@ def link(tagdb, obj, *objs):
 	link the given objects.
 	'''
 	tt = [obj] + list(objs)
+	tdbset = getset(tagdb)
 
 	for t in set(tt):
 		# remove one occurrence of self...
@@ -212,7 +242,7 @@ def link(tagdb, obj, *objs):
 		if t in tagdb:
 			tagdb[t].update(tt_c)
 		else:
-			tagdb[t] = set(tt_c)
+			tagdb[t] = tdbset(tt_c)
 	return tagdb
 
 
@@ -258,13 +288,32 @@ def links(tagdb, obj):
 
 #-----------------------------------------------------------------------
 # user interface functions...
+#-------------------------------------------------------------addtags---
+# XXX should this tag the tag with TAG_TAG???
 def addtags(tagdb, *tags):
 	'''
 	add empty tags to tag store.
 	'''
+	tdbset = getset(tagdb)
 	for tag in tags:
 		if tag not in tagdb:
-			tagdb[tag] = set()
+			tagdb[tag] = tdbset()
+
+
+#----------------------------------------------------------------_tag---
+# XXX should this be an iterator?
+def _tag(tagdb, obj, *tags):
+	'''
+	raw version of the tag(...). this does not enforce the use of system tags.
+
+	WARNING: not recommended for direct use.
+	'''
+	# the tag tag...
+	for t in tags:
+		# XXX revise: there should be a better and faster way to do this...
+		# link the object and tag...
+		link(tagdb, obj, t)
+	return tagdb
 
 
 #-----------------------------------------------------------------tag---
@@ -272,6 +321,12 @@ def addtags(tagdb, *tags):
 # 		1) an object is tagged by itself (the problem is link())
 # 		2) all tags (relations) are symetrical... (might need to have
 # 		   exceptions like OBJECT_TAG and TAG_TAG) 
+# XXX need a way to control the addition of TAG_TAG and OBJECT_TAG...
+#     ...might be good to add a LL layer...
+# XXX make error handling related to use of TAG_TAG and OBJECT_TAG
+#     optional...
+# XXX use the _tag function... (???)
+# NOTE: adds TAG_TAG and OBJECT_TAG...
 def tag(tagdb, obj, *tags):
 	'''
 	tag an object...
@@ -291,9 +346,12 @@ def tag(tagdb, obj, *tags):
 	for t in tags:
 		if TAG_TAG not in tagdb.get(t, ()):
 			link(tagdb, t, TAG_TAG)
-		# XXX revise: there should be a better and faster way to do this...
-		# link the object and tag...
-		link(tagdb, obj, t)
+##		# XXX revise: there should be a better and faster way to do this...
+##		# link the object and tag...
+##		link(tagdb, obj, t)
+	# XXX two loops is not good... may be a good idea to make _tag an
+	#     iterator/generator....
+	_tag(tagdb, obj, *tags)
 	# the object tag...
 	if OBJECT_TAG not in tagdb.get(obj, ()):
 		link(tagdb, obj, OBJECT_TAG)
@@ -309,6 +367,7 @@ def tag(tagdb, obj, *tags):
 #---------------------------------------------------------------untag---
 ##!!! test: appears to be broken !!!##
 ##!!! what should we do here with the special tags here???
+# NOTE: uses TAG_TAG and OBJECT_TAG... (mostly error handling)
 def untag(tagdb, obj, *tags):
 	'''
 	remove the tag relation.
@@ -324,6 +383,7 @@ def untag(tagdb, obj, *tags):
 
 
 #----------------------------------------------------------------tags---
+# NOTE: uses both TAG_TAG and OBJECT_TAG...
 def tags(tagdb, obj):
 	'''
 	return the tags tagging the object.
@@ -335,6 +395,7 @@ def tags(tagdb, obj):
 
 #---------------------------------------------------------relatedtags---
 # XXX seam relatively straightforward.... revise for efficiency...
+# NOTE: uses OBJECT_TAG...
 def relatedtags(tagdb, *tags):
 	'''
 	return the related tags to the given.
@@ -357,6 +418,8 @@ def relatedtags(tagdb, *tags):
 
 
 #--------------------------------------------------------------select---
+# XXX is this a good name at this? (should be something like "intersect"?)
+# NOTE: does not use either TAG_TAG or OBJECT_TAG directly...
 def select(tagdb, *tags):
 	'''
 	select a set of data using tags.

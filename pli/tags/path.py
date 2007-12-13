@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071015022637'''
+__sub_version__ = '''20071213162820'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -33,8 +33,10 @@ class RecursiveAttrPathProxy(object):
 		'''
 		if self._callback != None:
 			return self._callback(self._root, self._path, *p, **n)
-		return self.__getattrpath__(self._root, self._path, *p, **n)
-	##!!! revise!
+		return self.__getattrpath__(self._root, self._path)(*p, **n)
+	# XXX the bad thing here is that this will essentially call
+	#     root.__getattr__ which most likely called us... this this
+	#     may result in an infinite recursion...
 	def __getattrpath__(self, root, path):
 		'''
 		'''
@@ -55,7 +57,7 @@ if __name__ == "__main__":
 		def __getattr__(self, name):
 			'''
 			'''
-			return getattr(BaseRecursiveAttrPathProxy(self, (), self._printpath), name)
+			return getattr(RecursiveAttrPathProxy(self, (), self._printpath), name)
 		def _printpath(self, root, path, *p, **n):
 			'''
 			'''

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071108073717'''
+__sub_version__ = '''20071213162625'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -260,6 +260,11 @@ class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 class TagTree(tag.TagSet):
 	'''
 	'''
+	# this is needed here as the attr proxy try and get it othewise...
+	# ...another way to go is add an exception to the .__getattr__
+	# method, explicitly raising attrerror when this is not here...
+	__stored_set_constructor__ = set
+
 	__node_path_proxy__ = TagTreePathProxyMapping
 	
 	def __getattr__(self, name):

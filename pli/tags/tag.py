@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071108073639'''
+__sub_version__ = '''20071117150132'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -18,17 +18,29 @@ import pli.pattern.mixin.mapping as mapping
 # 	- One Of		: a set of tags is defined and the object is tagged
 #				 	  with one and only one of the tags in set.
 #
-##!!! do an iterative select...
+# TODO need more tag operations:
+# 		unite(*tags)		- return objects that contain at least one
+# 							  of the tags...
+# TODO do an iterative select...
+#
 #------------------------------------------------------AbstractTagSet---
 class AbstractTagSet(object):
 	'''
 	'''
 	# tagset inteface...
+	def addtags(self, *tags):
+		'''
+		'''
+		raise NotImplementedError
 	def tag(self, obj, *tags):
 		'''
 		'''
 		raise NotImplementedError
 	def untag(self, obj, *tags):
+		'''
+		'''
+		raise NotImplementedError
+	def relatedtags(self, *tags):
 		'''
 		'''
 		raise NotImplementedError
@@ -99,14 +111,15 @@ class TagSet(AbstractTagSet, dict):
 		'''
 		'''
 		return self.__tag_engine__.untag(self, obj, *tags)
-	def select(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.select(self, *tags)
 	def relatedtags(self, *tags):
 		'''
 		'''
 		return self.__tag_engine__.relatedtags(self, *tags)
+
+	def select(self, *tags):
+		'''
+		'''
+		return self.__tag_engine__.select(self, *tags)
 	
 	# XXX add store management inteface...
 ##	def isconsistent(self):

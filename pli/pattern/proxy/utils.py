@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20071101130642'''
+__sub_version__ = '''20071206153833'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -49,10 +49,51 @@ def createmethodwrappers(source_dict, method_list, wrapper, target_dict=None):
 
 
 #-----------------------------------------------------------------------
-#--------------------------------------------------genericproxymethod---
+# XXX attempt to get the class name form the context...
+##!!! TEST !!!##
+def superproxymethod(methodname, source_attr, class_name, exceptions=Exception, depth=1, decorators=()):
+	'''
+	create a proxy to the method name in the containing namespace.
+	
+	this constructed proxy will attempt to call an existing method, and
+	in case it fails with exceptions, it will call the alternative from 
+	the source_attr.
+	
+	NOTE: this will add the method_name to the containing namespace.
+	NOTE: source_attr is to be used as the attr name referencing the source object.
+	'''
+	# text of the new function....
+	txt = '''\
+def %(method_name)s(self, *p, **n):
+	"""
+	this is the proxy to %(method_name)s method.
+	"""
+	try:
+		return super(%(class_name)s, self).%(method_name)s(*p, **n)
+	except (%(exceptions)s):
+		return self.%(source_attr)s.%(method_name)s(*p, **n)
+proxy = %(method_name)s'''
+	# execute the above code...
+	exec (txt % {
+			'method_name': method_name, 
+			'source_attr': source_attr,
+			'class_name': class_name,
+			'exceptions': type(exceptions) in (tuple, list) \
+								and ', '.join([ e.__name__ for e in exceptions ]) \
+								or exceptions.__name__,
+			})
+	# run the decorators...
+	for d in decorators:
+		proxy = d(proxy)
+	# update the NS...
+	sys._getframe(depth).f_locals[method_name] = proxy
+
+
+#---------------------------------------------------------proxymethod---
+# TODO create a version of this with super call...
 def proxymethod(method_name, source_attr, depth=1, decorators=()):
 	'''
-	this will create a proxy to the method name in the containing namespace.
+	create a proxy to the method name in the containing namespace.
 
 	NOTE: this will add the method_name to the containing namespace.
 	NOTE: source_attr is to be used as the attr name referencing the source object.
@@ -67,16 +108,17 @@ def %(method_name)s(self, *p, **n):
 proxy = %(method_name)s'''
 	# execute the above code...
 	exec (txt % {'method_name': method_name, 'source_attr': source_attr})
-	# update the NS...
+	# run the decorators...
 	for d in decorators:
 		proxy = d(proxy)
+	# update the NS...
 	sys._getframe(depth).f_locals[method_name] = proxy
 
 
 #--------------------------------------------------------proxymethods---
 def proxymethods(names, source_attr, decorators=()):
 	'''
-	this will generate a direct proxy for each name.
+	generate a direct proxy for each name.
 	'''
 	for name in names:
 		proxymethod(name, source_attr, depth=2, decorators=decorators)
