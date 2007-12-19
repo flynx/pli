@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071213162820'''
+__sub_version__ = '''20071219035635'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -26,6 +26,10 @@ class RecursiveAttrPathProxy(object):
 		'''
 		cahe the attribute access.
 		'''
+		##!!!!!!
+##		if name in ('__getstate__', '__setstate__', '__reduce__', '__reduce_ex__', '__slots__'):
+##			##!!! what should we do here???
+##			return object.__getattribute__(self._root, name)
 		return self.__class__(self._root, self._path + (name,), self._callback, self._verify)
 	# XXX I don't like this...
 	def __call__(self, *p, **n):
@@ -40,11 +44,13 @@ class RecursiveAttrPathProxy(object):
 	def __getattrpath__(self, root, path):
 		'''
 		'''
+		print path
 ##		res = root
 ##		for p in path:
 ##			res = getattr(res, p)
 ##		return res
 		raise NotImplementedError
+##		raise AttributeError, path[0]
 
 
 
@@ -67,6 +73,19 @@ if __name__ == "__main__":
 
 	print p.a.b.c.d
 	p.a.b.c.d()
+
+	p.xxx = 1
+	print p.xxx
+
+	import pickle
+
+	pp = pickle.dumps(p)
+
+	ppp = pickle.loads(pp)
+	print ppp.xxx
+
+	print ppp.a.b.c.d
+	ppp.a.b.c.d()
 
 
 

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.19'''
-__sub_version__ = '''20060718234014'''
+__sub_version__ = '''20071215101236'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -31,11 +31,25 @@ import new
 import types
 import weakref
 import copy
+import warnings
+
+
+
+#-----------------------------------------------------------------------
+#----------------------------------------------------------ProxyError---
+class ProxyError(Exception):
+	'''
+	'''
+	pass
 
 
 
 #-----------------------------------------------------------------------
 # NOTE: the folowing two functions are *Evil*... :)
+# NOTE: the folowing two are different from the ones in
+#       pli.pattern.proxy.utils in that they use getproxytarget instead
+#       of proxy attr...
+#       XXX pind a way to combine the two...
 #---------------------------------------------------------proxymethod---
 def proxymethod(method_name, depth=1):
 	'''
@@ -522,12 +536,17 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 	# this may either be None or a dict-like (usualy a weakref.WeakKeyDictionary)
 	# if None the proxy caching will be disabled
 ##	__proxy_cache__ = _InheritAndOverrideProxy_cache
+	# if this is set fail if a proxy can't be created...
+	##!!! XXX change this to True
+##	__fail_on_no_proxy__ = True
+	__fail_on_no_proxy__ = False
 
 	def __new__(cls, source, *p, **n):
 		'''
 		'''
 		osetattr = object.__setattr__
 		tsetattr = type.__setattr__
+		ogetattribute = object.__getattribute__
 		cls_name = cls.__name__
 		proxy = cls
 		try:
@@ -537,6 +556,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 				return _obj
 			# create an object of a class (also just created) inherited
 			# from cls and source.__class__
+			# XXX this failes for builtin types... (try to resolve...)
 			if isinstance(source, cls):
 				##!!! HACK !!!##
 				# resolve a C3 mro conflict by cloning the parent
@@ -556,7 +576,7 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 			cls.__proxy_count__ += 1
 			# considering that the class we just created is unique we
 			# get the new class....
-			cls = object.__getattribute__(_obj, '__class__')
+			cls = ogetattribute(_obj, '__class__')
 			cls.__proxy__ = proxy
 			cls.__proxy_base__ = cls
 			# name the new class... 
@@ -602,15 +622,35 @@ class InheritAndOverrideProxy(CachedProxyMixin, ProxyWithReprMixin):
 				# callable wrapper hook...
 				if hasattr(cls, '__proxy_call__') and cls.__proxy_call__ != None:
 					return cls.__proxy_call__(source)
-				return source
+				# we cant create a proxy...
+				if cls.__fail_on_no_proxy__ == True:
+##					raise ProxyError, 'can\'t proxy object %s' % source
+					raise
+				else:
+					warnings.warn('proxy create failed, returning original result.\nreasnon:\n%s: %s' % (type(e).__name__, e))
+					##!!!!!! is this correct???
+					return source
 			# class (nested class constructors...)
 			elif callable(source):
 				# class wrapper hook...
 				if hasattr(cls, '__proxy_class__') and cls.__proxy_class__ != None:
 					return cls.__proxy_class__(source)
+				# we cant create a proxy...
+				if cls.__fail_on_no_proxy__ == True:
+##					raise ProxyError, 'can\'t proxy object %s' % source
+					raise
+				else:
+					warnings.warn('proxy create failed, returning original result.\nreasnon:\n%s: %s' % (type(e).__name__, e))
+					##!!!!!! is this correct???
+					return source
+			# we cant create a proxy...
+			if cls.__fail_on_no_proxy__ == True:
+##				raise ProxyError, 'can\'t proxy object %s' % source
+				raise
+			else:
+				warnings.warn('proxy create failed, returning original result.\nreasnon:\n%s: %s' % (type(e).__name__, e))
+				##!!!!!! is this correct???
 				return source
-			##!!!!!! is this correct???
-			return source
 		# process proxy cache...
 		cls._setcache(source, _obj)
 		return _obj

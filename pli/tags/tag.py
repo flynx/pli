@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071117150132'''
+__sub_version__ = '''20071215004558'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -83,8 +83,7 @@ def untag(tagset, obj, *tags):
 
 
 #-----------------------------------------------------------------------
-#--------------------------------------------------------------TagSet---
-class TagSet(AbstractTagSet, dict):
+class TagSetMixin(AbstractTagSet):
 	'''
 	this provides a direct and light inteface the the generic tag 
 	engine (or a similar inteface).
@@ -130,6 +129,13 @@ class TagSet(AbstractTagSet, dict):
 ##		'''
 ##		'''
 ##		pass
+
+
+#--------------------------------------------------------------TagSet---
+class TagSet(TagSetMixin, dict):
+	'''
+	'''
+	pass
 
 
 #------------------------------------------------TagSetWithSplitStore---

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071213162625'''
+__sub_version__ = '''20071219045713'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -256,20 +256,31 @@ class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 	pass
 
 
-#-------------------------------------------------------------TagTree---
-class TagTree(tag.TagSet):
+#--------------------------------------------------------TagTreeMixin---
+class TagTreeMixin(tag.AbstractTagSet):
 	'''
 	'''
 	# this is needed here as the attr proxy try and get it othewise...
 	# ...another way to go is add an exception to the .__getattr__
 	# method, explicitly raising attrerror when this is not here...
-	__stored_set_constructor__ = set
+##	__stored_set_constructor__ = None
 
 	__node_path_proxy__ = TagTreePathProxyMapping
 	
 	def __getattr__(self, name):
 		'''
 		'''
+		# support pickle...
+		##!!! automate this... (might be a good idea to put this into path.py)
+##		if name in (
+##				'__getstate__',
+##				'__setstate__',
+##				'__reduce__',
+##				'__reduce_ex__',
+##				'__slots__',
+##				'__getnewargs__'):
+		if name.startswith('__') and name.endswith('__'): 
+			return super(TagTreeMixin, self).__getattr__(name) 
 		return getattr(self.__node_path_proxy__(self, ()), name)
 
 ##	##!!! for type-checking to work need to split the tag method into two:
@@ -281,14 +292,21 @@ class TagTree(tag.TagSet):
 ##		for t in tags:
 ##			if type(t) not in (str, unicode):
 ##				raise TypeError, 'tag type must be str, got %s.' % type(t)
-##		return super(TagTree, self).tag(obj, *tags)
+##		return super(TagTreeMixin, self).tag(obj, *tags)
 	@public
 	def relatedtags(self, *tags):
 		'''
 		'''
 		# skip "special" constructor IDs...
-		return set( t for t in super(TagTree, self).relatedtags(*tags) 
+		return set( t for t in super(TagTreeMixin, self).relatedtags(*tags) 
 						if type(t) != tuple )
+
+
+#-------------------------------------------------------------TagTree---
+class TagTree(TagTreeMixin, tag.TagSet):
+	'''
+	'''
+	__stored_set_constructor__ = set
 
 
 
