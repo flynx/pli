@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071213162000'''
+__sub_version__ = '''20071228155716'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -418,6 +418,8 @@ def relatedtags(tagdb, *tags):
 
 
 #--------------------------------------------------------------select---
+# XXX make these return a sub-tagset to be able to efficiently chain
+#     operations...
 # XXX is this a good name at this? (should be something like "intersect"?)
 # NOTE: does not use either TAG_TAG or OBJECT_TAG directly...
 def select(tagdb, *tags):
@@ -433,7 +435,7 @@ def select(tagdb, *tags):
 	# if no tags are given return evrything we've got! :)
 	if len(tags) == 0:
 		return tagdb.keys()
-	# a small optimisation: order the tags to cut out as mach as
+	# a small optimisation: order the tags to intersect out as mach as
 	# possible as early as possible... (XXX check for better strategies)
 	l = list(tags)
 	l.sort(lambda a, b: cmp(len(tagdb[a]), len(tagdb[b])))
@@ -461,6 +463,28 @@ def iselect(tagdb, *tags):
 	      is needed use the non itarative version.
 	'''
 	raise NotImplementedError
+
+
+#---------------------------------------------------------excludeiter---
+def excludeiter(tagdb, objs, *tags):
+	'''
+	yield only objects that are not tagged with tags.
+	'''
+	for o in objs:
+		t = tagdb.get(o, None)
+		if t == None:
+			raise TypeError, 'object %s is not in the given tagdb.' %s (o,)
+		if len(t.intersection(tags)) != 0:
+			continue
+		yield o
+
+
+#-------------------------------------------------------------exclude---
+def exclude(tagdb, objs, *tags):
+	'''
+	exclude the objects tagged with tags from the object list.
+	'''
+	return set(excludeiter(tagdb, objs, *tags))
 
 
 
@@ -527,6 +551,9 @@ if __name__ == '__main__':
 
 	addtags(ts1, 'aaa', 'bbb')
 	print ts1['aaa']
+
+	print exclude(ts1, select(ts1, 'Y'), 'Y')
+	print exclude(ts1, select(ts1, 'Y'), 'X')
 	
 
 

@@ -1,5 +1,9 @@
-# this file was generated on [200712190501]
+# this file was generated on [200712281600]
 pli changes:
+
+version 0.0.209 (200712281559):
+- added exclude and excludeiter to pli.tags.generic
+- need to rethink the tag engine...
 
 version 0.0.205 (200711061536):
 - added pli.tags.utils
