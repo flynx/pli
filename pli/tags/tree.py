@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071219045713'''
+__sub_version__ = '''20080102021827'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -23,6 +23,7 @@ import pli.pattern.mixin.mapping as mapping
 #
 # TODO generate an ID for each object in store!!! (do as a mixin and
 #      possibly not here...)
+# TODO add support for different format tagchains...
 #
 #-----------------------------------------------------------------------
 ##!!! move somewhere and revise !!!##
@@ -60,14 +61,16 @@ class NodeConstructor(object):
 	def __init__(self, name, constructor, *tags):
 		'''
 		'''
-		if ('constructor', name) in self.__tagset__:
+##		if ('constructor', name) in self.__tagset__:
+		chain = self.__tagset__.tags2chain('constructor', name)
+		if chain in self.__tagset__:
 			raise TypeError, 'constructor id must be unique, id "%s" already exists!' % name
 		self.constructor_name = name
 		self._constructor = constructor
 		self._tags = tags
 		# tag self...
 		##!!! revise the constructor/name pair format... (use tag groups?)
-		self.__tagset__.tag(self, 'constructor', name, ('constructor', name), *tags)
+		self.__tagset__.tag(self, 'constructor', name, chain, *tags)
 	# XXX would be good to add the "format" support.... (this might be
 	#     too generic)
 	def __call__(self, *p, **n):
@@ -156,10 +159,14 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		if name.startswith('OID_'):
 			return self._getobject(name)
-		if ('constructor', name) in self._root:
+##		if ('constructor', name) in self._root:
+		chain = self._root.tags2chain('constructor', name)
+		if chain in self._root:
 			# XXX is this safe??? (constructors should be unique!)
 			##!!! WARNING: here the select also returns "tag".... check this out!
-			return [ o for o in self._root.select(('constructor', name)) if o != generic.TAG_TAG][0]
+##			return [ o for o in self._root.select(('constructor', name)) if o != generic.TAG_TAG][0]
+			return [ o for o in self._root.select(chain, generic.OBJECT_TAG)\
+						if o != generic.TAG_TAG][0]
 		return super(TagTreePathProxy, self).__getattr__(name)
 	
 	# public interface...
@@ -250,6 +257,7 @@ class TagTreePathProxyMappingMixin(mapping.Mapping):
 
 
 #---------------------------------------------TagTreePathProxyMapping---
+# XXX add exclude support...
 class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 	'''
 	'''
@@ -396,8 +404,10 @@ if __name__ == '__main__':
 	class B(object):
 		pass
 	
-	constructor('A', A, 'some_tag')
-	constructor('B', B, 'some_other_tag')
+	print 'creating constructors...'
+	print constructor('A', A, 'some_tag')
+	print constructor('B', B, 'some_other_tag')
+	print
 
 	print tree.constructor.list()
 	print
@@ -405,6 +415,7 @@ if __name__ == '__main__':
 	print
 	print tree.some_tag.relatedtags()
 	print
+	print tree.A
 	print tree.A()
 	print tree.some_tag.A()
 	print tree.some_tag.constructor.A()

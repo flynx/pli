@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071215004558'''
+__sub_version__ = '''20080102022334'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -34,6 +34,12 @@ class AbstractTagSet(object):
 		raise NotImplementedError
 	def tag(self, obj, *tags):
 		'''
+		'''
+		raise NotImplementedError
+	def _rawtag(self, obj, *tags):
+		'''
+
+		NOTE: this is not intended for direct use...
 		'''
 		raise NotImplementedError
 	def untag(self, obj, *tags):
@@ -106,6 +112,12 @@ class TagSetMixin(AbstractTagSet):
 		'''
 		'''
 		return self.__tag_engine__.tag(self, obj, *tags)
+	def _rawtag(self, obj, *tags):
+		'''
+
+		NOTE: this is not intended for direct use...
+		'''
+		return self.__tag_engine__._tag(self, obj, *tags)
 	def untag(self, obj, *tags):
 		'''
 		'''
@@ -131,8 +143,147 @@ class TagSetMixin(AbstractTagSet):
 ##		pass
 
 
+#--------------------------------------------TagSetWithTagChainsMixin---
+# XXX add chain formatting functions/methods...
+# 	   .getchain(*tags)
+class TagSetTagChainMixin(object):
+	'''
+
+	NOTE: this must be mixed with a valid tagset.
+	NOTE: by default the chains are represented as tuples.
+	'''
+	# the tag tagging the tagchains...
+	# NOTE: if this is None, do not tag chains
+	__chain_tag__ = 'TAGCHAIN'
+
+	# tag-chain specific methods...
+	def _ischain(self, tag):
+		'''
+		test if a tag is tagchain compatible.
+		'''
+		if type(tag) is tuple:
+			return True
+		return False
+	@staticmethod
+	def chain2tags(chain):
+		'''
+		return the tags in chain.
+		'''
+		# XXX check if cahin is a chain????
+		return tuple(chain)
+	@staticmethod
+	def tags2chain(*tags):
+		'''
+		'''
+		return tags
+	def _splitchains(self, tags):
+		'''
+		split the tags and chains.
+
+		returns: <tags>, <chians>
+		'''
+		t = ()
+		c = ()
+		ischain = self._ischain
+		for tag in tags:
+			if ischain(tag):
+				c += (tag,)
+			else:
+				t += (tag,)
+		return t, c
+	def _addchains(self, *chains):
+		'''
+		'''
+		for c in chains:
+			# check if chain exists...
+			if c not in self:
+				t = self.chain2tags(c)
+				if self.__chain_tag__ != None:
+					t += (self.__chain_tag__,)
+				self._rawtag(c, *(t+(tags.TAG_TAG,)))
+	
+	# tag interface...
+	def addtags(self, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		# process chains...
+		self._addchains(*chains)
+		super(TagSetTagChainMixin, self).addtags(*tags)
+		##!!! return??
+	def tag(self, obj, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		self._addchains(*chains)
+		return super(TagSetTagChainMixin, self).tag(obj, *(tags+chains))
+	def _rawtag(self, obj, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		self._addchains(*chains)
+		return super(TagSetTagChainMixin, self)._rawtag(obj, *(tags+chains))
+##	def untag(self, obj, *tags):
+##		'''
+##		'''
+##		tags, chaintags, chains = self._splitchains(tags)
+##		# XXX process chains...
+##		##!!!
+##		super(TagSetTagChainMixin, self).untag(obj, *tags)
+##		##!!! return??
+	##!!! is this correct???
+	def relatedtags(self, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		return super(TagSetTagChainMixin, self).relatedtags(*(tags+chains))
+
+	##!!! is this correct???
+	# XXX add more specific chain searches...
+	def select(self, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		return super(TagSetTagChainMixin, self).select(*(tags+chains))
+
+
+#-------------------------------------------------StringTagChainMixin---
+# XXX add consistency checking...
+class StringTagChainMixin(object):
+	'''
+	changes tagchain format to the folowing string syntax:
+
+		<tag>:<tag>[:...]
+
+	NOTE: this must be mixed with a valid tagset with chain support.
+	'''
+	def _ischain(self, tag):
+		'''
+		test if a tag is tagchain compatible.
+		'''
+		if type(tag) in (str, unicode) \
+				and ':' in tag \
+				and False not in [ len(t) > 0 for t in tag.split(':') ]:
+			return True
+		return False
+	@staticmethod
+	def chain2tags(chain):
+		'''
+		return the tags in chain.
+		'''
+		# XXX check if cahin is a chain????
+		return tuple(chain.split(':'))
+	@staticmethod
+	def tags2chain(*tags):
+		'''
+		'''
+		return ':'.join(tags)
+
+
 #--------------------------------------------------------------TagSet---
-class TagSet(TagSetMixin, dict):
+##class TagSet(TagSetMixin, dict):
+##class TagSet(TagSetTagChainMixin, TagSetMixin, dict):
+class TagSet(StringTagChainMixin, TagSetTagChainMixin, TagSetMixin, dict):
 	'''
 	'''
 	pass

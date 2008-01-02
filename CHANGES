@@ -1,5 +1,11 @@
-# this file was generated on [200712281600]
+# this file was generated on [200801030115]
 pli changes:
+
+version 0.0.217 (200801020225):
+- added tag chain support... (still both incomplete and experimental)
+  still todo:
+  	- search interface... (currently nothing changed and nothing special added)
+	- do some testing...
 
 version 0.0.209 (200712281559):
 - added exclude and excludeiter to pli.tags.generic
