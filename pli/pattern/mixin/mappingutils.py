@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080127070556'''
+__sub_version__ = '''20080127170722'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -154,12 +154,19 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 				return val
 			return _construct
 		self.__item_constructors__[name] = prepare(constructor)
-	##!!! needs better resolving... (self then parent)
 	@objutils.classinstancemethod
 	def unregconstructor(self, name):
 		'''
+
+		NOTE: this will only remove the local constructor.
 		'''
-		del self.__item_constructors__[name] 
+		if '__item_constructors__' in vars(self):
+			# NOTE: this is a dict chain object...
+			del self.__item_constructors__[name] 
+		else:
+			if name in self.__item_constructors__:
+				raise KeyError, '"%s" (constructor not local)' % name
+			raise KeyError, name
 ##	@objutils.classinstancemethod
 ##	def listconstructors(self):
 ##		'''
