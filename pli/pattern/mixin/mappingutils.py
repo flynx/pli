@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080127051039'''
+__sub_version__ = '''20080127060119'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -165,7 +165,6 @@ class MappingWithKeyTypeRestrictoinMixin(mapping.BasicMapping):
 		'''
 		raise NotImplementedError
 
-	##!!! add super call...
 	def __setitem__(self, name, value):
 		'''
 		'''
@@ -182,7 +181,6 @@ class MappingWithValueTypeRestrictoinMixin(mapping.BasicMapping):
 		'''
 		raise NotImplementedError
 
-	##!!! add super call...
 	def __setitem__(self, name, value):
 		'''
 		'''
