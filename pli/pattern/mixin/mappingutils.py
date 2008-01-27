@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080127172610'''
+__sub_version__ = '''20080128011401'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -112,10 +112,101 @@ class Attr2MappingMixin(mapping.BasicMapping):
 
 
 #-----------------------------------------------------------------------
+#----------------------------------------ConstructorRegistrationMixin---
+# XXX this is mot mapping specific... move someplace more logical...
+# XXX might be a good idea to uncouple this from DictChain...
+# XXX this is generic.... might be a good idea to remove the
+#     "constructor" suffix...
+class ConstructorRegistrationMixin(object):
+	'''
+	defines constructor registration mechanics.
+
+	NOTE: this will populates .__item_constructors__ in it's class or object 
+	      namespace (no other work needed).
+	NOTE: .__constructor_wrapper__ need to be overloaded.
+	'''
+	# mapping containing consturctos...
+	# a constructor may take any arguments and must return the
+	# constructed object...
+	# NOTE: DictChain object will be used as a container here.
+	__item_constructors__ = None
+	# callable. wrap or prepare the constructor.
+	# this' return will be stored as the constructor in .__item_constructors__
+	# NOTE: this is a good place to take care of object storing.
+	# NOTE: if this is None, no wrapper will be used and the
+	#       constructor will be stored as-is.
+	__constructor_wrapper__ = None
+
+	@objutils.classinstancemethod
+	def regconstructor(self, name, constructor):
+		'''
+		'''
+		if self.__item_constructors__ == None:
+			# XXX might be good to make chaining optional...
+			self.__item_constructors__ = logictypes.DictChain()
+		# XXX vars might not work in all cases (when the ns interface is
+		#     redefined)...
+		elif '__item_constructors__' not in vars(self):
+			p = self.__item_constructors__
+			# XXX might be good to make chaining optional...
+			c = self.__item_constructors__ = logictypes.DictChain()
+			c.chain_next = p
+		if self.__constructor_wrapper__ != None:
+			self.__item_constructors__[name] = self.__constructor_wrapper__(constructor)
+		else:
+			self.__item_constructors__[name] = constructor
+	@objutils.classinstancemethod
+	def unregconstructor(self, name):
+		'''
+
+		NOTE: this will only remove the local constructor.
+		'''
+		if '__item_constructors__' in vars(self):
+			# NOTE: this is a dict chain object...
+			del self.__item_constructors__[name] 
+		else:
+			if name in self.__item_constructors__:
+				raise KeyError, '"%s" (constructor not local)' % name
+			raise KeyError, name
+##	@objutils.classinstancemethod
+##	def listconstructors(self):
+##		'''
+##		'''
+##		return self.__item_constructors__ 
+
+
+#------------------------------------------AttrConstructorAccessMixin---
+# XXX this is mot mapping specific... move someplace more logical...
+class AttrConstructorAccessMixin(object):
+	'''
+	provides access to registred constructors via an attribute interface.
+
+	NOTE: this needs a populated .__item_constructors__ in it's namespace.
+	'''
+	__item_constructors__ = None
+
+	def __getattr__(self, name):
+		'''
+		'''
+		if name in self.__item_constructors__:
+			return new.instancemethod(self.__item_constructors__[name], self, self.__class__)
+		# XXX do we need a try block here??? (may block some errors)
+		try:
+			return super(AttrConstructorAccessMixin, self).__getattr__(name)
+		except AttributeError:
+			raise AttributeError, name
+
+
 #-------------------------------------MappingWithItemConstructorMixin---
 # TODO make a version/mixin where constructors are searched in
 #      parents...
-class MappingWithItemConstructorMixin(mapping.BasicMapping):
+# XXX might be a good idea to seporate the store and the constructor
+#     interfaces...
+#     also, may be good to make this more generic (not just a mapping)
+class MappingWithItemConstructorMixin(
+						ConstructorRegistrationMixin,
+						AttrConstructorAccessMixin, 
+						mapping.BasicMapping):
 	'''
 	provide a constructor interface.
 
@@ -134,6 +225,8 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 	      its' context only (class constructors form the class and the 
 		  instance constructors from the instance).
 	NOTE: instance constructors overshadow the class constructors.
+	NOTE: this needs actual mapping mechanics...
+	      (see: pli.pattern.mixin.mapping.Mapping)
 
 
 	minimal example:
@@ -157,67 +250,22 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 		print m			# -> {'a': '123', 'b', 321}
 
 	'''
-	# mapping containing item consturctos...
-	# a constructor may take any arguments and must return the
-	# constructed object...
-	# NOTE: when the constructor is called form the object it must take
-	#       the key for the object as the fist argument folowed bu
-	#       normal constructor args...
-	__item_constructors__ = None
-
-	def __getattr__(self, name):
-		'''
-		'''
-		if name in self.__item_constructors__:
-			return new.instancemethod(self.__item_constructors__[name], self, self.__class__)
-		# XXX do we need a try block here??? (may block some errors)
-		try:
-			return super(MappingWithItemConstructorMixin, self).__getattr__(name)
-		except AttributeError:
-			raise AttributeError, name
-	
-	# XXX this might not be pickle safe...
 	# XXX might be a good idea to warn if the constructed key overlaps
 	#     with a constructor name...
-	@objutils.classinstancemethod
-	def regconstructor(self, name, constructor):
+	@staticmethod
+	def __constructor_wrapper__(constructor):
 		'''
-		'''
-		if self.__item_constructors__ == None:
-			self.__item_constructors__ = logictypes.DictChain()
-		# XXX vars might not work in all cases (when the ns interface is
-		#     redefined)...
-		elif '__item_constructors__' not in vars(self):
-			p = self.__item_constructors__
-			c = self.__item_constructors__ = logictypes.DictChain()
-			c.chain_next = p
-		# XXX is this approach pickle-safe???
-		def prepare(constructor):
-			def _construct(self, name, *p, **n):
-				val = constructor(*p, **n)
-				self[name] = val
-				return val
-			return _construct
-		self.__item_constructors__[name] = prepare(constructor)
-	@objutils.classinstancemethod
-	def unregconstructor(self, name):
-		'''
+		wrapper that will save the constructor return to self as an item.
 
-		NOTE: this will only remove the local constructor.
+		NOTE: this adds a key argument to the constructor method, used as 
+		      key to store the result.
 		'''
-		if '__item_constructors__' in vars(self):
-			# NOTE: this is a dict chain object...
-			del self.__item_constructors__[name] 
-		else:
-			if name in self.__item_constructors__:
-				raise KeyError, '"%s" (constructor not local)' % name
-			raise KeyError, name
-##	@objutils.classinstancemethod
-##	def listconstructors(self):
-##		'''
-##		'''
-##		return self.__item_constructors__ 
-
+		def _construct(self, name, *p, **n):
+			val = constructor(*p, **n)
+			self[name] = val
+			return val
+		return _construct
+	
 
 
 #-----------------------------------------------------------------------
