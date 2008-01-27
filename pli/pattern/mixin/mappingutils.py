@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080128011401'''
+__sub_version__ = '''20080128013132'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -115,13 +115,16 @@ class Attr2MappingMixin(mapping.BasicMapping):
 #----------------------------------------ConstructorRegistrationMixin---
 # XXX this is mot mapping specific... move someplace more logical...
 # XXX might be a good idea to uncouple this from DictChain...
+# XXX also, might be good to make chaining customizable...
 # XXX this is generic.... might be a good idea to remove the
 #     "constructor" suffix...
+#     ...this change will need name modification policy so as to be
+#     able to use this in several contexts...
 class ConstructorRegistrationMixin(object):
 	'''
 	defines constructor registration mechanics.
 
-	NOTE: this will populates .__item_constructors__ in it's class or object 
+	NOTE: this will populates .__constructor_store__ in it's class or object 
 	      namespace (no other work needed).
 	NOTE: .__constructor_wrapper__ need to be overloaded.
 	'''
@@ -129,70 +132,80 @@ class ConstructorRegistrationMixin(object):
 	# a constructor may take any arguments and must return the
 	# constructed object...
 	# NOTE: DictChain object will be used as a container here.
-	__item_constructors__ = None
+	# XXX make this costomizable... (???)
+	__constructor_store__ = None
 	# callable. wrap or prepare the constructor.
-	# this' return will be stored as the constructor in .__item_constructors__
+	# this' return will be stored as the constructor in .__constructor_store__
 	# NOTE: this is a good place to take care of object storing.
 	# NOTE: if this is None, no wrapper will be used and the
 	#       constructor will be stored as-is.
+	# NOTE: what arguments the constructor will be passed depends on
+	#       how it will be called... (what args it expects depends on
+	#       how it is wrapped)
 	__constructor_wrapper__ = None
 
 	@objutils.classinstancemethod
 	def regconstructor(self, name, constructor):
 		'''
 		'''
-		if self.__item_constructors__ == None:
+		if self.__constructor_store__ == None:
 			# XXX might be good to make chaining optional...
-			self.__item_constructors__ = logictypes.DictChain()
+			self.__constructor_store__ = logictypes.DictChain()
 		# XXX vars might not work in all cases (when the ns interface is
 		#     redefined)...
-		elif '__item_constructors__' not in vars(self):
-			p = self.__item_constructors__
+		elif '__constructor_store__' not in vars(self):
+			p = self.__constructor_store__
 			# XXX might be good to make chaining optional...
-			c = self.__item_constructors__ = logictypes.DictChain()
+			c = self.__constructor_store__ = logictypes.DictChain()
 			c.chain_next = p
 		if self.__constructor_wrapper__ != None:
-			self.__item_constructors__[name] = self.__constructor_wrapper__(constructor)
+			self.__constructor_store__[name] = self.__constructor_wrapper__(constructor)
 		else:
-			self.__item_constructors__[name] = constructor
+			self.__constructor_store__[name] = constructor
 	@objutils.classinstancemethod
 	def unregconstructor(self, name):
 		'''
 
 		NOTE: this will only remove the local constructor.
 		'''
-		if '__item_constructors__' in vars(self):
+		if '__constructor_store__' in vars(self):
 			# NOTE: this is a dict chain object...
-			del self.__item_constructors__[name] 
+			del self.__constructor_store__[name] 
 		else:
-			if name in self.__item_constructors__:
+			if name in self.__constructor_store__:
 				raise KeyError, '"%s" (constructor not local)' % name
 			raise KeyError, name
 ##	@objutils.classinstancemethod
 ##	def listconstructors(self):
 ##		'''
 ##		'''
-##		return self.__item_constructors__ 
+##		return self.__constructor_store__ 
 
 
-#------------------------------------------AttrConstructorAccessMixin---
+#-------------------------------AttrConstructorAccessWithSelfArgMixin---
 # XXX this is mot mapping specific... move someplace more logical...
-class AttrConstructorAccessMixin(object):
+# XXX this is generic.... might be a good idea to remove the
+#     "constructor" suffix...
+# XXX do we need a version without self passing??
+class AttrConstructorAccessWithSelfArgMixin(object):
 	'''
 	provides access to registred constructors via an attribute interface.
 
-	NOTE: this needs a populated .__item_constructors__ in it's namespace.
+	NOTE: this needs a populated .__constructor_store__ in it's namespace.
+	NOTE: when the constructor is called it will be passed self as the first
+	      argument.
 	'''
-	__item_constructors__ = None
+	__constructor_store__ = None
 
 	def __getattr__(self, name):
 		'''
 		'''
-		if name in self.__item_constructors__:
-			return new.instancemethod(self.__item_constructors__[name], self, self.__class__)
+		if name in self.__constructor_store__:
+			# curry self into the constructor... 
+			return new.instancemethod(self.__constructor_store__[name], self, self.__class__)
 		# XXX do we need a try block here??? (may block some errors)
 		try:
-			return super(AttrConstructorAccessMixin, self).__getattr__(name)
+			return super(AttrConstructorAccessWithSelfArgMixin, self).__getattr__(name)
 		except AttributeError:
 			raise AttributeError, name
 
@@ -205,7 +218,7 @@ class AttrConstructorAccessMixin(object):
 #     also, may be good to make this more generic (not just a mapping)
 class MappingWithItemConstructorMixin(
 						ConstructorRegistrationMixin,
-						AttrConstructorAccessMixin, 
+						AttrConstructorAccessWithSelfArgMixin, 
 						mapping.BasicMapping):
 	'''
 	provide a constructor interface.
@@ -311,7 +324,7 @@ if __name__ == '__main__':
 		'''
 		'''
 		__attr2mapping_ignore_attrs__ = (
-				'__item_constructors__',
+				'__constructor_store__',
 				)
 
 	C.regconstructor('str', str)
