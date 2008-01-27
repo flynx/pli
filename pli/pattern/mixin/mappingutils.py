@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080127060119'''
+__sub_version__ = '''20080127070556'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -61,18 +61,18 @@ class Mapping2AttrMixin(Mapping2AttrMinimalMixin):
 
 #---------------------------------------------------Attr2MappingMixin---
 # XXX this is a workaround pythons "bug" with __dict__ using the
-#     C API instead of the py dict interface...
+#     C API only instead of the py dict interface and then C...
 class Attr2MappingMixin(mapping.BasicMapping):
 	'''
 	'''
 	# attrs that will always be accessed in the __dict__
-	__attr2map_ignore_attrs__ = ()
+	__attr2mapping_ignore_attrs__ = ()
 
 	def __getattr__(self, name):
 		'''
 		'''
 		try:
-			if name not in self.__attr2map_ignore_attrs__:
+			if name not in self.__attr2mapping_ignore_attrs__:
 				return self[name]
 		except KeyError:
 			pass
@@ -84,7 +84,7 @@ class Attr2MappingMixin(mapping.BasicMapping):
 	def __setattr__(self, name, value):
 		'''
 		'''
-		if name not in self.__attr2map_ignore_attrs__:
+		if name not in self.__attr2mapping_ignore_attrs__:
 			self[name] = value
 		else:
 			super(Attr2MappingMixin, self).__setattr__(name, value)	
@@ -92,7 +92,7 @@ class Attr2MappingMixin(mapping.BasicMapping):
 		'''
 		'''
 		try:
-			if name not in self.__attr2map_ignore_attrs__:
+			if name not in self.__attr2mapping_ignore_attrs__:
 				del self[name]
 				return
 		except KeyError:
@@ -132,6 +132,8 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 			raise AttributeError, name
 	
 	# XXX this might not be pickle safe...
+	# XXX might be a good idea to warn if the constructed key overlaps
+	#     with a constructor name...
 	@objutils.classinstancemethod
 	def regconstructor(self, name, constructor):
 		'''
@@ -152,6 +154,17 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 				return val
 			return _construct
 		self.__item_constructors__[name] = prepare(constructor)
+	##!!! needs better resolving... (self then parent)
+	@objutils.classinstancemethod
+	def unregconstructor(self, name):
+		'''
+		'''
+		del self.__item_constructors__[name] 
+##	@objutils.classinstancemethod
+##	def listconstructors(self):
+##		'''
+##		'''
+##		return self.__item_constructors__ 
 
 
 
@@ -196,12 +209,13 @@ if __name__ == '__main__':
 	class C(Attr2MappingMixin, MappingWithItemConstructorMixin, dict):
 		'''
 		'''
-		__attr2map_ignore_attrs__ = (
+		__attr2mapping_ignore_attrs__ = (
 				'__item_constructors__',
 				)
 
 	C.regconstructor('str', str)
 	C.regconstructor('set', set)
+	C.regconstructor('C', C)
 
 	c = C()
 
@@ -215,16 +229,18 @@ if __name__ == '__main__':
 
 	print c
 
-	cc = C()
+	c.C('c')
 
-	cc.str('a', 124)
-##	cc.int('d', 124)
+	c.c.str('a', 124)
+##	c.c.int('d', 124)
 
-	print cc
+	print c.c
 
-	print cc.a
-	del cc.a
-	print cc
+	print c.c.a
+	print c
+	del c.c.a
+	print c.c
+	print c
 
 
 
