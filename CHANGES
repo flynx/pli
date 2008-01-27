@@ -1,5 +1,9 @@
-# this file was generated on [200801040034]
+# this file was generated on [200801270555]
 pli changes:
+
+version 0.0.219 (200801270511):
+- added pli.pattern.mixin.mappingutils module and moved there several mixins form pli.pattern.mixin.mapping...
+- added DictChain to pli.logictypes
 
 version 0.0.217 (200801020225):
 - added tag chain support... (still both incomplete and experimental)

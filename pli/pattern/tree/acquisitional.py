@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20050824141124'''
+__sub_version__ = '''20080126193432'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -13,7 +13,6 @@ import pli.logictypes as logictypes
 
 
 #-----------------------------------------------------------------------
-# TODO rename this module to something like acquisitional.py
 # TODO parant resolution protocol (if not present use attr).
 # TODO acquisition cut (mignt be done by the above...)
 # TODO might be good to do a recursive depth iterator...

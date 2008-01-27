@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.03'''
-__sub_version__ = '''20071206152113'''
+__sub_version__ = '''20080127042744'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -371,57 +371,6 @@ class DictLike(Mapping):
 			for k in nargs:
 				self[k] = nargs[k]
 	
-
-
-#-----------------------------------------------------------------------
-# XXX move this elsewhere...
-
-import pli.pattern.proxy.utils as proxyutils
-
-
-#---------------------------------------------------Matting2AttrMixin---
-class Mapping2AttrMinimalMixin(Mapping):
-	'''
-	provides a minimal simple drop-in mixin to enable access to the objects 
-	namespace through a mapping interface.
-
-	NOTE: this shadows the already defined functionality.
-	'''
-	proxyutils.proxymethods((
-			# minimal set...
-			'__getitem__',
-			'__setitem__',
-			'__delitem__',
-			'__iter__',
-			# for speed...
-			'__contains__',
-			'__len__',
-		), '__dict__')
-
-
-#---------------------------------------------------Matting2AttrMixin---
-class Mapping2AttrMixin(Mapping2AttrMinimalMixin):
-	'''
-	provides a simple drop-in mixin to enable access to the objects 
-	namespace through a mapping interface.
-
-	NOTE: this shadows the already defined functionality.
-	'''
-	proxyutils.proxymethods((
-			# other methods...
-			'kyes',
-			'iterkeys',
-			'values',
-			'itervalues',
-			'items',
-			'iteritems',
-			'get',
-			'pop',
-			'update',
-			'copy',
-		), '__dict__')
-
-
 
 
 #=======================================================================

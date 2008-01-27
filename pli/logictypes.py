@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20070707174650'''
+__sub_version__ = '''20080127040755'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -12,6 +12,7 @@ usage of standard python types.
 #-----------------------------------------------------------------------
 
 import pli.pattern.mixin.mapping as mapping
+import pli.pattern.proxy.utils as proxyutils
 
 
 #-----------------------------------------------------------------------
@@ -544,25 +545,45 @@ class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
 	NOTE: this class was designed as a basic base class (atleast the
 	      __iterchainmembers__ method should be overloaded).
 	NOTE: do not forget to call the original __iterchainmembers__.
-	NOTE: this, if used as is will not differ from a dict.
+	NOTE: this, if used as-is will not differ from a dict.
 	'''
+	_dict_data = None
+
 	def __init__(self, *p, **n):
 		'''
 		'''
-		self._dct_data = {}
+		self._dict_data = {}
 		super(BasicDictChain, self).__init__(*p, **n)
-	def __setitem__(self, name, value):
-		'''
-		'''
-		self._dct_data[name] = value
-	def __delitem__(self, name):
-		'''
-		'''
-		del self._dct_data[name]
+	proxyutils.proxymethods((
+		'__setitem__',
+		'__delitem__',
+		), '_dict_data')
 	def __iterchainmembers__(self):
 		'''
 		'''
-		yield self._dct_data
+		yield self._dict_data
+
+
+#-----------------------------------------------------------DictChain---
+class DictChain(BasicDictChain):
+	'''
+	this is a basic dict chain element.
+
+	when a key can not be found in the local data then the request is 
+	forwarded to the .chain_next attribute.
+
+	NOTE: .chain_next can be None, then no other forwarding is done.
+	NOTE: editing is possible only to the local data.
+	'''
+	chain_next = None
+
+	def __iterchainmembers__(self):
+		'''
+		'''
+		for v in super(DictChain, self).__iterchainmembers__():
+			yield v
+		if self.chain_next != None:
+			yield self.chain_next
 
 
 
@@ -631,6 +652,13 @@ if __name__ == '__main__':
 
 	print isodd(3), isodd(6)
 
+	# check the dict chain...
+	d = DictChain(a=1, b=2, c=3)
+	print d.todict()
+	d.chain_next = DictChain(c=4, d=5, e=6)
+	print d.todict()
+	d.chain_next.chain_next = dict(e=7, f=8, g=9)
+	print d.todict()
 
 
 
