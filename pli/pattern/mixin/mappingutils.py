@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080127170722'''
+__sub_version__ = '''20080127172610'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -64,6 +64,12 @@ class Mapping2AttrMixin(Mapping2AttrMinimalMixin):
 #     C API only instead of the py dict interface and then C...
 class Attr2MappingMixin(mapping.BasicMapping):
 	'''
+	a mixin adepter form the attr protocol to the mapping protocol.
+
+	attributes listed in .__attr2mapping_ignore_attrs__ will be accessed
+	using the attribute protocol.
+
+	NOTE: this will call the object itself (not a proxy to an attr).
 	'''
 	# attrs that will always be accessed in the __dict__
 	__attr2mapping_ignore_attrs__ = ()
@@ -111,6 +117,45 @@ class Attr2MappingMixin(mapping.BasicMapping):
 #      parents...
 class MappingWithItemConstructorMixin(mapping.BasicMapping):
 	'''
+	provide a constructor interface.
+
+	a constructor will create objects that will be stored in the mapping.
+
+	the constructors are accessed by name as attributes/methods.
+
+	input constructor signature:
+		<cunstructor>(<args>) -> <obj>
+
+	constructor signature when accessed form the mapping:
+		<mapping>.<name>(<key>, <args>) -> <obj>
+
+
+	NOTE: this provides class and instance constructors, each edited from
+	      its' context only (class constructors form the class and the 
+		  instance constructors from the instance).
+	NOTE: instance constructors overshadow the class constructors.
+
+
+	minimal example:
+
+		class Mapping(MappingWithItemConstructorMixin, dict):
+			pass
+
+		# register class constructor (accessible from any instance)...
+		Mapping.regconstructor('string', str)
+
+		m = Mapping()
+
+		# register instance constructor (access only via the
+		# instance)...
+		m.regconstructor('integer', int)
+
+		# usage...
+		m.string('a', 123)
+		m.integer('b', 321)
+
+		print m			# -> {'a': '123', 'b', 321}
+
 	'''
 	# mapping containing item consturctos...
 	# a constructor may take any arguments and must return the
@@ -176,6 +221,7 @@ class MappingWithItemConstructorMixin(mapping.BasicMapping):
 
 
 #-----------------------------------------------------------------------
+# XXX still thinking about these...
 #----------------------------------MappingWithKeyTypeRestrictoinMixin---
 class MappingWithKeyTypeRestrictoinMixin(mapping.BasicMapping):
 	'''
