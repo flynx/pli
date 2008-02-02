@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.77'''
-__sub_version__ = '''20070725021043'''
+__sub_version__ = '''20080201051607'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -261,11 +261,13 @@ class RPCSessionManager(object):
 				obj = self.__session_objects__.get(obj_id, None)
 ##				if obj_id not in self.__session_objects__:
 				if obj == None:
+					# XXX causes (possibly) persistent session logout....
 					raise SessionError, 'no such object ("%s").' % obj_id
 ##				obj = self.__session_objects__[obj_id]
 				# check password...
 				if hasattr(self, '__password_check__') and self.__password_check__ and \
 						hasattr(obj, 'checkpassword') and not obj.checkpassword(password):
+					# XXX causes (possibly) persistent session logout....
 					raise SessionError, 'no such object ("%s").' % obj_id
 				# check uniqueness...
 				if (obj_id, ANY) in self.__active_sessions__.values() and \
@@ -283,6 +285,11 @@ class RPCSessionManager(object):
 				# set the time...
 ##				if self.__timeout__ != None:
 				##!!! TEST !!!##
+				# XXX possible bug...
+				#     reproduced by:
+				#     	- wrong pass
+				#     	- login (is this needed?)
+				#     	- persistent session gets a timeout
 				# set the timeout if the timeouts are enabled (in the
 				# manager) and if persistent sessions are enabled and
 				# the session timout is either not present or is not None
@@ -305,6 +312,11 @@ class RPCSessionManager(object):
 			return
 		# fire _onSessionClose event
 		obj = self.__active_sessions__[sid][1]
+##		# can't close a persistent session...
+##		if self.__persistent_sessions__ is True \
+##				##!!! need a way to know if an object is persistent session....
+##				and False:
+##			return
 		if hasattr(obj, '_onSessionClose'):
 			obj._onSessionClose(self)
 		del self.__active_sessions__[sid]

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080128013132'''
+__sub_version__ = '''20080128014715'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -145,7 +145,7 @@ class ConstructorRegistrationMixin(object):
 	__constructor_wrapper__ = None
 
 	@objutils.classinstancemethod
-	def regconstructor(self, name, constructor):
+	def regconstructor(self, name, constructor, *p, **n):
 		'''
 		'''
 		if self.__constructor_store__ == None:

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20071219035635'''
+__sub_version__ = '''20080128022740'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -14,6 +14,7 @@ __copyright__ = '''(c) Alex A. Naanou 2003'''
 class RecursiveAttrPathProxy(object):
 	'''
 	'''
+	_callback = None
 	##!!! path must be a list...
 	def __init__(self, root, path, callback=None, verify=None):
 		'''
@@ -44,7 +45,7 @@ class RecursiveAttrPathProxy(object):
 	def __getattrpath__(self, root, path):
 		'''
 		'''
-		print path
+##		print path
 ##		res = root
 ##		for p in path:
 ##			res = getattr(res, p)

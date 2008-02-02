@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20071103163830'''
+__sub_version__ = '''20080202055205'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -62,9 +62,9 @@ class termsuper(super):
 	'''
 	def __getattr__(self, name, *p, **n):
 		try:
-			super(terminatedsuper, self).__getattr__(name, *p, **n)
+			super(termsuper, self).__getattr__(name, *p, **n)
 		except AttributeError:
-			pass
+			return lambda *p, **n: None
 
 
 

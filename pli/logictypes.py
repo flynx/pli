@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080127040755'''
+__sub_version__ = '''20080202041225'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -538,8 +538,8 @@ class DictTypeUnion(DictUnion, dict):
 	pass
 
 
-#------------------------------------------------------BasicDictChain---
-class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
+#---------------------------------------------------BasicMappingChain---
+class BasicMappingChain(AbstractDictChainMixin, mapping.Mapping):
 	'''
 	
 	NOTE: this class was designed as a basic base class (atleast the
@@ -553,21 +553,28 @@ class BasicDictChain(AbstractDictChainMixin, mapping.DictLike):
 		'''
 		'''
 		self._dict_data = {}
-		super(BasicDictChain, self).__init__(*p, **n)
+		super(BasicMappingChain, self).__init__(*p, **n)
 	proxyutils.proxymethods((
 		'__setitem__',
 		'__delitem__',
+		'clear',
 		), '_dict_data')
 	def __iterchainmembers__(self):
 		'''
 		'''
 		yield self._dict_data
 
+	def localkeys(self):
+		'''
+		return list of local to the current node keys.
+		'''
+		return self._dict_data.keys()
 
-#-----------------------------------------------------------DictChain---
-class DictChain(BasicDictChain):
+
+#--------------------------------------------------------MappingChain---
+class MappingChain(BasicMappingChain):
 	'''
-	this is a basic dict chain element.
+	this is a basic mapping chain element.
 
 	when a key can not be found in the local data then the request is 
 	forwarded to the .chain_next attribute.
@@ -580,10 +587,66 @@ class DictChain(BasicDictChain):
 	def __iterchainmembers__(self):
 		'''
 		'''
-		for v in super(DictChain, self).__iterchainmembers__():
+		for v in super(MappingChain, self).__iterchainmembers__():
 			yield v
 		if self.chain_next != None:
 			yield self.chain_next
+
+
+#-----------------------------------------------MappingChainLiveMixin---
+class MappingChainLiveMixin(object):
+	'''
+	'''
+	_chain_attr_name = None
+	_chain_next_obj = None
+	
+	chain_next = property(
+			fget=lambda self: getattr(self.__chain_next_obj__, self.__chain_attr_name__),
+			fset=lambda self, val: (setattr(self, '__chain_next_obj__', val[0]), 
+									setattr(self, '__chain_attr_name__', val[1])))
+
+
+#-----------------------------------------------------------DictChain---
+class DictChain(MappingChain, mapping.DictLike):
+	'''
+	same as MappingChain but more dict like.
+
+	see docs for:
+		pli.logictypes.MappingChain
+		pli.pattern.mixin.mapping.DictLike
+	'''
+	pass
+
+
+#-------------------------------------------------------LiveDictChain---
+class LiveDictChain(MappingChainLiveMixin, DictChain):
+	'''
+	'''
+	pass
+
+
+#---------------------------------------------------------dictchainto---
+def dictchainto(dct):
+	'''
+	create a dictchain over a mapping.
+
+	helper/factory function.
+	'''
+	d = DictChain()
+	d.chain_next = dct
+	return d
+	
+
+#-----------------------------------------------------livedictchainto---
+def livedictchainto(dct, attr):
+	'''
+	create a live dictchain over a mapping.
+
+	helper/factory function.
+	'''
+	d = LiveDictChain()
+	d.chain_next = (dct, attr)
+	return d
 
 
 
@@ -660,6 +723,21 @@ if __name__ == '__main__':
 	d.chain_next.chain_next = dict(e=7, f=8, g=9)
 	print d.todict()
 
+
+	class X(object):
+		xxx = dict(a=1, b=2)
+
+	x = X()
+
+	ld = livedictchainto(x, 'xxx')
+	ld['b'] = 3
+	ld['c'] = 4
+
+	print ld.keys()
+
+	x.xxx = {}
+
+	print ld.keys()
 
 
 #=======================================================================

@@ -1,5 +1,8 @@
-# this file was generated on [200801280132]
+# this file was generated on [200802022102]
 pli changes:
+
+version 0.0.240 (200802022059):
+- did a full rewrite of the pli.net.rpcsession (now pli.net.rpcsession2)... heads-up: will migrate to the new version quite soon.
 
 version 0.0.219 (200801270511):
 - added pli.pattern.mixin.mappingutils module and moved there several mixins form pli.pattern.mixin.mapping...

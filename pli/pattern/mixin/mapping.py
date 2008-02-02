@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.03'''
-__sub_version__ = '''20080127042744'''
+__sub_version__ = '''20080130032350'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -279,7 +279,7 @@ class MappingWithModifyMethods(BasicMapping):
 	def clear(self):
 		'''
 		'''
-		for k in self:
+		for k in self.keys():
 			del self[k]
 	def update(self, data):
 		'''
