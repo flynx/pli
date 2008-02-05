@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080202180826'''
+__sub_version__ = '''20080205161610'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -93,6 +93,8 @@ class BaseSession(object):
 
 
 #-------------------------------------------SessionWithSessionNSMixin---
+# XXX add filter to write some attrs to __session_ns__
+# XXX add interface methods...
 class SessionWithSessionNSMixin(object):
 	'''
 	'''
@@ -140,12 +142,34 @@ class SessionWithSessionNSMixin(object):
 		super(SessionWithSessionNSMixin, self)._onSessionClose(manager)
 
 
+#------------------------------SessionWithSessionNSAndAttrFilterMixin---
+class SessionWithSessionNSAndAttrFilterMixin(SessionWithSessionNSMixin):
+	'''
+	'''
+	# attrs that will get written to session ns...
+	__session_attrs__ = ()
+
+	def __setattr__(self, name, val):
+		'''
+		'''
+		if name in self.__session_attrs__:
+			if self.__session_attrs__ == None:
+				self.__session_attrs__ = {}
+			self.__session_ns__[name] = val
+		else:
+			super(SessionWithSessionNSAndAttrFilterMixin, self).__setattr__(name, val)
+
+
+#-------------------------------------------------------------Session---
+class Session(SessionWithSessionNSAndAttrFilterMixin, BaseSession):
+	'''
+	'''
+	pass
+
 
 #-----------------------------------------------------------------------
 # TODO write mixins with the folowing features:
 # 		- session events (split from existing)
-# 		- ACL (use the wrapper for this... might be good to reject all
-# 		  path elements starting with '_')
 # 		- RPC
 # 		- password check (split out of existing???)
 #--------------------------------------------------BaseSessionManager---
@@ -288,12 +312,12 @@ class BaseSessionManager(object):
 		# ignore bad sids...
 		if SID not in self.__active_sessions__:
 			return
-		obj = self.__active_sessions__[sid][1]
+		obj = self.__active_sessions__[SID][1]
 		# fire open event... (XXX keep here?)
 		if hasattr(obj, self.__session_close_event_name__):
 			getattr(obj, self.__session_close_event_name__)()
 		# remove the session...
-		del self.__active_sessions__[sid]
+		del self.__active_sessions__[SID]
 	def isalive(self, SID):
 		'''
 		'''
@@ -425,10 +449,18 @@ class SessionManagerWithSessionCheckingMixin(object):
 		'''
 		self.__check_session__(SID)
 		return super(SessionManagerWithSessionCheckingMixin, self)._dispatch(SID, *p, **n)
-	def login(self, *p, **n):
+	def login(self, OID, *p, **n):
 		'''
 		'''
-		SID = super(SessionManagerWithSessionCheckingMixin, self).login(*p, **n)
+		# check if we are loged-in...
+		if (OID, ANY) in self.__active_sessions__.values():
+			# check all sessions for this object if they exist...
+			[ self.__check_session__(sid) for sid, (oid, _) \
+					in self.__active_sessions__.items() \
+					if oid == OID ]
+		# do login...
+		SID = super(SessionManagerWithSessionCheckingMixin, self).login(OID, *p, **n)
+		# check the object session...
 		self.__check_session__(SID)
 		return SID
 	def isalive(self, SID):
@@ -455,7 +487,7 @@ class SessionManagerWithSessionCheckingMixin(object):
 		NOTE: this is not called automaticly (usually called on timer).
 		'''
 		for SID in self.__active_sessions__:
-			self.__check_sessions__(SID)
+			self.__check_session__(SID)
 
 
 #-------------------------------SessionManagerWithSessionTimeoutMixin---
@@ -504,14 +536,18 @@ class SessionManagerWithSessionTimeoutMixin(SessionManagerWithSessionCheckingMix
 				# sanity check...
 				raise TypeError, 'unsupported timeout mode.'
 		# we see the object for the first time...
-		##!!! possible bug: if the session delets it's ._last_accessed it will get timeout extension...
+		##!!! possible bug: if the session deletes it's ._last_accessed it will get timeout extension...
 		if not hasattr(session, '_last_accessed'):
 			session._last_accessed = now
 		# kill the session on timeout...
 		elif session._last_accessed + timeout < now:
+			# XXX this is not correct... (use a special base-class to set access time and make this use it)
+			del self.__active_sessions__[SID][1]._last_accessed
 			self.logout(SID)
 			self.__session_manager_error__('session timeout.', SID)
-			raise SessionError, 'session timeout.'
+##			# XXX should this fail here??
+##			raise SessionError, 'session timeout.'
+			return
 		# set last accessed...
 		self.__active_sessions__[SID][1]._last_accessed = now
 
@@ -684,8 +720,6 @@ if __name__ == '__main__':
 
 	class O(object):
 		def test(self):
-			'''
-			'''
 			pass
 		def meth(self, *p, **n):
 			print 'o.meth', p, n
@@ -712,6 +746,8 @@ if __name__ == '__main__':
 			'test': O(),
 			'test2': s
 		}
+		__timeout__ = 1
+
 	TestSessionManager.regdefault('0', DFL())
 
 	sm = TestSessionManager()
@@ -731,6 +767,9 @@ if __name__ == '__main__':
 
 	# nice latency, about 4200 requests per second on a 1GHz Centrino CPU
 	print 'requests per second:', float(n)/(t1-t0)
+
+	# relogin after we were loged-out on timeout...
+	sid2 = sm.login('test2', '123')
 
 	sm.dispatch(['meth'], sid)
 	sm.dispatch(['meth'], sid2)

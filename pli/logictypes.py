@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080202041225'''
+__sub_version__ = '''20080205155234'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -638,14 +638,14 @@ def dictchainto(dct):
 	
 
 #-----------------------------------------------------livedictchainto---
-def livedictchainto(dct, attr):
+def livedictchainto(obj, attr):
 	'''
 	create a live dictchain over a mapping.
 
 	helper/factory function.
 	'''
 	d = LiveDictChain()
-	d.chain_next = (dct, attr)
+	d.chain_next = (obj, attr)
 	return d
 
 
@@ -736,6 +736,14 @@ if __name__ == '__main__':
 	print ld.keys()
 
 	x.xxx = {}
+
+	print ld.keys()
+
+	ld['aaa'] = 'bbb'
+
+	print ld.keys()
+
+	del ld['aaa']
 
 	print ld.keys()
 

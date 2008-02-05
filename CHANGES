@@ -1,5 +1,8 @@
-# this file was generated on [200802022121]
+# this file was generated on [200802051617]
 pli changes:
+
+version 0.0.241 (200802051617):
+- fixed several bugs in pli.net.rpcsession2...
 
 version 0.0.240 (200802022059):
 - did a full rewrite of the pli.net.rpcsession (now pli.net.rpcsession2)... heads-up: will migrate to the new version quite soon.
