@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20080211032701'''
+__sub_version__ = '''20080211033040'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -126,28 +126,6 @@ def proxymethods(names, source_attr, decorators=()):
 
 
 #-----------------------------------------------------------------------
-#------------------------------------------------------swapmethodself---
-def swapmethodself(meth, wrapper, use_wrapper_as_class=True):
-	'''
-	'''
-	return new.instancemethod(meth.im_func,
-								wrapper, 
-								use_wrapper_as_class and \
-										wrapper or meth.im_class)
-	
-
-#------------------------------------------------------wrapmethodself---
-def wrapmethodself(meth, wrapper, use_wrapper_as_class=True):
-	'''
-	'''
-	return new.instancemethod(meth.im_func,
-								wrapper(meth.im_self), 
-								use_wrapper_as_class and \
-										wrapper or meth.im_class)
-
-
-
-#-----------------------------------------------------------------------
 #-------------------------------------------------------proxyproperty---
 def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 	'''
@@ -155,6 +133,8 @@ def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 	referenced by .source_attr of no local value is defined, otherwise
 	get the local data.
 
+	NOTE: this will shadow inherited or overwrite local existing attributes 
+	      by the same name.
 	NOTE: this supports local data stored in ._<name> attr (default)
 	NOTE: local_attr_tpl controls the attribute name to store the data 
 	      in the local namespace (must contain a string containing exactly
@@ -184,6 +164,28 @@ def proxyproperties(names, source_attr, local_attr_tpl='_%s'):
 	'''
 	for name in names:
 		proxyproperty(name, source_attr, depth=2, local_attr_tpl=local_attr_tpl)
+
+
+
+#-----------------------------------------------------------------------
+#------------------------------------------------------swapmethodself---
+def swapmethodself(meth, wrapper, use_wrapper_as_class=True):
+	'''
+	'''
+	return new.instancemethod(meth.im_func,
+								wrapper, 
+								use_wrapper_as_class and \
+										wrapper or meth.im_class)
+	
+
+#------------------------------------------------------wrapmethodself---
+def wrapmethodself(meth, wrapper, use_wrapper_as_class=True):
+	'''
+	'''
+	return new.instancemethod(meth.im_func,
+								wrapper(meth.im_self), 
+								use_wrapper_as_class and \
+										wrapper or meth.im_class)
 
 
 
