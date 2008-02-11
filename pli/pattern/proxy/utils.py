@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20080211031920'''
+__sub_version__ = '''20080211032701'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -151,6 +151,14 @@ def wrapmethodself(meth, wrapper, use_wrapper_as_class=True):
 #-------------------------------------------------------proxyproperty---
 def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 	'''
+	create a property that will fetch the attr name form an object 
+	referenced by .source_attr of no local value is defined, otherwise
+	get the local data.
+
+	NOTE: this supports local data stored in ._<name> attr (default)
+	NOTE: local_attr_tpl controls the attribute name to store the data 
+	      in the local namespace (must contain a string containing exactly
+		  one '%s').
 	'''
 	local_attr = local_attr_tpl % name
 	def getter(self):
@@ -172,6 +180,7 @@ def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 #-----------------------------------------------------proxyproperties---
 def proxyproperties(names, source_attr, local_attr_tpl='_%s'):
 	'''
+	shorthad for multiple proxyproperty use with the same source_attr.
 	'''
 	for name in names:
 		proxyproperty(name, source_attr, depth=2, local_attr_tpl=local_attr_tpl)
