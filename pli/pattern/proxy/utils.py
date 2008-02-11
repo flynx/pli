@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.04'''
-__sub_version__ = '''20071206153833'''
+__sub_version__ = '''20080211025919'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -144,6 +144,36 @@ def wrapmethodself(meth, wrapper, use_wrapper_as_class=True):
 								wrapper(meth.im_self), 
 								use_wrapper_as_class and \
 										wrapper or meth.im_class)
+
+
+
+#-----------------------------------------------------------------------
+#-------------------------------------------------------proxyproperty---
+def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
+	'''
+	'''
+	local_attr = local_attr_tpl % name
+	def getter(self):
+		return getattr(getattr(self, source_attr), name)
+	def setter(self, val):
+		setattr(self, local_attr, val)
+	def remover(self):
+		if hasattr(self, local_attr):
+			delattr(self, local_attr)
+	# define the prop...
+	sys._getframe(depth).f_locals[name] \
+			= property(
+					fget=getter,
+					fset=setter,
+					fdel=remover)
+
+
+#-----------------------------------------------------proxyproperties---
+def proxyproperties(names, source_attr, local_attr_tpl='_%s'):
+	'''
+	'''
+	for name in names:
+		proxyproperty(name, source_attr, depth=2, local_attr_tpl=local_attr_tpl)
 
 
 

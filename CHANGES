@@ -1,5 +1,8 @@
-# this file was generated on [200802051617]
+# this file was generated on [200802110315]
 pli changes:
+
+version 0.0.243 (200802110313):
+- added proxyproperty and proxyproperties to pli.pattern.proxy.utils (not yet final, but the interface will likely not change).
 
 version 0.0.241 (200802051617):
 - fixed several bugs in pli.net.rpcsession2...
