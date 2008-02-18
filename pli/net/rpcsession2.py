@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080205161610'''
+__sub_version__ = '''20080213174054'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -748,9 +748,11 @@ if __name__ == '__main__':
 		}
 		__timeout__ = 1
 
-	TestSessionManager.regdefault('0', DFL())
+##	TestSessionManager.regdefault('0', DFL())
 
 	sm = TestSessionManager()
+
+	sm.regdefault('0', DFL())
 
 	# direct call...
 	sid = sm.login('test')
