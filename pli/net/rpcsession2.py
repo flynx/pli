@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080213174054'''
+__sub_version__ = '''20080306165348'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -657,7 +657,7 @@ class SessionManagerWithGlobalMethodsMixin(object):
 		'''
 		if self.__is_global_method__(path[-1]):
 			return self.__call_global__(SID, path, *p, **n)
-		super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
+		return super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
 
 	def __is_global_method__(self, name):
 		'''
@@ -738,6 +738,7 @@ if __name__ == '__main__':
 	class DFL(object):
 		def meth(self, *p, **n):
 			print 'dfl.meth', p, n
+			return 123
 		def _meth(self):
 			print 'dfl._meth'
 
@@ -784,9 +785,9 @@ if __name__ == '__main__':
 	print sm.dispatch(['isalive'], '0')
 
 	sm.logout('0')
-	sm.dispatch(['logout'], sid)
+	print sm.dispatch(['logout'], sid)
 
-	sm.dispatch(['meth'], 1, 2, m=6)
+	print sm.dispatch(['meth'], 1, 2, m=6)
 
 	# in this case the system can not reliably say that the argument is
 	# a SID or not (as it is not in active sessions), thus it considers
