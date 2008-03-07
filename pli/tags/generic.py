@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20080307142513'''
+__sub_version__ = '''20080307145304'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -121,7 +121,6 @@ TAG_TAG = 'TAG'
 OBJECT_TAG = 'OBJECT'
 
 
-
 #-----------------------------------------------------------------------
 # helpers...
 #--------------------------------------------------------------getset---
@@ -184,11 +183,11 @@ def itertaggaps(tagdb):
 
 #---------------------------------------------------------filltaggaps---
 # XXX should these two be split??
-# XXX might be good make this an interactive generator so as to have
-#     more control over what is fixed and how...
 # XXX should this restore the tag to self??
 # XXX might be good to make this explicitly depend on itertaggaps
 #    (through arguments)...
+# TODO make this an interactive generator so as to have more control 
+#      over what is fixed and how...
 def filltaggaps(tagdb):
 	'''
 	fix inconsistencies using the data returned by itertaggaps.
@@ -231,6 +230,32 @@ def iterorphans(tagdb):
 			# XXX do we need this check???
 			if len(tags(tagdb, k).difference((TAG_TAG, OBJECT_TAG))) == 0:
 				yield k
+
+
+#------------------------------------------------------------------gc---
+def gc(tagdb):
+	'''
+	interactive garbage collector.
+
+	this will iterate through the orphans and remove them.
+
+	to skip the removal send the string 'skip' to the generator instance.
+
+	Example:
+		
+		g = gc(tagdb)
+
+		for tag in g:
+			if 'a' in tag:
+				g.send('skip')
+
+
+	WARNING: this will remove orphaned tags and objects. this list will
+	         include tags added by addtags(..) but not yet used.
+	'''
+	for tag in iterorphans(tagdb):
+		if (yield tag) != 'skip':
+			del tagdb[tag]
 
 
 
@@ -571,9 +596,17 @@ if __name__ == '__main__':
 	print exclude(ts1, select(ts1, 'Y'), 'Y')
 	print exclude(ts1, select(ts1, 'Y'), 'X')
 	
-	print list(iterorphans(ts1))
 	print tags(ts1, 'a')
 	print tags(ts1, 'aaa')
+	print list(iterorphans(ts1))
+
+	# gc the orphans except for 'aaa'
+	g = gc(ts1)
+	for t in g:
+		if t == 'aaa':
+			g.send('skip')
+
+	print list(iterorphans(ts1))
 
 
 
