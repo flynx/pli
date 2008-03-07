@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080128022947'''
+__sub_version__ = '''20080307044349'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -114,7 +114,7 @@ class NodeConstructorWithCallbackMixin(object):
 		res = super(NodeConstructorWithOIDReturnMixin, self).__call__(*p, **n)
 		# call the interface method...
 		if hasattr(res, self.__node_constructor_callback_name__):
-			getattr(res, self.__node_constructor_callback_name__)(getoid(res), self.__tagset__, self.__object_tags__)
+			getattr(res, self.__node_constructor_callback_name__)(getoid(res), self.__tagset__, self.__object_tags__ + self._tags)
 		return res
 
 
@@ -433,7 +433,12 @@ if __name__ == '__main__':
 
 	print tree.addtags('xxx', 'yyy')
 	print tree.xxx.keys()
-		
+
+	constructor('X', A, 'fff:ggg')
+	tree.X()
+
+	print tree['fff:ggg']
+	print tree['fff']
 
 
 #=======================================================================

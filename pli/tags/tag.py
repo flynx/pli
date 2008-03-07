@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080102022334'''
+__sub_version__ = '''20080307045457'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -122,6 +122,10 @@ class TagSetMixin(AbstractTagSet):
 		'''
 		'''
 		return self.__tag_engine__.untag(self, obj, *tags)
+	def tags(self, obj):
+		'''
+		'''
+		return self.__tag_engine__.tags(self, obj)
 	def relatedtags(self, *tags):
 		'''
 		'''
@@ -191,6 +195,7 @@ class TagSetTagChainMixin(object):
 			else:
 				t += (tag,)
 		return t, c
+	##!!!
 	def _addchains(self, *chains):
 		'''
 		'''
@@ -199,8 +204,11 @@ class TagSetTagChainMixin(object):
 			if c not in self:
 				t = self.chain2tags(c)
 				if self.__chain_tag__ != None:
-					t += (self.__chain_tag__,)
-				self._rawtag(c, *(t+(tags.TAG_TAG,)))
+					self._rawtag(c, *(t+(tags.TAG_TAG, self.__chain_tag__)))
+				else:
+					self._rawtag(c, *(t+(tags.TAG_TAG,)))
+				##!!! is this correct???
+				self.__tag_engine__.link(self, c, *t)
 	
 	# tag interface...
 	def addtags(self, *tags):
@@ -478,6 +486,10 @@ if __name__ == '__main__':
 	print
 	print tss.addtags('x', 'y', 'z')
 
+	# chains...
+	ts.tag(o0, 'aaa:bbb')
+
+	print ts.select('aaa')
 	
 
 
