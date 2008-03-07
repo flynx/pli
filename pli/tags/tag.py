@@ -1,12 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307045457'''
+__sub_version__ = '''20080307143129'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
 #-----------------------------------------------------------------------
 
+import pli.pattern.proxy.utils as proxyutils
 import pli.tags.generic as tags
 import pli.pattern.mixin.mapping as mapping
 
@@ -104,54 +105,48 @@ class TagSetMixin(AbstractTagSet):
 	# XXX do we need the __XXX__ customization methods here??
 
 	# tagset inteface...
-	def addtags(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.addtags(self, *tags)
-	def tag(self, obj, *tags):
-		'''
-		'''
-		return self.__tag_engine__.tag(self, obj, *tags)
-	def _rawtag(self, obj, *tags):
-		'''
+	proxyutils.proxymethods((
+			'addtags',
+			'tag',
+			'untag',
+			'tags',
+			'relatedtags',
+			'select',
+		), '__tag_engine__',
+		explicit_self=True)
 
-		NOTE: this is not intended for direct use...
-		'''
-		return self.__tag_engine__._tag(self, obj, *tags)
-	def untag(self, obj, *tags):
-		'''
-		'''
-		return self.__tag_engine__.untag(self, obj, *tags)
-	def tags(self, obj):
-		'''
-		'''
-		return self.__tag_engine__.tags(self, obj)
-	def relatedtags(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.relatedtags(self, *tags)
-
-	def select(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.select(self, *tags)
+	# NOTE: this is not intended for direct use...
+	proxyutils.proxymethod('_rawtag', '__tag_engine__', '_tag',
+			doc='NOTE: this was not intended for direct use!',
+			explicit_self=True)
 	
-	# XXX add store management inteface...
-##	def isconsistent(self):
-##		'''
-##		'''
-##		pass
-##	def fixgaps(self):
-##		'''
-##		'''
-##		pass
+	# store management inteface...
+	proxyutils.proxymethod('isconsistent', '__tag_engine__', 'istagsconsistent',
+			doc='check for tag consistency',
+			explicit_self=True)
+	proxyutils.proxymethod('fix', '__tag_engine__', 'filltaggaps',
+			doc='check for tag consistency',
+			explicit_self=True)
+	
 
 
 #--------------------------------------------TagSetWithTagChainsMixin---
-# XXX add chain formatting functions/methods...
-# 	   .getchain(*tags)
+# XXX do we need chain-specific select???
 class TagSetTagChainMixin(object):
 	'''
+	a chain is a tuple of tags.
+
+	the tag chain structure is as follows:
+
+		title <------->	Terminator
+		   \			   /
+			\			  /
+			 \			 /
+			  v			v
+			(title, Terminator)
+
+	- all the chain elements tag the chain (all-one).
+	- all chain elements are linked (all-all).
 
 	NOTE: this must be mixed with a valid tagset.
 	NOTE: by default the chains are represented as tuples.
@@ -160,56 +155,6 @@ class TagSetTagChainMixin(object):
 	# NOTE: if this is None, do not tag chains
 	__chain_tag__ = 'TAGCHAIN'
 
-	# tag-chain specific methods...
-	def _ischain(self, tag):
-		'''
-		test if a tag is tagchain compatible.
-		'''
-		if type(tag) is tuple:
-			return True
-		return False
-	@staticmethod
-	def chain2tags(chain):
-		'''
-		return the tags in chain.
-		'''
-		# XXX check if cahin is a chain????
-		return tuple(chain)
-	@staticmethod
-	def tags2chain(*tags):
-		'''
-		'''
-		return tags
-	def _splitchains(self, tags):
-		'''
-		split the tags and chains.
-
-		returns: <tags>, <chians>
-		'''
-		t = ()
-		c = ()
-		ischain = self._ischain
-		for tag in tags:
-			if ischain(tag):
-				c += (tag,)
-			else:
-				t += (tag,)
-		return t, c
-	##!!!
-	def _addchains(self, *chains):
-		'''
-		'''
-		for c in chains:
-			# check if chain exists...
-			if c not in self:
-				t = self.chain2tags(c)
-				if self.__chain_tag__ != None:
-					self._rawtag(c, *(t+(tags.TAG_TAG, self.__chain_tag__)))
-				else:
-					self._rawtag(c, *(t+(tags.TAG_TAG,)))
-				##!!! is this correct???
-				self.__tag_engine__.link(self, c, *t)
-	
 	# tag interface...
 	def addtags(self, *tags):
 		'''
@@ -231,6 +176,7 @@ class TagSetTagChainMixin(object):
 		tags, chains = self._splitchains(tags)
 		self._addchains(*chains)
 		return super(TagSetTagChainMixin, self)._rawtag(obj, *(tags+chains))
+	# XXX this may be usefull for garbage collection...
 ##	def untag(self, obj, *tags):
 ##		'''
 ##		'''
@@ -239,20 +185,69 @@ class TagSetTagChainMixin(object):
 ##		##!!!
 ##		super(TagSetTagChainMixin, self).untag(obj, *tags)
 ##		##!!! return??
-	##!!! is this correct???
-	def relatedtags(self, *tags):
+	# chain-specific helpers...
+	def _ischain(self, tag):
 		'''
+		test if a tag is tagchain compatible.
 		'''
-		tags, chains = self._splitchains(tags)
-		return super(TagSetTagChainMixin, self).relatedtags(*(tags+chains))
+		if type(tag) is tuple:
+			return True
+		return False
+	def _splitchains(self, tags):
+		'''
+		split the tags and chains.
 
-	##!!! is this correct???
-	# XXX add more specific chain searches...
-	def select(self, *tags):
+		returns: <tags>, <chians>
 		'''
+		t = ()
+		c = ()
+		ischain = self._ischain
+		for tag in tags:
+			if ischain(tag):
+				c += (tag,)
+			else:
+				t += (tag,)
+		return t, c
+	def _addchains(self, *chains):
+		'''
+		'''
+		for c in chains:
+			# check if chain exists...
+			if c not in self:
+				t = self.chain2tags(c)
+				if self.__chain_tag__ != None:
+					self._rawtag(c, *(t+(tags.TAG_TAG, self.__chain_tag__)))
+				else:
+					self._rawtag(c, *(t+(tags.TAG_TAG,)))
+				# links all the tags in a chain...
+				self.__tag_engine__.link(self, c, *t)
+	# tag-chain specific methods...
+	@staticmethod
+	def chain2tags(chain):
+		'''
+		return the tags in chain.
+		'''
+		# XXX check if cahin is a chain????
+		return tuple(chain)
+	@staticmethod
+	def tags2chain(*tags):
+		'''
+		'''
+		return tags
+	def chains(self, *tags):
+		'''
+		return all the chains that contain tags.
+
+		NOTE: of chains are given, then all the tags in them will be 
+		      added to the search.
 		'''
 		tags, chains = self._splitchains(tags)
-		return super(TagSetTagChainMixin, self).select(*(tags+chains))
+		tags = set(tags)
+		for chain in chains:
+			tags.update(self.chain2tags(chain))
+		# collect all related chains...
+		res = self.select(self.__chain_tag__, *tags)
+		return res
 
 
 #-------------------------------------------------StringTagChainMixin---
@@ -289,8 +284,6 @@ class StringTagChainMixin(object):
 
 
 #--------------------------------------------------------------TagSet---
-##class TagSet(TagSetMixin, dict):
-##class TagSet(TagSetTagChainMixin, TagSetMixin, dict):
 class TagSet(StringTagChainMixin, TagSetTagChainMixin, TagSetMixin, dict):
 	'''
 	'''
@@ -298,6 +291,7 @@ class TagSet(StringTagChainMixin, TagSetTagChainMixin, TagSetMixin, dict):
 
 
 #------------------------------------------------TagSetWithSplitStore---
+##!!! bring this up to date to support tag chains...
 # in geniral this should generate a unique string id for each stored
 # object and use that id in the tag store while storing the objects by
 # id in a seporate dict...
@@ -488,10 +482,13 @@ if __name__ == '__main__':
 
 	# chains...
 	ts.tag(o0, 'aaa:bbb')
+	ts.tag(o1, 'aaa:ccc')
 
-	print ts.select('aaa')
+	print ts.select('aaa', 'TAGCHAIN')
+	print ts.relatedtags('aaa')
+	print ts.chains('aaa')
+##	print ts.relatedtags('aaa:bbb')
 	
-
 
 
 

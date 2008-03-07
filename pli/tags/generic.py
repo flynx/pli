@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071228155716'''
+__sub_version__ = '''20080307145304'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -42,6 +42,7 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 # 		intersect		- select(...) 			done.
 # 		unite			- ???
 # 		exclude			- 						done but not here.
+# 		pattern			- search (difflib?)
 #
 #
 #
@@ -120,7 +121,6 @@ TAG_TAG = 'TAG'
 OBJECT_TAG = 'OBJECT'
 
 
-
 #-----------------------------------------------------------------------
 # helpers...
 #--------------------------------------------------------------getset---
@@ -183,11 +183,11 @@ def itertaggaps(tagdb):
 
 #---------------------------------------------------------filltaggaps---
 # XXX should these two be split??
-# XXX might be good make this an interactive generator so as to have
-#     more control over what is fixed and how...
 # XXX should this restore the tag to self??
 # XXX might be good to make this explicitly depend on itertaggaps
 #    (through arguments)...
+# TODO make this an interactive generator so as to have more control 
+#      over what is fixed and how...
 def filltaggaps(tagdb):
 	'''
 	fix inconsistencies using the data returned by itertaggaps.
@@ -218,6 +218,44 @@ def filltaggaps(tagdb):
 			tagdb[k] = rel
 	# return the diff...
 	return tdb_diff
+
+
+#---------------------------------------------------------iterorphans---
+def iterorphans(tagdb):
+	'''
+	iterate orpahed tags.
+	'''
+	for k, v in tagdb.items():
+		if v == None or len(v.difference((TAG_TAG, OBJECT_TAG))) == 0:
+			# XXX do we need this check???
+			if len(tags(tagdb, k).difference((TAG_TAG, OBJECT_TAG))) == 0:
+				yield k
+
+
+#------------------------------------------------------------------gc---
+def gc(tagdb):
+	'''
+	interactive garbage collector.
+
+	this will iterate through the orphans and remove them.
+
+	to skip the removal send the string 'skip' to the generator instance.
+
+	Example:
+		
+		g = gc(tagdb)
+
+		for tag in g:
+			if 'a' in tag:
+				g.send('skip')
+
+
+	WARNING: this will remove orphaned tags and objects. this list will
+	         include tags added by addtags(..) but not yet used.
+	'''
+	for tag in iterorphans(tagdb):
+		if (yield tag) != 'skip':
+			del tagdb[tag]
 
 
 
@@ -298,6 +336,8 @@ def addtags(tagdb, *tags):
 	for tag in tags:
 		if tag not in tagdb:
 			tagdb[tag] = tdbset()
+			# XXX should this tag the tag with TAG_TAG???
+			_tag(tagdb, tag, TAG_TAG)
 
 
 #----------------------------------------------------------------_tag---
@@ -455,6 +495,7 @@ def select(tagdb, *tags):
 
 
 #-------------------------------------------------------------iselect---
+##!!!
 def iselect(tagdb, *tags):
 	'''
 	an iterative version of select.
@@ -555,6 +596,17 @@ if __name__ == '__main__':
 	print exclude(ts1, select(ts1, 'Y'), 'Y')
 	print exclude(ts1, select(ts1, 'Y'), 'X')
 	
+	print tags(ts1, 'a')
+	print tags(ts1, 'aaa')
+	print list(iterorphans(ts1))
+
+	# gc the orphans except for 'aaa'
+	g = gc(ts1)
+	for t in g:
+		if t == 'aaa':
+			g.send('skip')
+
+	print list(iterorphans(ts1))
 
 
 

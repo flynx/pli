@@ -1,5 +1,12 @@
-# this file was generated on [200803070504]
+# this file was generated on [200803071457]
 pli changes:
+
+version 0.0.244 (200803071454):
+- added gc to pli.tags.generic
+- fixed several issues with the tag engine...
+- added .chains(...) to pli.tags.tag.TagSetTagChainMixin
+- some refactoring...
+- added more functionality to pli.pattern.proxy.utils.proxymethod (see docs).
 
 version 0.0.243 (200802110313):
 - added proxyproperty and proxyproperties to pli.pattern.proxy.utils (not yet final, but the interface will likely not change).
