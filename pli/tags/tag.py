@@ -1,12 +1,13 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307045457'''
+__sub_version__ = '''20080307132444'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
 #-----------------------------------------------------------------------
 
+import pli.pattern.proxy.utils as proxyutils
 import pli.tags.generic as tags
 import pli.pattern.mixin.mapping as mapping
 
@@ -104,37 +105,20 @@ class TagSetMixin(AbstractTagSet):
 	# XXX do we need the __XXX__ customization methods here??
 
 	# tagset inteface...
-	def addtags(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.addtags(self, *tags)
-	def tag(self, obj, *tags):
-		'''
-		'''
-		return self.__tag_engine__.tag(self, obj, *tags)
-	def _rawtag(self, obj, *tags):
-		'''
+	proxyutils.proxymethods((
+			'addtags',
+			'tag',
+			'untag'
+			'tags',
+			'relatedtags',
+			'select',
+		), '__tag_engine__',
+		explicit_self=True)
 
-		NOTE: this is not intended for direct use...
-		'''
-		return self.__tag_engine__._tag(self, obj, *tags)
-	def untag(self, obj, *tags):
-		'''
-		'''
-		return self.__tag_engine__.untag(self, obj, *tags)
-	def tags(self, obj):
-		'''
-		'''
-		return self.__tag_engine__.tags(self, obj)
-	def relatedtags(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.relatedtags(self, *tags)
-
-	def select(self, *tags):
-		'''
-		'''
-		return self.__tag_engine__.select(self, *tags)
+	# NOTE: this is not intended for direct use...
+	proxyutils.proxymethod('_rawtag', '__tag_engine__', '_tag',
+			doc='NOTE: this was not intended for direct use!\n',
+			explicit_self=True)
 	
 	# XXX add store management inteface...
 ##	def isconsistent(self):

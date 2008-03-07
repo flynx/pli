@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20071228155716'''
+__sub_version__ = '''20080307125708'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -42,6 +42,7 @@ __copyright__ = '''(c) Alex A. Naanou 2007'''
 # 		intersect		- select(...) 			done.
 # 		unite			- ???
 # 		exclude			- 						done but not here.
+# 		pattern			- search (difflib?)
 #
 #
 #

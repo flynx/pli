@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.0.04'''
-__sub_version__ = '''20080211033040'''
+__version__ = '''0.0.09'''
+__sub_version__ = '''20080307132338'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -91,9 +91,21 @@ proxy = %(method_name)s'''
 
 #---------------------------------------------------------proxymethod---
 # TODO create a version of this with super call...
-def proxymethod(method_name, source_attr, depth=1, decorators=()):
+# XXX as soon as we can construct a function in pure python this will
+#     need to be rewritten...
+def proxymethod(method_name, source_attr, target_method_name=None, doc='', depth=1, decorators=(), explicit_self=False):
 	'''
 	create a proxy to the method name in the containing namespace.
+
+	arguments:
+		method_name			- the name of the method to proxy.
+		source_attr			- attribute to which to proxy the method call.
+		target_method_name	- target method name (optional).
+		doc					- the doc string to use for the constructed function.
+		decorators			- sequence of decorators to apply to the constructed function.
+		explicit_self		- if true, pass the self to the target explicitly.
+
+		depth				- frame depth, used for name setting (use at your own risk).
 
 	NOTE: this will add the method_name to the containing namespace.
 	NOTE: source_attr is to be used as the attr name referencing the source object.
@@ -101,13 +113,29 @@ def proxymethod(method_name, source_attr, depth=1, decorators=()):
 	# text of the new function....
 	txt = '''\
 def %(method_name)s(self, *p, **n):
+	"""%(doc)s
+	this is a proxy to %(target_method_name)s method.
 	"""
-	this is the proxy to %(method_name)s method.
-	"""
-	return self.%(source_attr)s.%(method_name)s(*p, **n)
+	return self.%(source_attr)s.%(target_method_name)s(%(self_arg)s*p, **n)
+
+# add the result to a predictable name in the NS.
 proxy = %(method_name)s'''
+
+	# explicit self passing...
+	if explicit_self is True:
+		self_arg = 'self, '
+	else:
+		self_arg = ''
+	# target method...
+	if target_method_name == None:
+		target_method_name = method_name
 	# execute the above code...
-	exec (txt % {'method_name': method_name, 'source_attr': source_attr})
+	exec (txt % {
+			'doc': doc,
+			'method_name': method_name, 
+			'target_method_name': target_method_name, 
+			'source_attr': source_attr,
+			'self_arg': self_arg})
 	# run the decorators...
 	for d in decorators:
 		proxy = d(proxy)
@@ -116,12 +144,13 @@ proxy = %(method_name)s'''
 
 
 #--------------------------------------------------------proxymethods---
-def proxymethods(names, source_attr, decorators=()):
+def proxymethods(names, source_attr, decorators=(), explicit_self=False):
 	'''
 	generate a direct proxy for each name.
 	'''
 	for name in names:
-		proxymethod(name, source_attr, depth=2, decorators=decorators)
+		proxymethod(name, source_attr, depth=2,
+						decorators=decorators, explicit_self=explicit_self)
 
 
 
