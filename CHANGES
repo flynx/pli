@@ -1,0 +1,184 @@
+# this file was generated on [200803071250]
+pli changes:
+
+version 0.0.243 (200802110313):
+- added proxyproperty and proxyproperties to pli.pattern.proxy.utils (not yet final, but the interface will likely not change).
+
+version 0.0.241 (200802051617):
+- fixed several bugs in pli.net.rpcsession2...
+
+version 0.0.240 (200802022059):
+- did a full rewrite of the pli.net.rpcsession (now pli.net.rpcsession2)... heads-up: will migrate to the new version quite soon.
+
+version 0.0.219 (200801270511):
+- added pli.pattern.mixin.mappingutils module and moved there several mixins form pli.pattern.mixin.mapping...
+- added DictChain to pli.logictypes
+
+version 0.0.217 (200801020225):
+- added tag chain support... (still both incomplete and experimental)
+  still todo:
+  	- search interface... (currently nothing changed and nothing special added)
+	- do some testing...
+
+version 0.0.209 (200712281559):
+- added exclude and excludeiter to pli.tags.generic
+- need to rethink the tag engine...
+
+version 0.0.205 (200711061536):
+- added pli.tags.utils
+
+version 0.0.205 (200711061427):
+- added callback interface to pli.tags.tree.NodeConstructor* as a mixin...
+
+version 0.0.205 (200711031638):
+- added pli.objutils.termsuper (see doc for details).
+
+version 0.0.203 (200711011608):
+- merged pli.tags.tree with the version from another project of mine... (still needs cleaning).
+
+version 0.0.201 (200710311812):
+- added decorator support for pli.pattern.proxy.utils.proxymethod and proxymethods...
+
+version 0.0.199 (200710311349):
+changed the default tags for the pli.tags.generic... (not yet final)
+
+version 0.0.195 (200707280022):
+- added new suff to pli.event.decorator...
+
+
+version 0.0.194 (200707261656):
+- replaced the tag OO inteface... may not be stable yet..
+- several typos and minor bugs fixed...
+
+version 0.0.189 (200707171720):
+- created pli.tags.generic tag engine ...prepating to move the pli.tags.tag to the new engine...
+
+version 0.0.185 (200707080008):
+added tag engine... (pli.tags.tag)
+
+version 0.0.182 (200701212005):
+added pli.event.timer.FireInSeconds event constructor...
+
+version 0.0.181 (200701050206):
+added support for None in persistence.sql...
+
+version 0.0.166 (200512090249):
+- added pli.pattern.mixin.history.StateHistoryWithArchiveMixin.
+
+version 0.0.165 (200512082036):
+- fixed a bug in the pli.logictypes.DictUnion.tailunite method...
+
+version 0.0.164 (200512051748):
+- added pli.apps.pluginloader2...
+
+version 0.0.162 (200511031616):
+- added the folowing to pli.logictypes:
+	OfType (originaly named oftype. the old name is still there and will likely be used on as an inline constructor)
+	OfTypeWithPredicate
+	OfTypeWithArgPredicate
+
+	isodd
+	iseven
+
+version 0.0.161 (200510131908):
+- added sf patch #1260933.... ToDo revise :)
+
+version 0.0.160 (200510120807):
+- at last!! the pli.persistance.sql.shelve appears to be working!!! :)
+  still todo:
+  	- auto commit/commit wrappers.
+	- support delete on the LL.
+	- cleaner shelve delitem.
+	- add deflate sql/python function (SQL data GC :) ).
+
+version 0.0.157 (200509030104):
+- moved the StateHistoryProxy from pli.pattern.mixin.monitor to pli.pattern.proxy.history...
+
+version 0.0.156 (200509021731):
+- updated pli.pattern.mixin.monitor (still needs optimisation)...
+
+version 0.0.155 (200508300106):
+- added the __auto_start__ option to the pli.pattern.state.fsm.FiniteStateMachine...
+
+version 0.0.153 (200508241508):
+- refactored pli.logictypes.DictUnion
+- added pli.logictypes.AbstractDictChain
+- added pli.logictypes.BasicDictChain
+
+version 0.0.152 (200508241358):
+- added pli.persistance module (still quite raw...)
+
+version 0.0.143 (200507051502):
+- added pli.event.event.bindcount and pli.event.bindonce...
+- added more docs for pli.pattern.state.fsm...
+
+version 0.0.140 (200504060442):
++ added pli.logictypes.WritableDictUnion class...
+
+version 0.0.138 (200503310620):
+- added support for proxy objects (module pli.pattern.proxy.generic) to be safely pickled and unpickled (needs more testing).
+- added two functions to pli.pattern.proxy.generic, the _reduceproxyobject and _reconstructproxyobject which enable to breakup a proxy object and safely restore it respectively... these are used for the pickle protocol (see above) (needs nor testing).
+- defined a simple proxy (pli.pattern.proxy.generic) pickle protocol extension... actually one configuration option (WARNING: this might change in the near future re).
+- several bug-fixes...
+
+version 0.0.132 (200412311609):
+- added pli.event.decorator module.
+
+version 0.0.131 (200412261457):
+- add pli.event.event.isused function...
+
+version 0.0.128 (200412021636):
+- added persistent sessions an session based timeouts to pli.net.rpcsession (still needs more testing...)
+
+version 0.0.127 (200411211520):
+- added transition mode to pli.pattern.fsm...
+
+version 0.0.109 (200410170040):
+- refactored the pli.pattern.proxy.generic (some incompatibilities may arise..).
+- lots of changes and bug-fixes in pli.interface since last writing...
+
+version 0.0.84 (200409091457):
+- moved the dispatch module to the pli.dispatch package.... (old.py)
+
+version 0.0.83 (200409060449):
+- did a full rewrite of the pli.pattern.proxy.generic
+
+version 0.0.82 (200409050022):
+- fixed ComparableMapping in pli.pattern.mixin.mapping.... (now it actually works! :) ) ...though there is no __cmp__ method...
+
+version 0.0.82 (200408310058):
+- split the pli/interface.py into several modules now in the pli.interface package....
+
+
+version 0.0.79 (200408291438):
+- updated pli.logictypes.DictUnion to use the pli.pattern.mixin.mapping module...
+- rewriting the pli.interface using pli.logictypes.DictUnion.
+
+version 0.0.78 (200408290203):
+- done a redesign and a full rewrite of the pli.interface... (currently in the testing phase...).
+
+version 0.0.73 (200408252219):
+- added unix file format filtering to the cvs_commit script.... (NOTE: this might introduce some bugs!)
+
+version 0.0.73 (200408250410):
+- added pli.apps.pluginloader module...
+
+version 0.0.72 (200408212051):
+- added the pli.pattern.store.storeproxy.... (name might still change!)
+
+version 0.0.71 (200408200305):
+- test version of pli.pattern.store.store.BaseStore (using the pli.pattern.mixin.mapping)
+
+version 0.0.70 (200408200247):
+- added pli.pattern.mixin.mapping.AbstractMapping...
+- added pli.pattern.mixin.mapping.BasicMappingProxy...
+
+version 0.0.69 (200408200006):
+- started transfer of pli.pattern.store.store to use the pli.pattern.mixin.mapping.... (needs more testing)
+
+version 0.0.68 (200408191647):
+- added the pli.pattern.mixin package
+- added the pli.pattern.mixin.mapping module
+
+version 0.0.67 (200408191635):
+this is the first changes script test...
