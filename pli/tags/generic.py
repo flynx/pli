@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.07'''
-__sub_version__ = '''20080307125708'''
+__sub_version__ = '''20080307142513'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -221,6 +221,18 @@ def filltaggaps(tagdb):
 	return tdb_diff
 
 
+#---------------------------------------------------------iterorphans---
+def iterorphans(tagdb):
+	'''
+	iterate orpahed tags.
+	'''
+	for k, v in tagdb.items():
+		if v == None or len(v.difference((TAG_TAG, OBJECT_TAG))) == 0:
+			# XXX do we need this check???
+			if len(tags(tagdb, k).difference((TAG_TAG, OBJECT_TAG))) == 0:
+				yield k
+
+
 
 #-----------------------------------------------------------------------
 # low-level "naive" functions...
@@ -299,6 +311,8 @@ def addtags(tagdb, *tags):
 	for tag in tags:
 		if tag not in tagdb:
 			tagdb[tag] = tdbset()
+			# XXX should this tag the tag with TAG_TAG???
+			_tag(tagdb, tag, TAG_TAG)
 
 
 #----------------------------------------------------------------_tag---
@@ -456,6 +470,7 @@ def select(tagdb, *tags):
 
 
 #-------------------------------------------------------------iselect---
+##!!!
 def iselect(tagdb, *tags):
 	'''
 	an iterative version of select.
@@ -556,6 +571,9 @@ if __name__ == '__main__':
 	print exclude(ts1, select(ts1, 'Y'), 'Y')
 	print exclude(ts1, select(ts1, 'Y'), 'X')
 	
+	print list(iterorphans(ts1))
+	print tags(ts1, 'a')
+	print tags(ts1, 'aaa')
 
 
 

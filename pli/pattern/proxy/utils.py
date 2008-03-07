@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080307132338'''
+__sub_version__ = '''20080307140442'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -121,6 +121,11 @@ def %(method_name)s(self, *p, **n):
 # add the result to a predictable name in the NS.
 proxy = %(method_name)s'''
 
+	# doc...
+	if doc == None:
+		doc = ''
+	else:
+		doc += '\n\n'
 	# explicit self passing...
 	if explicit_self is True:
 		self_arg = 'self, '
