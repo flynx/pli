@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080306165348'''
+__sub_version__ = '''20080308185500'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -14,7 +14,7 @@ import sha
 import pli.objutils as objutils
 import pli.logictypes as logictypes
 
-from pli.logictypes import ANY
+from pli.logictypes import ANY, isident
 
 
 #-----------------------------------------------------------------------
@@ -265,11 +265,19 @@ class BaseSessionManager(object):
 		'''
 		second level dispatch.
 
-		this gets the path (.__get_by_path__(..) method) for the session 
-		context and calls it.
+		get the object and call it.
+
+		this does the folowing:
+			- get the session.
+			- prepare the path if .__prepare_path__ is defined.
+			- get the object via the .__get_by_path__ method.
+			- call the object and return the result.
 		'''
 		# get the session context...
 		session = self.__active_sessions__[SID][1]
+		# prepare the path...
+		if hasattr(self, '__prepare_path__'):
+			path = self.__prepare_path__(session, path)
 		# make the call...
 		return self.__get_by_path__(session, path)(*p, **n)
 	# system methods...
@@ -346,7 +354,8 @@ class BaseSessionManager(object):
 		if prefix != None:
 			res = prefix+res
 		return res
-	##!!! possible problem with an expired sid that does not get noticed... (need a more clever way to destingwith a sid)
+	##!!! possible problem with an expired sid that does not get noticed... 
+	##!!! (need a more clever way to destingwith a sid)
 	def __prepare_data__(self, path, *p, **n):
 		'''
 		get the SID out of the input data.
@@ -385,17 +394,9 @@ class BaseSessionManager(object):
 	#     protocols... (???)
 	def __get_by_path__(self, session, path):
 		'''
+		get an object by path using the attribute protocol.
 		'''
 		obj = session
-		if hasattr(self, '__prepare_path__'):
-			path = self.__prepare_path__(session, path)
-##		##!!! think of a better way to do this...
-##		if self.__item_protocol_in_path__:
-##			for name in path:
-##				obj = getattr(obj, name, obj['name'])
-##		else:
-##			for name in path:
-##				obj = getattr(obj, name)
 		for name in path:
 			obj = getattr(obj, name)
 		return obj
@@ -408,6 +409,46 @@ class BaseSessionManager(object):
 
 
 #-----------------------------------------------------------------------
+#-------------------------------SessionManagerWithItemPathGetterMixin---
+class SessionManagerWithItemPathGetterMixin(object):
+	'''
+	'''
+	def __get_by_path__(self, session, path):
+		'''
+		get an object by path.
+
+		NOTE: this will use pure item access protocol.
+		'''
+		obj = session
+		for name in path:
+			obj = obj[name]
+		return obj
+
+
+#--------------------------SessionManagerWithItemNAttrPathGetterMixin---
+class SessionManagerWithItemNAttrPathGetterMixin(object):
+	'''
+	'''
+	def __get_by_path__(self, session, path):
+		'''
+		get object by path using either the attribute or the item protocol.
+
+		if a path element is not an identifier or is not accessible ad an attr 
+		the use the attr protocol, else, use the item protocol.
+
+		NOTE: in this approach attributes have greater priority and shadow
+		      items with the same name/key.
+		'''
+		obj = session
+		for name in path:
+			if isident(name):
+				obj = getattr(obj, name, obj[name])
+			else:
+				obj = obj[name]
+		return obj
+
+
+#-----------------------------SessionManagerWithBasicPathTestingMixin---
 class SessionManagerWithBasicPathTestingMixin(object):
 	'''
 	'''
@@ -657,7 +698,7 @@ class SessionManagerWithGlobalMethodsMixin(object):
 		'''
 		if self.__is_global_method__(path[-1]):
 			return self.__call_global__(SID, path, *p, **n)
-		return super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
+		super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
 
 	def __is_global_method__(self, name):
 		'''
@@ -738,7 +779,6 @@ if __name__ == '__main__':
 	class DFL(object):
 		def meth(self, *p, **n):
 			print 'dfl.meth', p, n
-			return 123
 		def _meth(self):
 			print 'dfl._meth'
 
@@ -785,9 +825,9 @@ if __name__ == '__main__':
 	print sm.dispatch(['isalive'], '0')
 
 	sm.logout('0')
-	print sm.dispatch(['logout'], sid)
+	sm.dispatch(['logout'], sid)
 
-	print sm.dispatch(['meth'], 1, 2, m=6)
+	sm.dispatch(['meth'], 1, 2, m=6)
 
 	# in this case the system can not reliably say that the argument is
 	# a SID or not (as it is not in active sessions), thus it considers

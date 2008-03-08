@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307143129'''
+__sub_version__ = '''20080307153553'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -248,6 +248,15 @@ class TagSetTagChainMixin(object):
 		# collect all related chains...
 		res = self.select(self.__chain_tag__, *tags)
 		return res
+	def chainrelated(self, *tags):
+		'''
+		return all the tags that are related via chains.
+		'''
+		chains = self.chains(*tags)
+		res = set()
+		for chain in chains:
+			res.update(self.chain2tags(chain))
+		return res.difference(tags)
 
 
 #-------------------------------------------------StringTagChainMixin---
@@ -487,6 +496,7 @@ if __name__ == '__main__':
 	print ts.select('aaa', 'TAGCHAIN')
 	print ts.relatedtags('aaa')
 	print ts.chains('aaa')
+	print ts.chainrelated('aaa')
 ##	print ts.relatedtags('aaa:bbb')
 	
 

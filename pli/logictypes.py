@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080205155234'''
+__sub_version__ = '''20080308184834'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -202,6 +202,12 @@ issequence = oftype(list, tuple)
 
 isiterabletype = oftype(str, unicode, list, tuple, dict)
 
+
+#- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+isident = ofptype(str, unicode, predicate=lambda o: len(o) > 0 \
+												and False not in [ c.isalnum() \
+																	for c in o.split('_') ] \
+												and  o[0].isalpha())
 
 
 ###-----------------------------------------------------------------------
@@ -714,6 +720,8 @@ if __name__ == '__main__':
 	print 'a' in D
 
 	print isodd(3), isodd(6)
+
+	print isident('b0_c'), isident('aaa'), isident(''), isident('321_4')
 
 	# check the dict chain...
 	d = DictChain(a=1, b=2, c=3)
