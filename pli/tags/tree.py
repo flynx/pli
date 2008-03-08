@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307044349'''
+__sub_version__ = '''20080307153817'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -168,6 +168,7 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 			return [ o for o in self._root.select(chain, generic.OBJECT_TAG)\
 						if o != generic.TAG_TAG][0]
 		return super(TagTreePathProxy, self).__getattr__(name)
+##	__getitem__ = __getattr__
 	
 	# public interface...
 	# in general, this will form the args and call the corresponding
@@ -177,6 +178,11 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		'''
 		return self._root.relatedtags(*self._path + tags)
+	@public
+	def chains(self, *tags):
+		'''
+		'''
+		return self._root.chains(*self._path + tags)
 	##!!! OID !!!##
 	# XXX add efficient counting...
 	# XXX split this into two levels... one to return objects and
