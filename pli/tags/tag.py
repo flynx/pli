@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307153553'''
+__sub_version__ = '''20080308225241'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -99,7 +99,6 @@ class TagSetMixin(AbstractTagSet):
 	NOTE: it is not very safe to use the dict interface for editing 
 	      here directly.
 	'''
-	##!!! is this pretty?
 	__tag_engine__ = tags
 
 	# XXX do we need the __XXX__ customization methods here??

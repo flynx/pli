@@ -1,8 +1,8 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080128022740'''
-__copyright__ = '''(c) Alex A. Naanou 2003'''
+__sub_version__ = '''20080309024328'''
+__copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
 #-----------------------------------------------------------------------
@@ -29,7 +29,6 @@ class RecursiveAttrPathProxy(object):
 		'''
 		##!!!!!!
 ##		if name in ('__getstate__', '__setstate__', '__reduce__', '__reduce_ex__', '__slots__'):
-##			##!!! what should we do here???
 ##			return object.__getattribute__(self._root, name)
 		return self.__class__(self._root, self._path + (name,), self._callback, self._verify)
 	# XXX I don't like this...
