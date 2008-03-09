@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080308185500'''
+__sub_version__ = '''20080309132348'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -125,21 +125,25 @@ class SessionWithSessionNSMixin(object):
 	
 	# low level event handlers...
 	# XXX rename into __<name>__
-	def _onSessionOpen(self, manager):
+##	def _onSessionOpen(self, manager):
+	def _onSessionOpen(self):
 		'''
 		'''
 		# set the temporary namespace...
 		self.__session_ns__ = {}
-		super(SessionWithSessionNSMixin, self)._onSessionOpen(manager)
+##		super(SessionWithSessionNSMixin, self)._onSessionOpen(manager)
+		super(SessionWithSessionNSMixin, self)._onSessionOpen()
 	# XXX rename into __<name>__
-	def _onSessionClose(self, manager):
+##	def _onSessionClose(self, manager):
+	def _onSessionClose(self):
 		'''
 		'''
 		# delete the temporary namespace...
 		if hasattr(self, '__session_ns__'):
 			del self.__session_ns__
 		# fire the event...
-		super(SessionWithSessionNSMixin, self)._onSessionClose(manager)
+##		super(SessionWithSessionNSMixin, self)._onSessionClose(manager)
+		super(SessionWithSessionNSMixin, self)._onSessionClose()
 
 
 #------------------------------SessionWithSessionNSAndAttrFilterMixin---
