@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080309132348'''
+__sub_version__ = '''20080309171942'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -702,7 +702,7 @@ class SessionManagerWithGlobalMethodsMixin(object):
 		'''
 		if self.__is_global_method__(path[-1]):
 			return self.__call_global__(SID, path, *p, **n)
-		super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
+		return super(SessionManagerWithGlobalMethodsMixin, self)._dispatch(SID, path, *p, **n)
 
 	def __is_global_method__(self, name):
 		'''
@@ -765,17 +765,21 @@ if __name__ == '__main__':
 
 	class O(object):
 		def test(self):
-			pass
+			return 123
 		def meth(self, *p, **n):
 			print 'o.meth', p, n
+			return 123
 		def _meth(self):
 			print 'o._meth'
+			return 123
 
 	class S(BaseSession):
 		def meth(self, *p, **n):
 			print 'o.meth', p, n
+			return 123
 		def _meth(self):
 			print 'o._meth'
+			return 123
 
 	s = S()
 	s._setpassword('123')
@@ -783,8 +787,10 @@ if __name__ == '__main__':
 	class DFL(object):
 		def meth(self, *p, **n):
 			print 'dfl.meth', p, n
+			return 123
 		def _meth(self):
 			print 'dfl._meth'
+			return 123
 
 	class TestSessionManager(SessionManager):
 		__session_objects__ = {
@@ -831,7 +837,7 @@ if __name__ == '__main__':
 	sm.logout('0')
 	sm.dispatch(['logout'], sid)
 
-	sm.dispatch(['meth'], 1, 2, m=6)
+	print sm.dispatch(['meth'], 1, 2, m=6)
 
 	# in this case the system can not reliably say that the argument is
 	# a SID or not (as it is not in active sessions), thus it considers
