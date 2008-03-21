@@ -1,5 +1,9 @@
-# this file was generated on [200803091722]
+# this file was generated on [200803210508]
 pli changes:
+
+version 0.0.244 (200803210507):
+- moving to git.
+- all the new changes will be maintained in git commit messages.
 
 version 0.0.244 (200803071454):
 - added gc to pli.tags.generic
