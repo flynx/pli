@@ -1,14 +1,15 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20080202055205'''
-__copyright__ = '''(c) Alex A. Naanou 2003'''
+__sub_version__ = '''20080326055907'''
+__copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
 #-----------------------------------------------------------------------
 
 import types
 import new
+import sys
 
 
 #-----------------------------------------------------------------------
@@ -97,6 +98,34 @@ class classinstancemethod(object):
 			# we are called from an instance...
 			return new.instancemethod(self.inst_func, obj, cls)
 		
+
+
+#-----------------------------------------------------------------------
+#------------------------------------------------------createonaccess---
+def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
+	'''
+	return a property object that will create an instance on first access.
+	'''
+	local_attr = local_attr_tpl % name
+
+	def getter(obj):
+		if not hasattr(obj, local_attr):
+			v = constructor()
+			setattr(obj, local_attr, v)
+			return v
+		return getattr(obj, local_attr)
+	def setter(obj, value):
+		return setattr(obj, local_attr, value)
+	def remover(obj):
+		return delattr(obj, local_attr)
+	# set the attr...
+	sys._getframe(depth).f_locals[name] \
+			= property(
+					fget=getter,
+					fset=setter,
+					fdel=remover,
+					doc=doc)
+
 
 
 #-----------------------------------------------------------------------
