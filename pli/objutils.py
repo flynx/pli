@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20080326055907'''
+__sub_version__ = '''20080326152310'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
@@ -102,9 +102,23 @@ class classinstancemethod(object):
 
 #-----------------------------------------------------------------------
 #------------------------------------------------------createonaccess---
+# TODO make writing and removal optional...
 def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
 	'''
-	return a property object that will create an instance on first access.
+	return a property object that will create an an object via the provided
+	constructor on first access.
+
+	the created object will be saved in the data attribute (named local_attr_tpl % name)
+	in the containing namespace.
+
+	this also both supports writing and removal. on write the value will be 
+	written to the data attribute directly. ob removal the data attribute will 
+	be removed form the containing namespace.
+
+	an oprional doc argument will get written to the property doc.
+
+	NOTE: after removal, first access to the property will recreate it using 
+	      the constructor.
 	'''
 	local_attr = local_attr_tpl % name
 
