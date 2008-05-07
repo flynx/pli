@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080309171942'''
+__sub_version__ = '''20080507145213'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -15,6 +15,14 @@ import pli.objutils as objutils
 import pli.logictypes as logictypes
 
 from pli.logictypes import ANY, isident
+
+
+#-----------------------------------------------------------------------
+
+SID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
+			'abcdefghijklmnopqrstuvwxyz' \
+			'0123456789' \
+			## '._-@#'
 
 
 #-----------------------------------------------------------------------
@@ -40,16 +48,26 @@ class BaseSession(object):
 
 	this provides basic password support.
 	'''
+	def __hashpassword__(self, text):
+		'''
+		process the password text.
+
+		NOTE: this should produce stable results.
+		'''
+		return text
 	# LL password and security...
 	def _setpassword(self, password):
 		'''
 		'''
-		self.password = sha.sha(password).hexdigest() 
+		if password in (None, ''):
+			self._password = None
+		else:
+			self._password = self.__hashpassword__(password)
 	def checkpassword(self, password):
 		'''
 		'''
-		if hasattr(self, 'password') and self.password not in ('', None):
-			return self.password == sha.sha(password).hexdigest() 
+		if hasattr(self, '_password') and self._password not in ('', None):
+			return self._password == self.__hashpassword__(password)
 		return True
 	
 	# User level password and security...
@@ -91,6 +109,52 @@ class BaseSession(object):
 ##		this is called on session open.
 ##		'''
 
+
+#------------------------------------SessionWithSHA1PasswordHashMixin---
+class SessionWithSHA1PasswordHashMixin(object):
+	'''
+	this mixin uses the sha1 hash to hash and store passwords.
+	'''
+	def __hashpassword__(self, text):
+		'''
+		produce a sha1 hash from the text.
+		'''
+		return sha.sha(text).hexdigest()
+
+
+#----------------------------------SessionWithResettablePasswordMixin---
+class SessionWithResettablePasswordMixin(object):
+	'''
+	add a method for semi-automatic password resetting.
+	'''
+	def _resetpassword(self, chars=SID_CHARS, plen=8):
+		'''
+		set the password to a randomly generated text and return it.
+		'''
+		password = ''.join(random.sample(chars, plen))
+		self._setpassword(password)
+		return password
+
+
+#------------------------------------SessionWithPropertyPasswordMixin---
+class SessionWithPropertyPasswordMixin(object):
+	'''
+	add a .password property.
+
+	this will enable direct password writing but, only if the password is
+	either not set or is empty.
+
+	NOTE: if the password is set use .changepassword(...) method to change it.
+	'''
+	password = property(
+				doc='''password attribute.
+				
+				NOTE: this is write only, the hash can not be read.
+				NOTE: writing to this is only possible if the password is empty.''',
+				fset=lambda s, v: (not hasattr(s, '_password') \
+										or s._password not in ('', None)) \
+									and s._setpassword(v))
+	
 
 #-------------------------------------------SessionWithSessionNSMixin---
 # XXX add filter to write some attrs to __session_ns__
@@ -165,7 +229,11 @@ class SessionWithSessionNSAndAttrFilterMixin(SessionWithSessionNSMixin):
 
 
 #-------------------------------------------------------------Session---
-class Session(SessionWithSessionNSAndAttrFilterMixin, BaseSession):
+class Session(SessionWithSHA1PasswordHashMixin,
+					SessionWithResettablePasswordMixin,
+					SessionWithPropertyPasswordMixin,
+					SessionWithSessionNSAndAttrFilterMixin, 
+					BaseSession):
 	'''
 	'''
 	pass
@@ -223,10 +291,7 @@ class BaseSessionManager(object):
 	# prefix to be added to sid (to ease recognition)...
 	__sid_prefix__ = 'SID:'
 	# charactes allowed in a SID... 
-	__sid_chars__ = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' \
-					'abcdefghijklmnopqrstuvwxyz' \
-					'0123456789' \
-					#'._-@#'
+	__sid_chars__ = SID_CHARS
 	# methods accesible from the root directly... (used by .dispatch(...))
 	__system_methods__ = (
 			'login',
@@ -298,7 +363,7 @@ class BaseSessionManager(object):
 		if self.__password_check__ \
 				and hasattr(obj, 'checkpassword') \
 				and not obj.checkpassword(password):
-			self.__session_manager_error__('wrong password.', OID)
+			self.__session_manager_error__('wrong password.', OID, password=password)
 			raise SessionError, 'no such context (%s).' % OID
 		# check if already loged in... (XXX keep here?)
 		if (OID, ANY) in self.__active_sessions__.values() \
@@ -762,6 +827,8 @@ class SessionManager(SessionManagerWithBasicPathTestingMixin,
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
+
+	##!!! there seams to be a bug with the login with password...
 
 	class O(object):
 		def test(self):
