@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080309024328'''
+__sub_version__ = '''20080518202337'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
@@ -44,13 +44,22 @@ class RecursiveAttrPathProxy(object):
 	def __getattrpath__(self, root, path):
 		'''
 		'''
-##		print path
+##		print '@@@@@@@@@', path
 ##		res = root
 ##		for p in path:
 ##			res = getattr(res, p)
 ##		return res
 		raise NotImplementedError
 ##		raise AttributeError, path[0]
+
+	def __getstate__(self):
+		'''
+		'''
+		return self.__dict__
+	def __setstate__(self, state):
+		'''
+		'''
+		self.__dict__.update(state)
 
 
 

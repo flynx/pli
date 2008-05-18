@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080307153817'''
+__sub_version__ = '''20080518211107'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -118,6 +118,7 @@ class NodeConstructorWithCallbackMixin(object):
 		return res
 
 
+
 #----------------------------------------------DynamicNodeConstructor---
 class DynamicNodeConstructor(NodeConstructor):
 	'''
@@ -130,6 +131,14 @@ class DynamicNodeConstructor(NodeConstructor):
 
 		super(DynamicNodeConstructor, self).__init__(name, constructor, *common_tags)
 
+	def __getstate__(self):
+		'''
+		'''
+		return self.__dict__
+	def __setstate__(self, state):
+		'''
+		'''
+		self.__dict__.update(state)
 
 #---------------------------------DynamicNodeConstructorWithOIDReturn---
 ##!!! does this need to get reorgonized?
@@ -271,6 +280,7 @@ class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 
 
 #--------------------------------------------------------TagTreeMixin---
+##!!!! not yet very picklable...
 class TagTreeMixin(tag.AbstractTagSet):
 	'''
 	'''
@@ -321,6 +331,15 @@ class TagTree(TagTreeMixin, tag.TagSet):
 	'''
 	'''
 	__stored_set_constructor__ = set
+
+##	def __getstate__(self):
+##		'''
+##		'''
+##		return 1
+##	def __setstate__(self, state):
+##		'''
+##		'''
+##		pass
 
 
 
@@ -440,11 +459,38 @@ if __name__ == '__main__':
 	print tree.addtags('xxx', 'yyy')
 	print tree.xxx.keys()
 
-	constructor('X', A, 'fff:ggg')
+	AA = constructor('X', A, 'fff:ggg')
 	tree.X()
 
 	print tree['fff:ggg']
 	print tree['fff']
+
+	print 
+	print 
+
+
+
+##	##!!! pickle does not seem to work with recursive references... (2.5.1-specific?)
+##	import pickle
+##
+##	class X(object): pass
+##
+##	x = X()
+##
+##	d = {'x':x}
+##	x.d = d
+##	print d
+##	print pickle.dumps(d)
+
+	import cPickle as pickle
+
+	s = pickle.dumps(tree)
+
+	ss = pickle.dumps(tree.some_tag)
+
+	print AA
+	sss = pickle.dumps(AA)
+
 
 
 #=======================================================================
