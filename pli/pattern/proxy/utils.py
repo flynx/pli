@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080906224637'''
+__sub_version__ = '''20080906224912'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -171,7 +171,7 @@ def proxymethods(names, source_attr, decorators=(), explicit_self=False):
 def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 	'''
 	create a property that will fetch the attr name form an object 
-	referenced by .source_attr of no local value is defined, otherwise
+	referenced by .source_attr if no local value is defined, otherwise
 	get the local data.
 
 	NOTE: this will shadow inherited or overwrite local existing attributes 
