@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080906224521'''
+__sub_version__ = '''20080906224637'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -55,7 +55,7 @@ def superproxymethod(methodname, source_attr, class_name, exceptions=Exception, 
 	'''
 	create a proxy to the method name in the containing namespace.
 	
-	this constructed proxy will attempt to call an existing method, and
+	the constructed proxy will attempt to call an existing method, and
 	in case it fails with exceptions, it will call the alternative from 
 	the source_attr.
 	
