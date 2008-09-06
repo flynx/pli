@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080906224912'''
+__sub_version__ = '''20080906225332'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -183,8 +183,9 @@ def proxyproperty(name, source_attr, depth=1, local_attr_tpl='_%s'):
 	'''
 	local_attr = local_attr_tpl % name
 	def getter(self):
-		return getattr(self, local_attr, 
-					getattr(getattr(self, source_attr), name))
+		if hasattr(self, local_attr):
+			return getattr(self, local_attr)
+		return getattr(getattr(self, source_attr), name)
 	def setter(self, val):
 		setattr(self, local_attr, val)
 	def remover(self):
