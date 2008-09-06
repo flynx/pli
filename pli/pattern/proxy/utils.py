@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080307140442'''
+__sub_version__ = '''20080906224521'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -90,17 +90,22 @@ proxy = %(method_name)s'''
 
 
 #---------------------------------------------------------proxymethod---
+# NOTE: the interface changed, so if you used something like this:
+# 			proxymethod('some_method', 'attr', target_method_name='method', ...)
+# 		you should now do it like this:
+# 			proxymethod(('some_method', 'method'), 'attr', ...)
 # TODO create a version of this with super call...
 # XXX as soon as we can construct a function in pure python this will
 #     need to be rewritten...
-def proxymethod(method_name, source_attr, target_method_name=None, doc='', depth=1, decorators=(), explicit_self=False):
+def proxymethod(method_name, source_attr, doc='', depth=1, decorators=(), explicit_self=False):
 	'''
 	create a proxy to the method name in the containing namespace.
 
 	arguments:
-		method_name			- the name of the method to proxy.
+		method_name			- the name of the method to proxy or a tuple of two strings first
+							  is the name of the local method and the second is the name of the 
+							  target method.
 		source_attr			- attribute to which to proxy the method call.
-		target_method_name	- target method name (optional).
 		doc					- the doc string to use for the constructed function.
 		decorators			- sequence of decorators to apply to the constructed function.
 		explicit_self		- if true, pass the self to the target explicitly.
@@ -121,6 +126,11 @@ def %(method_name)s(self, *p, **n):
 # add the result to a predictable name in the NS.
 proxy = %(method_name)s'''
 
+	# get the method name and target name...
+	if type(name) in (tuple, list):
+		if len(name) != 2:
+			raise TypeError, 'name must either be a string or a sequence of two (got: %s).' % name
+		name, target_method_name = name[0], name[-1]
 	# doc...
 	if doc == None:
 		doc = ''
@@ -131,9 +141,6 @@ proxy = %(method_name)s'''
 		self_arg = 'self, '
 	else:
 		self_arg = ''
-	# target method...
-	if target_method_name == None:
-		target_method_name = method_name
 	# execute the above code...
 	exec (txt % {
 			'doc': doc,
