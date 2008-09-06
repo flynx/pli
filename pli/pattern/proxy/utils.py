@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080906225332'''
+__sub_version__ = '''20080906230338'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -119,7 +119,7 @@ def proxymethod(method_name, source_attr, doc='', depth=1, decorators=(), explic
 	txt = '''\
 def %(method_name)s(self, *p, **n):
 	"""%(doc)s
-	this is a proxy to %(target_method_name)s method.
+	this is a proxy to self.%(source_attr)s.%(target_method_name)s method.
 	"""
 	return self.%(source_attr)s.%(target_method_name)s(%(self_arg)s*p, **n)
 
@@ -159,6 +159,8 @@ proxy = %(method_name)s'''
 def proxymethods(names, source_attr, decorators=(), explicit_self=False):
 	'''
 	generate a direct proxy for each name.
+
+	for more details see docs for proxymethod(...)
 	'''
 	for name in names:
 		proxymethod(name, source_attr, depth=2,
