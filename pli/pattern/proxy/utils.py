@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080907030322'''
+__sub_version__ = '''20080907044938'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -127,10 +127,10 @@ def %(method_name)s(self, *p, **n):
 proxy = %(method_name)s'''
 
 	# get the method name and target name...
-	if type(name) in (tuple, list):
-		if len(name) != 2:
-			raise TypeError, 'name must either be a string or a sequence of two (got: %s).' % name
-		name, target_method_name = name[0], name[-1]
+	if type(method_name) in (tuple, list):
+		if len(method_name) != 2:
+			raise TypeError, 'name must either be a string or a sequence of two (got: %s).' % method_name
+		name, target_method_name = method_name[0], method_name[-1]
 	# doc...
 	if doc == None:
 		doc = ''
