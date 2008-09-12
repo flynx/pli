@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080913020706'''
+__sub_version__ = '''20080913020906'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -32,6 +32,9 @@ class Compare(object):
 		else:
 			self._name = name
 	def __call__(self):
+		'''
+		create a copy of self.
+		'''
 		return copy.copy(self)
 	def __repr__(self):
 		return '<%s object at %s>' % (self._name, hash(self))
