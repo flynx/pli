@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080913015857'''
+__sub_version__ = '''20080913020706'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -11,6 +11,8 @@ usage of standard python types.
 
 #-----------------------------------------------------------------------
 
+import copy
+
 import pli.pattern.mixin.mapping as mapping
 import pli.pattern.proxy.utils as proxyutils
 
@@ -19,18 +21,21 @@ import pli.pattern.proxy.utils as proxyutils
 # TODO create a logic proxy, with adapters....
 #      UNION(*p), INTERSECTION(*n), ...
 #
-#------------------------------------------------------------_Compare---
-class _Compare(object):
+#-------------------------------------------------------------Compare---
+class Compare(object):
 	'''
 	'''
 	def __init__(self, eq, name=None):
 		self._eq = eq
 		if name == None:
-			self.__name__ = self.__class__.__name__
+			self._name = self.__class__.__name__
 		else:
-			self.__name__ = name
+			self._name = name
+	def __call__(self):
+		return copy.copy(self)
 	def __repr__(self):
-		return '<%s object at %s>' % (self.__name__, hash(self))
+		return '<%s object at %s>' % (self._name, hash(self))
+	# comparison methods...
 	def __cmp__(self, other):
 		return self._eq
 	def __eq__(self, other):
@@ -48,15 +53,15 @@ class _Compare(object):
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this will compare to any value as equel (almost oposite to None)
-Any = ANY = _Compare(0, 'ANY')
+Any = ANY = Compare(0, 'ANY')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is bigger than any value...
-MAXIMUM = _Compare(1, 'MAXIMUM')
+MAXIMUM = Compare(1, 'MAXIMUM')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is smaller than any value...
-MINIMUM = _Compare(-1, 'MINIMUM')
+MINIMUM = Compare(-1, 'MINIMUM')
 
 
 
@@ -258,6 +263,7 @@ isident = ofptype(str, unicode, predicate=lambda o: len(o) > 0 \
 ##		return False
 ##	def __le__(self, other):
 ##		return True
+
 
 
 #-----------------------------------------------------------------------
@@ -777,7 +783,7 @@ if __name__ == '__main__':
 
 	print ld.keys()
 
-	print ANY
+	print ANY, ANY()
 
 
 #=======================================================================
