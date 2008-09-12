@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080907045542'''
+__sub_version__ = '''20080908154151'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -95,6 +95,7 @@ proxy = %(method_name)s'''
 # 		you should now do it like this:
 # 			proxymethod(('some_method', 'method'), 'attr', ...)
 # TODO create a version of this with super call...
+# TODO move depth to the end of the args...
 # XXX as soon as we can construct a function in pure python this will
 #     need to be rewritten...
 def proxymethod(method_name, source_attr, doc='', depth=1, decorators=(), explicit_self=False):
@@ -105,7 +106,8 @@ def proxymethod(method_name, source_attr, doc='', depth=1, decorators=(), explic
 		method_name			- the name of the method to proxy or a tuple of two strings first
 							  is the name of the local method and the second is the name of the 
 							  target method.
-		source_attr			- attribute to which to proxy the method call.
+		source_attr			- attribute to which to proxy the method call. if this is set to
+							  None the the method will be called directly to the current object.
 		doc					- the doc string to use for the constructed function.
 		decorators			- sequence of decorators to apply to the constructed function.
 		explicit_self		- if true, pass the self to the target explicitly.
@@ -121,7 +123,7 @@ def %(method_name)s(self, *p, **n):
 	"""%(doc)s
 	this is a proxy to self.%(source_attr)s.%(target_method_name)s method.
 	"""
-	return self.%(source_attr)s.%(target_method_name)s(%(self_arg)s*p, **n)
+	return self.%(source_attr)s%(target_method_name)s(%(self_arg)s*p, **n)
 
 # add the result to a predictable name in the NS.
 proxy = %(method_name)s'''
@@ -133,6 +135,11 @@ proxy = %(method_name)s'''
 		method_name, target_method_name = method_name[0], method_name[-1]
 	else:
 		target_method_name = method_name
+	# prepare the source attr...
+	if source_attr == None:
+		source_attr = ''
+	else:
+		source_attr += '.'
 	# doc...
 	if doc == None:
 		doc = ''
