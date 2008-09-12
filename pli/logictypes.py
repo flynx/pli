@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080308184834'''
+__sub_version__ = '''20080913015857'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -23,8 +23,14 @@ import pli.pattern.proxy.utils as proxyutils
 class _Compare(object):
 	'''
 	'''
-	def __init__(self, eq):
+	def __init__(self, eq, name=None):
 		self._eq = eq
+		if name == None:
+			self.__name__ = self.__class__.__name__
+		else:
+			self.__name__ = name
+	def __repr__(self):
+		return '<%s object at %s>' % (self.__name__, hash(self))
 	def __cmp__(self, other):
 		return self._eq
 	def __eq__(self, other):
@@ -42,15 +48,31 @@ class _Compare(object):
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this will compare to any value as equel (almost oposite to None)
-Any = ANY = _Compare(0)
+Any = ANY = _Compare(0, 'ANY')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is bigger than any value...
-MAXIMUM = _Compare(1)
+MAXIMUM = _Compare(1, 'MAXIMUM')
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # this is smaller than any value...
-MINIMUM = _Compare(-1)
+MINIMUM = _Compare(-1, 'MINIMUM')
+
+
+
+#-----------------------------------------------------------------------
+#-----------------------------------------------------------------AND---
+class AND(object):
+	'''
+	'''
+	pass
+
+
+#------------------------------------------------------------------OR---
+class OR(object):
+	'''
+	'''
+	pass
 
 
 
@@ -754,6 +776,8 @@ if __name__ == '__main__':
 	del ld['aaa']
 
 	print ld.keys()
+
+	print ANY
 
 
 #=======================================================================
