@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080913125144'''
+__sub_version__ = '''20080913125320'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -18,9 +18,6 @@ import pli.pattern.proxy.utils as proxyutils
 
 
 #-----------------------------------------------------------------------
-# TODO create a logic proxy, with adapters....
-#      UNION(*p), INTERSECTION(*n), ...
-#
 #-------------------------------------------------------------Pattern---
 class Pattern(object):
 	'''
