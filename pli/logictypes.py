@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080913020906'''
+__sub_version__ = '''20080913125144'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -21,8 +21,15 @@ import pli.pattern.proxy.utils as proxyutils
 # TODO create a logic proxy, with adapters....
 #      UNION(*p), INTERSECTION(*n), ...
 #
+#-------------------------------------------------------------Pattern---
+class Pattern(object):
+	'''
+	'''
+	pass
+
+
 #-------------------------------------------------------------Compare---
-class Compare(object):
+class Compare(Pattern):
 	'''
 	'''
 	def __init__(self, eq, name=None):
@@ -67,20 +74,44 @@ MAXIMUM = Compare(1, 'MAXIMUM')
 MINIMUM = Compare(-1, 'MINIMUM')
 
 
-
-#-----------------------------------------------------------------------
 #-----------------------------------------------------------------AND---
-class AND(object):
+class AND(Pattern):
 	'''
 	'''
-	pass
+	def __init__(self, *patterns):
+		'''
+		'''
+		self.patterns = patterns
+	
+	# XXX revise comparison order...
+	def __eq__(self, other):
+		return False not in [ other == p for p in self.patterns ]
+	def __ne__(self, other):
+		for p in self.patterns:
+			if other != p:
+				return True
+		return False
+	# XXX do we need anthing else here??
 
 
 #------------------------------------------------------------------OR---
-class OR(object):
+class OR(Pattern):
 	'''
 	'''
-	pass
+	def __init__(self, *patterns):
+		'''
+		'''
+		self.patterns = patterns
+	
+	# XXX revise comparison order...
+	def __eq__(self, other):
+		for p in self.patterns:
+			if other == p:
+				return True
+		return False
+	def __ne__(self, other):
+		return False not in [ other != p for p in self.patterns ]
+	# XXX do we need anthing else here??
 
 
 
@@ -787,6 +818,11 @@ if __name__ == '__main__':
 	print ld.keys()
 
 	print ANY, ANY()
+
+	print AND((1, ANY), (ANY, 2)) == (1, 2)
+	print AND((1, ANY), (ANY, 2)) != (ANY, 9)
+	print OR((1, ANY), (ANY, 2)) == (1, 8)
+	print OR((1, ANY), (ANY, 2)) != (7, 8)
 
 
 #=======================================================================
