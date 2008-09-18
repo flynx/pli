@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080913125320'''
+__sub_version__ = '''20080919024913'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -110,6 +110,17 @@ class OR(Pattern):
 		return False not in [ other != p for p in self.patterns ]
 	# XXX do we need anthing else here??
 
+
+#-----------------------------------------------------------------NOT---
+class NOT(Pattern):
+	'''
+	'''
+	def __init__(self, obj):
+		self.obj = obj
+	def __eq__(self, other):
+		return not (self.obj == other)
+	def __ne__(self, other):
+		return not (self.obj != other)
 
 
 #-----------------------------------------------------------------------
