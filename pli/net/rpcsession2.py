@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.3.00'''
-__sub_version__ = '''20080507145213'''
+__sub_version__ = '''20080919025449'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -521,6 +521,13 @@ class SessionManagerWithItemNAttrPathGetterMixin(object):
 class SessionManagerWithBasicPathTestingMixin(object):
 	'''
 	'''
+	# XXX rename this...
+	__special_name_exceptions__ = (
+			# XXX is this correct??
+			'__doc__',
+			'__str__',
+			)
+
 	def __prepare_path__(self, session, path):
 		'''
 		'''
@@ -528,7 +535,7 @@ class SessionManagerWithBasicPathTestingMixin(object):
 		if npath != None:
 			path = npath
 		for i in path:
-			if i.startswith('_'):
+			if i.startswith('_') and i not in self.__special_name_exceptions__:
 				self.__session_manager_error__(('%s atempted read of private attr: %s.' % (session, i)), path)
 				raise SessionError, 'can\'t read path elements starting with "_" (got: %s).' % i
 		return path
@@ -688,13 +695,15 @@ class SessionManagerWithPersistentSessionMixin(object):
 	def logout(self, SID):
 		'''
 		'''
-		if SID in self.__persistent_sessions__:
+		if self.__persistent_sessions__ is not None \
+				and SID in self.__persistent_sessions__:
 			return
 		return super(SessionManagerWithPersistentSessionMixin, self).logout(SID)
 	def isalive(self, SID):
 		'''
 		'''
-		if SID in self.__persistent_sessions__:
+		if self.__persistent_sessions__ is not None \
+				and SID in self.__persistent_sessions__:
 			return True
 		return super(SessionManagerWithPersistentSessionMixin, self).isalive(SID)
 
