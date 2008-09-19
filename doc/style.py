@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.00'''
-__sub_version__ = '''20070717183115'''
+__sub_version__ = '''20080920022138'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2007'''
 
 
@@ -18,8 +18,8 @@ NOTE: the rest of this module illustrates the styling and can be used as
 
 General format:
     - code should if possible be no more than 72 chars wide.
-    - all comments must be no more than 71 chars wide and if possible justified,
-      unless positional commenting of very long lines of code.
+    - all comments must be no more than 71 chars wide and if possible 
+      justified, unless positional commenting of very long lines of code.
     - all section separators must be exactly 72 chras wide.
 
 
@@ -31,9 +31,10 @@ Commenting culture:
       make anyone search for what you are trying to say.
     - be relevant. comment on the code/task at hand and not something
       that is not in the direct vicinity, module or universe.
-    - be descriptive. describe what you are doing but only if it
-      will take more time to get it form the code than form your 
-      comment (by the average user and not by you!).
+    - be descriptive. describe why you are doing something rather than
+      what you are doing. the later is appropriate only if it will take
+      more time to get it form the code than form your comment (by the 
+      average user and not by you!).
       making the user read the same code twice in two languages is not 
       vary polite.
     - warn and instruct if needed. it is a good idea to write out all
@@ -44,10 +45,13 @@ Commenting culture:
 
 Commenting style:
     - comments must always precede the commented code, and not follow it.
-    - there should be no blank lines separating the comment and the commented code.
+    - there should be no blank lines separating the comment and the 
+      commented code.
     - use a '#' for general commenting of code.
     - use '##' for temporary and commented-out code.
     - use '# TODO ' to indicate normal priority todo tasks/reminders.
+    - use '# XXX ' to indicate issues of a certain priority that need
+      to be dealt with.
     - High Priority Commenting (HP):
         - use '##!!!' for general todo markers (may not be followed by text).
         - use '##!!' as a start of HP remarks and notes 
