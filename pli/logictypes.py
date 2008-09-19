@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080919024913'''
+__sub_version__ = '''20080920005733'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -121,6 +121,22 @@ class NOT(Pattern):
 		return not (self.obj == other)
 	def __ne__(self, other):
 		return not (self.obj != other)
+
+
+#------------------------------------------------------------------IN---
+# NOTE: this looks odd :)
+class IN(Pattern):
+	'''
+	IN(A, B) == X iff B == X is True and A in X is True
+	'''
+	def __init__(self, obj, container=ANY):
+		self.obj = obj
+		self.container = container
+	def __eq__(self, other):
+		return self.container == other and self.obj in other
+	def __ne__(self, other):
+		return self.container != other or self.obj not in other
+
 
 
 #-----------------------------------------------------------------------
