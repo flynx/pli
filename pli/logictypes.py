@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080920005733'''
+__sub_version__ = '''20080921002201'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -74,11 +74,12 @@ MINIMUM = Compare(-1, 'MINIMUM')
 #-----------------------------------------------------------------AND---
 class AND(Pattern):
 	'''
+	AND(A, B[, ..]) == X iff X == A and X == B [and ..]
 	'''
-	def __init__(self, *patterns):
+	def __init__(self, A, B, *patterns):
 		'''
 		'''
-		self.patterns = patterns
+		self.patterns = (A, B) + patterns
 	
 	# XXX revise comparison order...
 	def __eq__(self, other):
@@ -94,11 +95,12 @@ class AND(Pattern):
 #------------------------------------------------------------------OR---
 class OR(Pattern):
 	'''
+	OR(A, B[, ..]) == X iff X == A and X == B [and ..]
 	'''
-	def __init__(self, *patterns):
+	def __init__(self, A, B, *patterns):
 		'''
 		'''
-		self.patterns = patterns
+		self.patterns = (A, B) + patterns
 	
 	# XXX revise comparison order...
 	def __eq__(self, other):
@@ -114,6 +116,7 @@ class OR(Pattern):
 #-----------------------------------------------------------------NOT---
 class NOT(Pattern):
 	'''
+	NOT(A) == X iff A != X
 	'''
 	def __init__(self, obj):
 		self.obj = obj
@@ -127,7 +130,7 @@ class NOT(Pattern):
 # NOTE: this looks odd :)
 class IN(Pattern):
 	'''
-	IN(A, B) == X iff B == X is True and A in X is True
+	IN(A, B) == X iff B == X and A in X
 	'''
 	def __init__(self, obj, container=ANY):
 		self.obj = obj
