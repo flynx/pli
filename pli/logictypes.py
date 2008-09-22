@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080921002201'''
+__sub_version__ = '''20080922231254'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -29,6 +29,8 @@ class Pattern(object):
 class Compare(Pattern):
 	'''
 	'''
+	original = True
+
 	def __init__(self, eq, name=None):
 		self._eq = eq
 		if name == None:
@@ -39,9 +41,13 @@ class Compare(Pattern):
 		'''
 		create a copy of self.
 		'''
-		return copy.copy(self)
+		res = copy.copy(self)
+		res.original = False
+		return res
 	def __repr__(self):
-		return '<%s object at %s>' % (self._name, hash(self))
+		if self.original is True:
+			return self._name
+		return '<%s object %s>' % (self._name, hash(self))
 	# comparison methods...
 	def __cmp__(self, other):
 		return self._eq
@@ -80,7 +86,10 @@ class AND(Pattern):
 		'''
 		'''
 		self.patterns = (A, B) + patterns
-	
+	def __repr__(self):
+		'''
+		'''
+		return 'AND(%s)' % ', '.join(repr(p) for p in self.patterns)
 	# XXX revise comparison order...
 	def __eq__(self, other):
 		return False not in [ other == p for p in self.patterns ]
@@ -89,7 +98,6 @@ class AND(Pattern):
 			if other != p:
 				return True
 		return False
-	# XXX do we need anthing else here??
 
 
 #------------------------------------------------------------------OR---
@@ -101,7 +109,10 @@ class OR(Pattern):
 		'''
 		'''
 		self.patterns = (A, B) + patterns
-	
+	def __repr__(self):
+		'''
+		'''
+		return 'OR(%s)' % ', '.join(repr(p) for p in self.patterns)
 	# XXX revise comparison order...
 	def __eq__(self, other):
 		for p in self.patterns:
@@ -110,7 +121,6 @@ class OR(Pattern):
 		return False
 	def __ne__(self, other):
 		return False not in [ other != p for p in self.patterns ]
-	# XXX do we need anthing else here??
 
 
 #-----------------------------------------------------------------NOT---
@@ -120,6 +130,10 @@ class NOT(Pattern):
 	'''
 	def __init__(self, obj):
 		self.obj = obj
+	def __repr__(self):
+		'''
+		'''
+		return 'NOT(%r)' % self.obj
 	def __eq__(self, other):
 		return not (self.obj == other)
 	def __ne__(self, other):
@@ -135,6 +149,10 @@ class IN(Pattern):
 	def __init__(self, obj, container=ANY):
 		self.obj = obj
 		self.container = container
+	def __repr__(self):
+		'''
+		'''
+		return 'IN(%r, %r)' % (self.obj, self.container)
 	def __eq__(self, other):
 		return self.container == other and self.obj in other
 	def __ne__(self, other):
@@ -846,6 +864,7 @@ if __name__ == '__main__':
 
 	print ANY, ANY()
 
+	print AND((1, ANY), (ANY, 2))
 	print AND((1, ANY), (ANY, 2)) == (1, 2)
 	print AND((1, ANY), (ANY, 2)) != (ANY, 9)
 	print OR((1, ANY), (ANY, 2)) == (1, 8)
