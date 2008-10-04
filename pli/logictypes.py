@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20080922231254'''
+__sub_version__ = '''20081004173331'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -174,36 +174,36 @@ class IN(Pattern):
 # 	not
 # 	
 #
-class Pattern(object):
-	'''
-	'''
-	# cmp
-	def __eq__(self, other):
-		'''
-		'''
-		pass
-	def __ne__(self, other):
-		'''
-		'''
-		pass
-	def __gt__(self, other):
-		'''
-		'''
-		pass
-	def __ge__(self, other):
-		'''
-		'''
-		pass
-	def __lt__(self, other):
-		'''
-		'''
-		pass
-	def __le__(self, other):
-		'''
-		'''
-		pass
-	# op
-	##!!!
+##class Pattern(object):
+##	'''
+##	'''
+##	# cmp
+##	def __eq__(self, other):
+##		'''
+##		'''
+##		pass
+##	def __ne__(self, other):
+##		'''
+##		'''
+##		pass
+##	def __gt__(self, other):
+##		'''
+##		'''
+##		pass
+##	def __ge__(self, other):
+##		'''
+##		'''
+##		pass
+##	def __lt__(self, other):
+##		'''
+##		'''
+##		pass
+##	def __le__(self, other):
+##		'''
+##		'''
+##		pass
+##	# op
+##	##!!!
 
 
 #--------------------------------------------------------------oftype---
@@ -283,34 +283,38 @@ ofptype = OfTypeWithArgPredicate
 
 #-----------------------------------------------------------------------
 # simple type predicates...
-isint = oftype(int)
-isfloat = oftype(float)
-iscomplex = oftype(complex)
+INT = isint = oftype(int)
+FLOAT = isfloat = oftype(float)
+COMPLEX = iscomplex = oftype(complex)
 
-isstr = oftype(str)
-isunicode = oftype(unicode)
+STR = isstr = oftype(str)
+UNICODE = isunicode = oftype(unicode)
 
-islist = oftype(list)
-istuple = oftype(tuple)
-isdict = oftype(dict)
+LIST = islist = oftype(list)
+TUPLE = istuple = oftype(tuple)
+DICT = isdict = oftype(dict)
+SET = isset = oftype(set)
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # other odd predicates :)
-isodd = ofptype(int, long, predicate=lambda o: o%2 != 0)
-iseven = ofptype(int, long, predicate=lambda o: o%2 == 0)
+ODD = isodd = ofptype(int, long, predicate=lambda o: o%2 != 0)
+EVEN = iseven = ofptype(int, long, predicate=lambda o: o%2 == 0)
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # general type groups predicates...
-isnumber = oftype(int, float, complex) 
-isstring = oftype(str, unicode)
-issequence = oftype(list, tuple)
+NUMBER = isnumber = oftype(int, float, complex) 
 
-isiterabletype = oftype(str, unicode, list, tuple, dict)
+STRING = isstring = oftype(str, unicode)
+
+SEQUENCE = issequence = oftype(list, tuple)
+CONTAINER = iscontainer = oftype(list, tuple, dict, set)
+
+ITERABLETYPE = isiterabletype = oftype(str, unicode, list, tuple, dict, set)
 
 
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-isident = ofptype(str, unicode, predicate=lambda o: len(o) > 0 \
+IDENT = isident = ofptype(str, unicode, predicate=lambda o: len(o) > 0 \
 												and False not in [ c.isalnum() \
 																	for c in o.split('_') ] \
 												and  o[0].isalpha())
