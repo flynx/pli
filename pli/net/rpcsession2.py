@@ -1,7 +1,7 @@
 #=======================================================================
 
-__version__ = '''0.3.00'''
-__sub_version__ = '''20080919025449'''
+__version__ = '''0.4.00'''
+__sub_version__ = '''20081022134745'''
 __copyright__ = '''(c) Alex A. Naanou 2008'''
 
 
@@ -353,12 +353,7 @@ class BaseSessionManager(object):
 	def login(self, OID, password='', *p, **n):
 		'''
 		'''
-		# get session context...
-		obj = self.__session_objects__.get(OID, None)
-		# check session object...
-		if obj is None:
-			self.__session_manager_error__('oid does not exist.', OID)
-			raise SessionError, 'no such context (%s).' % OID
+		obj = self.__getsession__(OID)
 		# check password...
 		if self.__password_check__ \
 				and hasattr(obj, 'checkpassword') \
@@ -402,14 +397,20 @@ class BaseSessionManager(object):
 			return True
 		return False
 	# internal methods...
-##	def __getsession__(self, SID):
+	def __getsession__(self, OID):
+		'''
+		'''
+		# get session context...
+		obj = self.__session_objects__.get(OID, None)
+		# check session object...
+		if obj is None:
+			self.__session_manager_error__('oid does not exist.', OID)
+			raise SessionError, 'no such context (%s).' % OID
+		return obj
+##	def _get_session_by_sid(self, SID):
 ##		'''
-##		get an active session by it's SID.
 ##		'''
-##		try:
-##			return self.__active_sessions__[SID][1]
-##		except KeyError:
-##			raise SessionError, 'no such session.'
+##		pass
 	def __new_sid__(self, length=20, seed=8, prefix=None):
 		'''
 		will generate a session id...
@@ -547,12 +548,27 @@ class SessionManagerWithSessionWraperMixin(object):
 	'''
 	__session_wrapper__ = None
 
+	def __getsession__(self, SID):
+		'''
+		'''
+		session = super(SessionManagerWithSessionWraperMixin, self).__getsession__(SID)
+		if self.__session_wrapper__ != None:
+			session = self.__session_wrapper__(session)
+		return session
+
+
+#--------------------------------SessionManagerWithRequestWraperMixin---
+class SessionManagerWithRequestWraperMixin(object):
+	'''
+	'''
+	__session_request_wrapper__ = None
+
 	def __get_by_path__(self, session, path):
 		'''
 		'''
-		if self.__session_wrapper__ != None:
-			session = self.__session_wrapper__(session)
-		return super(SessionManagerWithSessionWraperMixin, self).__get_by_path__(session, path)
+		if self.__session_request_wrapper__ != None:
+			session = self.__session_request_wrapper__(session)
+		return super(SessionManagerWithRequestWraperMixin, self).__get_by_path__(session, path)
 
 
 #------------------------------SessionManagerWithSessionCheckingMixin---
@@ -819,6 +835,7 @@ class SimpleSessionManager(SessionManagerWithSessionTimeoutMixin,
 #------------------------------------------------------SessionManager---
 class SessionManager(SessionManagerWithBasicPathTestingMixin,
 						SessionManagerWithSessionWraperMixin,
+						SessionManagerWithRequestWraperMixin,
 						SessionManagerWithSessionTimeoutMixin, 
 						SessionManagerWithDefaultSessionMixin,
 						SessionManagerWithListGlobalMethodsMixin,
@@ -911,6 +928,8 @@ if __name__ == '__main__':
 	print sm.dispatch(['isalive'], '0')
 
 	sm.logout('0')
+	print sm.dispatch(['isalive'], '0')
+
 	sm.dispatch(['logout'], sid)
 
 	print sm.dispatch(['meth'], 1, 2, m=6)
