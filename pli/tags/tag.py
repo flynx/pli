@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080308225241'''
+__sub_version__ = '''20081027135602'''
 __copyright__ = '''(c) Alex A. Naanou 2007'''
 
 
@@ -115,15 +115,15 @@ class TagSetMixin(AbstractTagSet):
 		explicit_self=True)
 
 	# NOTE: this is not intended for direct use...
-	proxyutils.proxymethod('_rawtag', '__tag_engine__', '_tag',
+	proxyutils.proxymethod(('_rawtag', '_tag'), '__tag_engine__',
 			doc='NOTE: this was not intended for direct use!',
 			explicit_self=True)
 	
 	# store management inteface...
-	proxyutils.proxymethod('isconsistent', '__tag_engine__', 'istagsconsistent',
+	proxyutils.proxymethod(('isconsistent', 'istagsconsistent'), '__tag_engine__',
 			doc='check for tag consistency',
 			explicit_self=True)
-	proxyutils.proxymethod('fix', '__tag_engine__', 'filltaggaps',
+	proxyutils.proxymethod(('fix', 'filltaggaps'), '__tag_engine__',
 			doc='check for tag consistency',
 			explicit_self=True)
 	
