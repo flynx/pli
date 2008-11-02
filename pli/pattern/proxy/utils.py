@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20080908154151'''
+__sub_version__ = '''20081027154102'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -59,6 +59,8 @@ def superproxymethod(methodname, source_attr, class_name, exceptions=Exception, 
 	in case it fails with exceptions, it will call the alternative from 
 	the source_attr.
 	
+	NOTE: method name can either be a string or a touple of two strings, a source
+	      and target method names.
 	NOTE: this will add the method_name to the containing namespace.
 	NOTE: source_attr is to be used as the attr name referencing the source object.
 	'''
@@ -71,11 +73,20 @@ def %(method_name)s(self, *p, **n):
 	try:
 		return super(%(class_name)s, self).%(method_name)s(*p, **n)
 	except (%(exceptions)s):
-		return self.%(source_attr)s.%(method_name)s(*p, **n)
+		return self.%(source_attr)s.%(target_method_name)s(*p, **n)
 proxy = %(method_name)s'''
+
+	# get the method name and target name...
+	if type(method_name) in (tuple, list):
+		if len(method_name) != 2:
+			raise TypeError, 'name must either be a string or a sequence of two (got: %s).' % method_name
+		method_name, target_method_name = method_name[0], method_name[-1]
+	else:
+		target_method_name = method_name
 	# execute the above code...
 	exec (txt % {
 			'method_name': method_name, 
+			'target_method_name': target_method_name, 
 			'source_attr': source_attr,
 			'class_name': class_name,
 			'exceptions': type(exceptions) in (tuple, list) \
