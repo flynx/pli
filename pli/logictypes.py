@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20081004173331'''
+__sub_version__ = '''20081102142629'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -157,6 +157,43 @@ class IN(Pattern):
 		return self.container == other and self.obj in other
 	def __ne__(self, other):
 		return self.container != other or self.obj not in other
+
+
+#------------------------------------------------------------------AT---
+class AT(Pattern):
+	'''
+	AT(A, B) == X iff A in X and X[B] == A
+
+	NOTE: this works as good as python's containers accept patterns.
+		  this mostly amounts to staying clear of using patterns as 
+		  indexes.
+	'''
+	def __init__(self, obj, position=ANY):
+		self.obj = obj
+		self.position = position
+	def __repr__(self):
+		return 'AT(%r, %r)' % (self.obj, self.position)
+	def __eq__(self, other):
+		try:
+			if other == SEQUENCE:
+				return self.obj in other \
+						and other[self.position] == self.obj
+			else:
+				# mappings...
+				return self.obj in other.values() \
+						and other[self.position] == self.obj
+		except (KeyError, IndexError):
+			return False
+	def __ne__(self, other):
+		try:
+			if other == SEQUENCE:
+				return self.obj not in other \
+						or other[self.position] != self.obj
+			else:
+				return self.obj not in other.values() \
+						or other[self.position] != self.obj
+		except (KeyError, IndexError):
+			return False
 
 
 
@@ -873,6 +910,10 @@ if __name__ == '__main__':
 	print AND((1, ANY), (ANY, 2)) != (ANY, 9)
 	print OR((1, ANY), (ANY, 2)) == (1, 8)
 	print OR((1, ANY), (ANY, 2)) != (7, 8)
+
+	print AT(1, 10) == range(100)
+	print AT(10, 10) == range(100)
+
 
 
 #=======================================================================
