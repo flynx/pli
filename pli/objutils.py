@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20080326152310'''
+__sub_version__ = '''20081117150143'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
@@ -28,7 +28,7 @@ class termsuper(super):
 			def meth(self, arg):
 				try:
 					super(X, self).meth(arg)
-				except AttributeError:
+				except (AttributeError, NotImplemented, NotImplementedError):
 					pass
 
 		# and using the termsuper...
@@ -64,7 +64,7 @@ class termsuper(super):
 	def __getattr__(self, name, *p, **n):
 		try:
 			super(termsuper, self).__getattr__(name, *p, **n)
-		except AttributeError:
+		except (AttributeError, NotImplemented, NotImplementedError):
 			return lambda *p, **n: None
 
 
@@ -98,6 +98,126 @@ class classinstancemethod(object):
 			# we are called from an instance...
 			return new.instancemethod(self.inst_func, obj, cls)
 		
+
+
+#-----------------------------------------------------------------------
+#------------------------------------------------------------property---
+_property = property
+class property(_property):
+	'''
+	create a property in a nicer way.
+
+	Example 1 -- using this class:
+		@property
+		def attr(self):
+			...
+		@property.setter
+		def attr(self, value):
+			...
+		@property.deleter
+		def attr(self):
+			...
+
+
+	Example 2 -- using this class:
+		@property
+		def attr(self):
+			...
+		@attr.setter
+		def attr(self, value):
+			...
+		@attr.deleter
+		def attr(self):
+			...
+
+	NOTE: the stile exhibited in example #1 is prefered.
+	NOTE: in example #1 and #2, each decorator may be used many times, and each
+	      consecutive time will overwrite the previous handler.
+	NOTE: in example #1 the name of the handler is used to identify the property
+	      in the enclosing namespace.
+	NOTE: in example #2 both the name of the decorator and the name of the method
+	      are significant. this is due to the way CPython handles the result of 
+		  the decorator.
+	NOTE: this was inspired by the Py3.0 property interface.
+
+	For illustration, here is how things used to be:
+
+	Example 3 -- Py25-style:
+		def getter(self):
+			...
+		def setter(self, value):
+			...
+		def deleter(self):
+			...
+		attr = property(fget=getter, fset=setter, fdel=deleter)
+		del getter, setter, deleter
+
+
+	'''
+	@classinstancemethod
+	def getter(self, func):
+		# we are called as a class method...
+		if self is property:
+			# extand the existing property...
+			##!!! this is not the best way to go... find a safer way to check this!
+			f = sys._getframe(1).f_locals.get(func.__name__, None)
+			if type(f) in (property, _property):
+				fset = f.fset
+				fdel = f.fdel
+			# create a new property...
+			else:
+				fset = fdel = None
+			doc = func.__doc__
+		else:
+			# we are called as an instance method...
+			fset = self.fset
+			fdel = self.fdel
+			doc = self.__doc__
+		# return the prop...
+		return property(fget=func, fset=fset, fdel=fdel, doc=doc)
+	@classinstancemethod
+	def setter(self, func):
+		# we are called as a class method...
+		if self is property:
+			# extand the existing property...
+			##!!! this is not the best way to go... find a safer way to check this!
+			f = sys._getframe(1).f_locals.get(func.__name__, None)
+			if type(f) in (property, _property):
+				fget = f.fget
+				fdel = f.fdel
+			# create a new property...
+			else:
+				fget = fdel = None
+			doc = func.__doc__
+		else:
+			# we are called as an instance method...
+			fget = self.fget
+			fdel = self.fdel
+			doc = self.__doc__
+		# return the prop...
+		return property(fget=fget, fset=func, fdel=fdel, doc=doc)
+	@classinstancemethod
+	def deleter(self, func):
+		# we are called as a class method...
+		if self is property:
+			# extand the existing property...
+			##!!! this is not the best way to go... find a safer way to check this!
+			f = sys._getframe(1).f_locals.get(func.__name__, None)
+			if type(f) in (property, _property):
+				fget = f.fget
+				fset = f.fset
+			# create a new property...
+			else:
+				fset = fget = None
+			doc = func.__doc__
+		else:
+			# we are called as an instance method...
+			fset = self.fset
+			fdel = self.fdel
+			doc = self.__doc__
+		# return the prop...
+		return property(fget=fget, fset=fset, fdel=func, doc=doc)
+
 
 
 #-----------------------------------------------------------------------
