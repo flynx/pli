@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20070124021359'''
+__sub_version__ = '''20090410122453'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -172,7 +172,7 @@ class FireInSeconds(AbstractTimerEvent, event.InstanceEvent):
 	'''
 	this will create an event that will fire after a given number of 
 	seconds.
-	afrer this is fired it will be recycled (e.g. the event is fired once)
+	after this is fired it will be recycled (e.g. the event is fired once)
 
 	NOTE: the accuracy of this depends on the timer resolution.
 	'''
