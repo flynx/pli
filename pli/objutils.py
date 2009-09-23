@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20090923131527'''
+__sub_version__ = '''20090923133544'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
@@ -249,8 +249,10 @@ def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
 		if not hasattr(obj, local_attr):
 			# check if we need to get the constructor first...
 			if type(constructor) in (str, unicode):
-				constructor = getattr(obj, constructor)
-			v = constructor()
+				c = getattr(obj, constructor)
+			else:
+				c = constructor
+			v = c()
 			setattr(obj, local_attr, v)
 			return v
 		return getattr(obj, local_attr)
