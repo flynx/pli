@@ -1,11 +1,12 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090923124527'''
+__sub_version__ = '''20090923130743'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
 #-----------------------------------------------------------------------
+##!!! revise docs....
 __doc__ = '''\
 This module implements a basic object tagging engine.
 
@@ -184,6 +185,7 @@ class LinkSetMixin(object):
 
 
 #---------------------------------------------------------BasicTagSetMixin---
+##!!! revise...
 class BasicTagSetMixin(AbstractTagSet):
 	'''
 	defines basic taging operations.
@@ -272,18 +274,23 @@ class BasicTagSetMixin(AbstractTagSet):
 
 
 #--------------------------------------------TagSetBasicSelectorMixin---
+# XXX possible hack: the obj_tag is not tagged as a tag.... 
 class TagSetBasicSelectorMixin(AbstractTagSet):
 	'''
 	'''
-	def tags(self, obj):
+	def tags(self, obj=None):
 		'''
 		return the tags tagging the object.
 
 		NOTE: this removes all the relations that are not tags.
+		NOTE: without arguments this will return all available tags.
 		'''
 		tag_tag = self.__tag_tag__
 		obj_tag = self.__object_tag__
 		tagdb = self.__tagset__
+		if obj is None:
+			# XXX possible hack: the obj_tag is not tagged as a tag.... 
+			return tagdb[tag_tag].copy().union((obj_tag,))
 		return self.__reverse_links__[obj].intersection(tagdb[tag_tag].union([obj_tag]))
 	##!!! revise...
 	def relatedtags(self, *tags):
@@ -300,8 +307,7 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		tagdb = self.__tagset__
 		revlinks = self.__reverse_links__
 		# get all the valid data...
-##		objs = self.select(obj_tag, *tags)
-		objs = self.select(*tags)
+		objs = self.all(*tags)
 		res = set()
 		# gather all the related tags...
 		for o in objs:
@@ -309,6 +315,10 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		# remove the objects and input tags...
 		res.difference_update((obj_tag,) + tags + tuple(objs))
 		return res
+	def objects(self):
+		'''
+		'''
+		return self.__tagset__[self.__object_tag__].copy()
 
 
 
@@ -668,6 +678,16 @@ if __name__ == '__main__':
 	pprint(words.tags('a'))
 
 ##	pprint(words.any('t', 'x').none('c'))
+
+	pprint(words.objects())
+
+	pprint(words.any('a').objects())
+
+	pprint(words.tags())
+
+	pprint(words.tags('that'))
+
+	pprint(words.tags('t'))
 
 
 
