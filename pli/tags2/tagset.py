@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090923133707'''
+__sub_version__ = '''20090923134948'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
@@ -67,8 +67,46 @@ Container structure:
 
 
 
-Notes
------
+Selectors
+---------
+
+A selector is a means of filtering the data in the store. 
+
+There are two types of selectors: 
+	- concatenative, returning tagsets, and
+	- non-concatenative returning direct data.
+
+
+Selector operations:
+	tagset.all(*tags) -> tagset
+		select items where each is tagged with ALL of the given tags.
+
+	tagset.any(*tags) -> tagset
+		select items where each item is tagged with ANY (at least one)
+		of the given tags. 
+
+	tagset.none(*tags) -> tagset
+		select items where each item is NOTE tagged with any of the given
+		tags.
+
+	tagset.tags([object]) -> set
+		select the tags tagging the object.
+		
+		if no object is given then return all the tags.
+
+	tagset.objects() -> set
+		select all the object in the current tagset.
+
+	tagset.relatedtags(...) -> ...
+		XXX
+
+NOTE: concatinative selectors also filter tags (XXX need to describe this
+	  in more detail!)
+
+
+
+General notes
+-------------
 
 It is expected that the number of tags will grow far slower than the 
 number of objects (after stabilizing the objects in a live system
@@ -703,6 +741,9 @@ if __name__ == '__main__':
 	pprint(words.tags('that'))
 
 	pprint(words.tags('t'))
+
+	##!!! is this correct???
+	pprint(words.all())
 
 
 
