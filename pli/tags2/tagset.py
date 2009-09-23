@@ -1,12 +1,11 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090923131100'''
+__sub_version__ = '''20090923133707'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
 #-----------------------------------------------------------------------
-##!!! revise docs....
 __doc__ = '''\
 This module implements a basic object tagging engine.
 
@@ -25,18 +24,23 @@ There are also basic structural consistency verification and restoration
 routines implemented here.
 
 
+
 The Tag Store
 -------------
 
 A dict-compatible object used to store objects and tags.
 
 Semantics:
-	Each value stores the tags/objects related to it's key.
+	A key is an entity that "relates" to it's values.
+
+	for tags we say that the key tags it's values.
 
 	When the object is tagged, the whole chain (including the object)
 	is treated as a set of related tags. The tag is recorded as a key
 	and the rest are recorded in a set as a value to that key. This is
 	done for each tag in the given set.
+
+	NOTE: for tags the relation is asymmetrical.
 
 Results:
 	+ trivial and fast search.
@@ -48,9 +52,18 @@ Results:
 NOTE: there is no distinction between tagged abjects and tags other
       than the two special tags "tag" and "object". They are both
       treated the same and stored in one structure.
+NOTE: the system tags are configurable.
 
-Structure:
-	{ <tag>: set([<tag>, ...]), ...}
+
+Container structure:
+	{ 
+		<tag>: set([
+			<tag>,
+			...]),
+		...
+		<object>: set([]),
+		...
+	}
 
 
 
@@ -70,6 +83,8 @@ with each other.
 Most searches will be tag oriented, possibly with a final filtration
 by tag or object.
 
+The current architecture favors concatenative selectors, this each selector
+will construct a new store of the same type as the parent.
 
 
 '''
@@ -89,18 +104,14 @@ import pli.objutils as objutils
 #
 # TODO add an iterative select that goes good on memeory (different
 #      algorithm)...
-# TODO generic methods to check for tags, or if a tag exists... etc.
 # TODO make the TAG_TAG and OBJECT_TAG tags optional and/or 
 #      confugurable...
 #      the problem here is the lack of ability to control these tags;
 #      in cases it might be usefull to be able to add a third system
 #      tag or remove one...
 #      ....this may be done as a seporate layer
-# TODO add more basic tag operations:
-# 		all		- select(...) 			done.
-# 		any			- ???
-# 		none			- 						done but not here.
-# 		pattern			- search (difflib?)
+# TODO use None instead of an empty set for keys that still have no
+#      relations...
 #
 #
 #-----------------------------------------------------------------------
@@ -210,17 +221,18 @@ class BasicTagSetMixin(AbstractTagSet):
 		'''
 		tagdb = self.__tagset__
 		revlinks = self.__reverse_links__
+		tdbset = self.__stored_set_constructor__
 		# add tags...
 		for t in tags:
 			if t not in tagdb:
-				tagdb[t] = self.__stored_set_constructor__()
+				tagdb[t] = tdbset()
 			tagdb[t].add(obj)
 		# add object to db...
 		if obj not in tagdb:
-			tagdb[obj] = self.__stored_set_constructor__()
+			tagdb[obj] = tdbset()
 		# add reverse links...
 		if obj not in revlinks:
-			revlinks[obj] = self.__stored_set_constructor__()
+			revlinks[obj] = tdbset()
 		revlinks[obj].update(tags)
 		return self
 	def tag(self, obj, *tags):
