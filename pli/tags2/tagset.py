@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090923130743'''
+__sub_version__ = '''20090923131100'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
@@ -315,8 +315,11 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		# remove the objects and input tags...
 		res.difference_update((obj_tag,) + tags + tuple(objs))
 		return res
+##	# XXX should this be a prop?
+##	@property
 	def objects(self):
 		'''
+		return all the objects in the current tagset.
 		'''
 		return self.__tagset__[self.__object_tag__].copy()
 
