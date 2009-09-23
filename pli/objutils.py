@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20081117150143'''
+__sub_version__ = '''20090923131527'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
@@ -228,6 +228,9 @@ def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
 	return a property object that will create an an object via the provided
 	constructor on first access.
 
+	if the constructor is a string, it will be used as a method name in the 
+	containing object. this method will be used to construct the object.
+
 	the created object will be saved in the data attribute (named local_attr_tpl % name)
 	in the containing namespace.
 
@@ -244,6 +247,9 @@ def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
 
 	def getter(obj):
 		if not hasattr(obj, local_attr):
+			# check if we need to get the constructor first...
+			if type(constructor) in (str, unicode):
+				constructor = getattr(obj, constructor)
 			v = constructor()
 			setattr(obj, local_attr, v)
 			return v
