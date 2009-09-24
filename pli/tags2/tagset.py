@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090923134948'''
+__sub_version__ = '''20090925001058'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
@@ -97,8 +97,10 @@ Selector operations:
 	tagset.objects() -> set
 		select all the object in the current tagset.
 
-	tagset.relatedtags(...) -> ...
-		XXX
+	tagset.relatedtags(*tags) -> set
+		select the tags related to the given. related tags are those that
+		also tag the seletced objects.
+		i.e. tags sutable for further specialization via .all(...)
 
 NOTE: concatinative selectors also filter tags (XXX need to describe this
 	  in more detail!)
@@ -152,6 +154,11 @@ import pli.objutils as objutils
 #      relations...
 #
 #
+#-----------------------------------------------------------------------
+class TagError(Exception):
+	pass
+
+
 #-----------------------------------------------------------------------
 #-----------------------------------------------------AbstractLinkSet---
 class AbstractLinkSet(object):
@@ -338,6 +345,8 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		tag_tag = self.__tag_tag__
 		obj_tag = self.__object_tag__
 		tagdb = self.__tagset__
+		if tag_tag not in tagdb:
+			return set()
 		if obj is None:
 			# XXX possible hack: the obj_tag is not tagged as a tag.... 
 			return tagdb[tag_tag].copy().union((obj_tag,))
@@ -348,7 +357,7 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		return the related tags to the given.
 
 		two tags are related if they both tag the same object. thus this will 
-		return the tags sutable for further specialization.
+		return the tags suitable for further specialization.
 
 		NOTE: to get all the objects use "select(tagdb, tag, tags, __object_tag__)"
 			  with the same tags...
@@ -357,7 +366,7 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		tagdb = self.__tagset__
 		revlinks = self.__reverse_links__
 		# get all the valid data...
-		objs = self.all(*tags)
+		objs = self.all(*tags).objects()
 		res = set()
 		# gather all the related tags...
 		for o in objs:
@@ -371,7 +380,11 @@ class TagSetBasicSelectorMixin(AbstractTagSet):
 		'''
 		return all the objects in the current tagset.
 		'''
-		return self.__tagset__[self.__object_tag__].copy()
+		object_tag = self.__object_tag__
+		tagset = self.__tagset__
+		if object_tag in tagset:
+			return tagset[object_tag].copy()
+		return set()
 
 
 
@@ -545,6 +558,7 @@ class TagSetInitMixin(AbstractTagSet):
 class TagSetSelectorMixin(TagSetUtilsMixin):
 	'''
 	'''
+	##!!! should these in case of tag conflicts return empty tagsets or just err?
 	def _all(self, *tags):
 		'''
 		selects all objects tagged with all the tags.
@@ -575,12 +589,16 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		all that are tagged with all of the tags.
 		'''
 		tags = set(tags)
-		intersection = self._all(*tags)
-		# build a result tagset...
-		res = self.__class__([ (k, self[k].copy()) 
-										for k in self.keys()
-										if k in intersection 
-											or len(self[k].intersection(intersection)) > 0 ])
+		try:
+			intersection = self._all(*tags)
+			# build a result tagset...
+			res = self.__class__([ (k, self[k].copy()) 
+											for k in self.keys()
+											if k in intersection 
+												or len(self[k].intersection(intersection)) > 0 ])
+		except KeyError:
+##			raise TagError, 'tag "%s" not present in current tagset.' % t
+			return self.__class__()
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
 		res.removetaggaps()
@@ -595,14 +613,19 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 
 		##!!! revize...
 		objects = set()
-		[ objects.update(self[t]) for t in tags ]
+		try:
+			[ objects.update(self[t]) for t in tags ]
 
-		res = self.__class__([ (k, self[k].copy()) 
-										for k in self.keys()
-										if k in tags 
-											or len(tags.intersection(self[k])) > 0
-											or k in objects ])
-##											or self[k].issubset(objects) ])
+			res = self.__class__([ (k, self[k].copy()) 
+											for k in self.keys()
+											if k in tags 
+												or len(tags.intersection(self[k])) > 0
+												or k in objects ])
+##												or self[k].issubset(objects) ])
+		except KeyError:
+##			raise TagError, 'tag "%s" not present in current tagset.' % t
+			return self.__class__()
+
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
 		res.removetaggaps()
@@ -616,14 +639,19 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		tags = set(tags)
 
 		objects = set()
-		[ objects.update(self[t]) for t in tags ]
+		try:
+			[ objects.update(self[t]) for t in tags ]
 
-		res = self.__class__([ (k, self[k].copy()) 
-										for k in self.keys() 
-										if (k not in tags
-												and len(tags.intersection(self[k])) == 0
-												and k not in objects)
-											or not self[k].issubset(objects) ])
+			res = self.__class__([ (k, self[k].copy()) 
+											for k in self.keys() 
+											if (k not in tags
+													and len(tags.intersection(self[k])) == 0
+													and k not in objects)
+												or not self[k].issubset(objects) ])
+		except KeyError:
+##			raise TagError, 'tag "%s" not present in current tagset.' % t
+			return self.__class__()
+
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
 		res.removetaggaps()
@@ -744,6 +772,30 @@ if __name__ == '__main__':
 
 	##!!! is this correct???
 	pprint(words.all())
+
+	pprint(words.relatedtags('a', 't'))
+
+	pprint(words.relatedtags('a', 't', 'e'))
+
+	pprint(words.relatedtags('a', 't', 'e', 'g'))
+
+	pprint(words.relatedtags('a', 't', 'e', 'g', 'd'))
+	pprint(words.all('a', 't', 'e', 'g', 'd').tags())
+	pprint(words.all('a', 't', 'e', 'g', 'd').objects())
+
+	pprint(words.all('a', 't', 'e', 'g', 'd').none('.').objects())
+	pprint(words.all('a', 't', 'e', 'g', 'd').none('.', 'a').objects())
+
+
+	pprint(words.all('t', 'e').tags())
+	pprint(words.all('t', 'e').any('l', 'j').objects())
+
+	# errors -- tag conflicts...
+	# XXX should these err or just return empty tagsets???
+	pprint(words.all('t', 'e').any('l').any('j').objects())
+	pprint(words.all('t', 'e').all('l').all('j').objects())
+	pprint(words.all('t', 'e').all('l').all('j').tags())
+	pprint(words.all('t', 'e').all('l').all('j'))
 
 
 
