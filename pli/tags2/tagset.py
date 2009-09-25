@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090925001058'''
+__sub_version__ = '''20090925074723'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
@@ -584,6 +584,7 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		for t in tags:
 			res.intersection_update(tagdb[t])
 		return res.difference(visited)
+	##!!! on coflict this produces a resul not containing system tags (tagset.__init__ problem)...
 	def all(self, *tags):
 		'''
 		all that are tagged with all of the tags.
@@ -609,22 +610,19 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		'''
 		all that are tagged with any of the tags.
 		'''
-		tags = set(tags)
+		# take only the tags present in self and ignore the rest...
+		# XXX should we err if a tag s not present??
+		tags = set(tags).intersection(self)
 
-		##!!! revize...
 		objects = set()
-		try:
-			[ objects.update(self[t]) for t in tags ]
+		[ objects.update(self[t]) for t in tags ]
 
-			res = self.__class__([ (k, self[k].copy()) 
-											for k in self.keys()
-											if k in tags 
-												or len(tags.intersection(self[k])) > 0
-												or k in objects ])
+		res = self.__class__([ (k, self[k].copy()) 
+										for k in self.keys()
+										if k in tags 
+											or len(tags.intersection(self[k])) > 0
+											or k in objects ])
 ##												or self[k].issubset(objects) ])
-		except KeyError:
-##			raise TagError, 'tag "%s" not present in current tagset.' % t
-			return self.__class__()
 
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
@@ -639,18 +637,20 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		tags = set(tags)
 
 		objects = set()
-		try:
-			[ objects.update(self[t]) for t in tags ]
+		[ objects.update(self[t]) 
+			# skip tags not present in self...
+			for t in tags.intersection(self) ]
 
-			res = self.__class__([ (k, self[k].copy()) 
-											for k in self.keys() 
-											if (k not in tags
-													and len(tags.intersection(self[k])) == 0
-													and k not in objects)
-												or not self[k].issubset(objects) ])
-		except KeyError:
-##			raise TagError, 'tag "%s" not present in current tagset.' % t
-			return self.__class__()
+		# NOTE: if a tagset is inconsistent, i.e. some tags are not
+		# 		present in keys bot still tag an object that object
+		# 		will get cut out...
+		# 		XXX this might be a good place to err...
+		res = self.__class__([ (k, self[k].copy()) 
+										for k in self.keys() 
+										if (k not in tags
+												and len(tags.intersection(self[k])) == 0
+												and k not in objects)
+											or not self[k].issubset(objects) ])
 
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
@@ -795,6 +795,10 @@ if __name__ == '__main__':
 	pprint(words.all('t', 'e').any('l').any('j').objects())
 	pprint(words.all('t', 'e').all('l').all('j').objects())
 	pprint(words.all('t', 'e').all('l').all('j').tags())
+	pprint(words.all('t', 'e').all('l'))
+	pprint(words.all('t', 'e').all('l').any('j'))
+	pprint(words.all('t', 'e').all('l').any('j').tags())
+	pprint(words.all('t', 'e').all('l').none('j').tags())
 	pprint(words.all('t', 'e').all('l').all('j'))
 
 
