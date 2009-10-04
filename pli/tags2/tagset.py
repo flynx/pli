@@ -1,8 +1,8 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20090925074723'''
-__copyright__ = '''(c) Alex A. Naanou 2007-'''
+__sub_version__ = '''20091004223407'''
+__copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
 #-----------------------------------------------------------------------
@@ -155,8 +155,10 @@ import pli.objutils as objutils
 #
 #
 #-----------------------------------------------------------------------
+#------------------------------------------------------------TagError---
 class TagError(Exception):
 	pass
+
 
 
 #-----------------------------------------------------------------------
@@ -399,18 +401,20 @@ class TagSetUtilsMixin(TagSetBasicSelectorMixin):
 	def _rebuild_system_tags(self, other):
 		'''
 		'''
+		other_tagdb = other.__tagset__
+		tagdb = self.__tagset__
 		# rebuild system tags...
-		self[self.__tag_tag__] = set( t for t in other[other.__tag_tag__] 
-											if t in self 
+		tagdb[self.__tag_tag__] = set( t for t in other_tagdb[other.__tag_tag__] 
+											if t in tagdb 
 												or t == other.__tag_tag__ ) 
-		self[self.__object_tag__] = set( t for t in other[other.__object_tag__] 
-											if t in self 
+		tagdb[self.__object_tag__] = set( t for t in other_tagdb[other.__object_tag__] 
+											if t in tagdb 
 												or t == other.__object_tag__ ) 
 		return self
 	def _rebuild_reverse_links(self, other):
 		'''
 		'''
-		self.__reverse_links__ = dict( (k, v.intersection(self)) for k, v in other.__reverse_links__.items() 
+		self.__reverse_links__ = self.__reverse_links__.__class__( (k, v.intersection(self)) for k, v in other.__reverse_links__.items() 
 											if k in self ) 
 		return self
 
@@ -543,7 +547,6 @@ class TagSetDictMixin(AbstractTagSet):
 
 	objutils.createonaccess('__reverse_links__', dict)
 
-	
 
 #-----------------------------------------------------TagSetInitMixin---
 class TagSetInitMixin(AbstractTagSet):
@@ -584,7 +587,7 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		for t in tags:
 			res.intersection_update(tagdb[t])
 		return res.difference(visited)
-	##!!! on coflict this produces a resul not containing system tags (tagset.__init__ problem)...
+	##!!! on coflict this produces a result not containing system tags (tagset.__init__ problem)...
 	def all(self, *tags):
 		'''
 		all that are tagged with all of the tags.
