@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20091004223407'''
+__sub_version__ = '''20091005003814'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -493,8 +493,9 @@ class TagSetUtilsMixin(TagSetBasicSelectorMixin):
 	def removetaggaps(self):
 		'''
 		'''
+		ts = self.__tagset__
 		for key, dif in self.itertaggaps():
-			self[key].difference_update(dif)
+			ts[key].difference_update(dif)
 	def iterorphans(self):
 		'''
 		iterate orpahed tags.
@@ -558,6 +559,7 @@ class TagSetInitMixin(AbstractTagSet):
 #-----------------------------------------------------------------------
 # all basic tag selectors should return tagsets...
 # XXX this is really ugly, need to revise/rewrite...
+##!!! this needs to be a mapping -- constructor interface...
 class TagSetSelectorMixin(TagSetUtilsMixin):
 	'''
 	'''
@@ -593,13 +595,14 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		all that are tagged with all of the tags.
 		'''
 		tags = set(tags)
+		ts = self.__tagset__
 		try:
 			intersection = self._all(*tags)
 			# build a result tagset...
-			res = self.__class__([ (k, self[k].copy()) 
-											for k in self.keys()
+			res = self.__class__([ (k, ts[k].copy()) 
+											for k in ts.keys()
 											if k in intersection 
-												or len(self[k].intersection(intersection)) > 0 ])
+												or len(ts[k].intersection(intersection)) > 0 ])
 		except KeyError:
 ##			raise TagError, 'tag "%s" not present in current tagset.' % t
 			return self.__class__()
@@ -616,16 +619,17 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		# take only the tags present in self and ignore the rest...
 		# XXX should we err if a tag s not present??
 		tags = set(tags).intersection(self)
+		ts = self.__tagset__
 
 		objects = set()
-		[ objects.update(self[t]) for t in tags ]
+		[ objects.update(ts[t]) for t in tags ]
 
-		res = self.__class__([ (k, self[k].copy()) 
-										for k in self.keys()
+		res = self.__class__([ (k, ts[k].copy()) 
+										for k in ts.keys()
 										if k in tags 
-											or len(tags.intersection(self[k])) > 0
+											or len(tags.intersection(ts[k])) > 0
 											or k in objects ])
-##												or self[k].issubset(objects) ])
+##												or ts[k].issubset(objects) ])
 
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
@@ -638,9 +642,10 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		all that are tagged with none of the tags.
 		'''
 		tags = set(tags)
+		ts = self.__tagset__
 
 		objects = set()
-		[ objects.update(self[t]) 
+		[ objects.update(ts[t]) 
 			# skip tags not present in self...
 			for t in tags.intersection(self) ]
 
@@ -648,12 +653,12 @@ class TagSetSelectorMixin(TagSetUtilsMixin):
 		# 		present in keys bot still tag an object that object
 		# 		will get cut out...
 		# 		XXX this might be a good place to err...
-		res = self.__class__([ (k, self[k].copy()) 
-										for k in self.keys() 
+		res = self.__class__([ (k, ts[k].copy()) 
+										for k in ts.keys() 
 										if (k not in tags
-												and len(tags.intersection(self[k])) == 0
+												and len(tags.intersection(ts[k])) == 0
 												and k not in objects)
-											or not self[k].issubset(objects) ])
+											or not ts[k].issubset(objects) ])
 
 		res._rebuild_system_tags(self)
 		res._rebuild_reverse_links(self)
@@ -697,9 +702,17 @@ if __name__ == '__main__':
 	
 	ts = DictTagSet()
 
+	ts.tag('X', 'a', 'b', 'c')
+
+	pprint(ts)
+
+	ts = DictTagSet()
+
 	ts.tag('X', 'a')
 	ts.tag('X', 'b')
 	ts.tag('X', 'c')
+
+	pprint(ts)
 
 	ts.tag('Y', 'c', 'd')
 
@@ -744,7 +757,7 @@ if __name__ == '__main__':
 	'''
 
 	words = DictTagSet() 
-	[[ words.tag(w, l) for l in w ] for w in txt.split() ]
+	[ words.tag(w, *tuple(w)) for w in txt.split() ]
 
 ##	pprint(words)
 ##	pprint(words.__tagset__['t'])
