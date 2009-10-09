@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.09'''
-__sub_version__ = '''20090410122453'''
+__sub_version__ = '''20091009155707'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2004'''
 
 
@@ -40,8 +40,7 @@ class Timer(object):
 	def installhook(self, hook_func):
 		'''
 		'''
-		if self.__callbacks__ == ():
-			self.start()
+		self.start()
 		self.__callbacks__ += (hook_func,)
 	def uninstallhook(self, hook_func):
 		'''
@@ -57,8 +56,6 @@ class Timer(object):
 		if not self.running:
 			self.running = True
 			return thread.start_new(self.loop, ())
-		else:
-			raise TypeError, 'can\'t start the timer twice'
 ##	def stop(self):
 ##		'''
 ##		'''
