@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20091005003814'''
+__sub_version__ = '''20100111024210'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -102,6 +102,19 @@ Selector operations:
 		also tag the seletced objects.
 		i.e. tags sutable for further specialization via .all(...)
 
+
+	tagset.chains(*tags) -> set
+		XXX
+
+	tagset.chainrelated(*tags) -> set
+		XXX
+
+	tagset.chain2tags(chain) -> list
+		XXX
+
+	tagset.tags2chain(*tags) -> str
+		XXX
+
 NOTE: concatinative selectors also filter tags (XXX need to describe this
 	  in more detail!)
 
@@ -138,6 +151,7 @@ import pli.objutils as objutils
 
 #-----------------------------------------------------------------------
 #
+# XXX need tagchain support!!! (used by tree)
 #
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -678,20 +692,188 @@ class TagSetMixin(BasicTagSetMixin, TagSetSelectorMixin, TagSetUtilsMixin):
 
 
 #-----------------------------------------------------------------------
+##!!! tagchian mechanics...
+##!!! move this to a different module...
+#--------------------------------------------TagSetWithTagChainsMixin---
+# XXX do we need chain-specific select???
+##!!! need to migrate this to the new interface !!!##
+class TagSetTagChainMixin(object):
+	'''
+	a chain is a tuple of tags.
+
+	the tag chain structure is as follows:
+
+		title <------->	Terminator
+		   \			   /
+			\			  /
+			 \			 /
+			  v			v
+			(title, Terminator)
+
+	- all the chain elements tag the chain (all-one).
+	- all chain elements are linked (all-all).
+
+	NOTE: this must be mixed with a valid tagset.
+	NOTE: by default the chains are represented as tuples.
+	'''
+	# the tag tagging the tagchains...
+	# NOTE: if this is None, do not tag chains
+	__chain_tag__ = 'TAGCHAIN'
+
+	# tag interface...
+	def addtags(self, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		# process chains...
+		self._addchains(*chains)
+		super(TagSetTagChainMixin, self).addtags(*tags)
+		##!!! return??
+	def tag(self, obj, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		self._addchains(*chains)
+		return super(TagSetTagChainMixin, self).tag(obj, *(tags+chains))
+	def _tag(self, obj, *tags):
+		'''
+		'''
+		tags, chains = self._splitchains(tags)
+		self._addchains(*chains)
+		return super(TagSetTagChainMixin, self)._tag(obj, *(tags+chains))
+	# XXX this may be usefull for garbage collection...
+##	def untag(self, obj, *tags):
+##		'''
+##		'''
+##		tags, chaintags, chains = self._splitchains(tags)
+##		# XXX process chains...
+##		##!!!
+##		super(TagSetTagChainMixin, self).untag(obj, *tags)
+##		##!!! return??
+	# chain-specific helpers...
+	def _ischain(self, tag):
+		'''
+		test if a tag is tagchain compatible.
+		'''
+		if type(tag) is tuple:
+			return True
+		return False
+	def _splitchains(self, tags):
+		'''
+		split the tags and chains.
+
+		returns: <tags>, <chians>
+		'''
+		t = ()
+		c = ()
+		ischain = self._ischain
+		for tag in tags:
+			if ischain(tag):
+				c += (tag,)
+			else:
+				t += (tag,)
+		return t, c
+	def _addchains(self, *chains):
+		'''
+		'''
+		for c in chains:
+			# check if chain exists...
+			if c not in self:
+				t = self.chain2tags(c)
+				if self.__chain_tag__ != None:
+					self._tag(c, *(t+(tags.TAG_TAG, self.__chain_tag__)))
+				else:
+					self._tag(c, *(t+(tags.TAG_TAG,)))
+				# links all the tags in a chain...
+				self.__tag_engine__.link(self, c, *t)
+	# tag-chain specific methods...
+	@staticmethod
+	def chain2tags(chain):
+		'''
+		return the tags in chain.
+		'''
+		# XXX check if cahin is a chain????
+		return tuple(chain)
+	@staticmethod
+	def tags2chain(*tags):
+		'''
+		'''
+		return tags
+	def chains(self, *tags):
+		'''
+		return all the chains that contain tags.
+
+		NOTE: of chains are given, then all the tags in them will be 
+		      added to the search.
+		'''
+		tags, chains = self._splitchains(tags)
+		tags = set(tags)
+		for chain in chains:
+			tags.update(self.chain2tags(chain))
+		# collect all related chains...
+		res = self.all(self.__chain_tag__, *tags)
+		return res
+	def chainrelated(self, *tags):
+		'''
+		return all the tags that are related via chains.
+		'''
+		chains = self.chains(*tags)
+		res = set()
+		for chain in chains:
+			res.update(self.chain2tags(chain))
+		return res.difference(tags)
+
+
+#-------------------------------------------------StringTagChainMixin---
+# XXX add consistency checking...
+##!!! need to migrate this to the new interface !!!##
+class StringTagChainMixin(object):
+	'''
+	changes tagchain format to the folowing string syntax:
+
+		<tag>:<tag>[:...]
+
+	NOTE: this must be mixed with a valid tagset with chain support.
+	'''
+	def _ischain(self, tag):
+		'''
+		test if a tag is tagchain compatible.
+		'''
+		if type(tag) in (str, unicode) \
+				and ':' in tag \
+				and False not in [ len(t) > 0 for t in tag.split(':') ]:
+			return True
+		return False
+	@staticmethod
+	def chain2tags(chain):
+		'''
+		return the tags in chain.
+		'''
+		# XXX check if cahin is a chain????
+		return tuple(chain.split(':'))
+	@staticmethod
+	def tags2chain(*tags):
+		'''
+		'''
+		return ':'.join(tags)
+
+
+
+#-----------------------------------------------------------------------
 #--------------------------------------------------------------TagSet---
-class TagSet(TagSetInitMixin, TagSetMixin):
+##class TagSet(TagSetInitMixin, TagSetMixin):
+class TagSet(StringTagChainMixin, TagSetInitMixin, TagSetMixin):
 	'''
 	'''
 	__stored_set_constructor__ = set
 
 
 #----------------------------------------------------------DictTagSet---
-class DictTagSet(TagSetDictMixin, TagSetMixin, dict):
+##class DictTagSet(TagSetDictMixin, TagSetMixin, dict):
+class DictTagSet(StringTagChainMixin, TagSetDictMixin, TagSetMixin, dict):
 	'''
 	'''
 	__stored_set_constructor__ = set
-
-
 
 
 
@@ -816,6 +998,11 @@ if __name__ == '__main__':
 	pprint(words.all('t', 'e').all('l').any('j').tags())
 	pprint(words.all('t', 'e').all('l').none('j').tags())
 	pprint(words.all('t', 'e').all('l').all('j'))
+
+
+	# test tagchain functionality...
+	pprint(words.tags2chain('a', 'b', 'c'))
+	pprint(words.chain2tags('a:b:c'))
 
 
 
