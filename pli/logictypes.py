@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20081102142629'''
+__sub_version__ = '''20091228013755'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -15,6 +15,7 @@ import copy
 
 import pli.pattern.mixin.mapping as mapping
 import pli.pattern.proxy.utils as proxyutils
+import pli.objutils as objutils
 
 
 #-----------------------------------------------------------------------
@@ -103,7 +104,7 @@ class AND(Pattern):
 #------------------------------------------------------------------OR---
 class OR(Pattern):
 	'''
-	OR(A, B[, ..]) == X iff X == A and X == B [and ..]
+	OR(A, B[, ..]) == X iff X == A or X == B [and ..]
 	'''
 	def __init__(self, A, B, *patterns):
 		'''
@@ -194,6 +195,244 @@ class AT(Pattern):
 						or other[self.position] != self.obj
 		except (KeyError, IndexError):
 			return False
+
+
+
+#-----------------------------------------------------------------------
+# TODO rename...
+# TODO add chaining support...
+# TODO add shadowing support... (via NOTHING, afect chained values)
+class ErxCONTAINER(Pattern, mapping.Mapping):
+	'''
+
+	has the folowing notions:
+		- length, if content is sizable or has length
+		- content/containment
+		- bounds
+	'''
+	def __init__(self, data=()):
+		objutils.termsuper(ErxCONTAINER, self).__init__(data)
+		self._data = data
+	# mapping-like interface...
+	# NOTE: this is mainly needed to bypass pythons dict optimizations
+	# 		thus enabling patterns... 
+	def __getitem__(self, pattern):
+		'''
+		'''
+		# XXX might be good to make this check the obvious first...
+		for e in self:
+			if pattern == e:
+				return e
+		# XXX should this fail like this??
+		raise KeyError, pattern
+	def __setitem__(self, pattern, value):
+		'''
+		'''
+		del self[pattern]
+		self._data += (value,)
+	def __delitem__(self, pattern):
+		'''
+		'''
+		res = list(self)
+		while pattern in res:
+			res.remove(pattern)
+		self._data = tuple(res)
+	##!!! need raw iter, to iterate and detect content items...
+	def __iter__(self):
+		'''
+		'''
+		for e in self._data:
+			if isinstance(e, CONTENT):
+				for ee in e:
+					yield ee
+			else:
+				yield e
+	# pattern interface...
+	def __eq__(self, other):
+		'''
+		'''
+		for e in other:
+			if e not in self:
+				return False
+		return len(self) == len(other)
+	def __ne__(self, other):
+		'''
+		'''
+		pass
+
+
+C = ErxCONTAINER
+
+
+##!!! should this be a view or a container?
+class ORDERED(ErxCONTAINER):
+	'''
+	takes a container as argument and returns a container that also considers
+	the nothion of order.
+	'''
+	def __eq__(self, other):
+		'''
+		'''
+		if len(self) == len(other):
+			return tuple(self) == tuple(other)
+		return False
+	def __ne__(self, other):
+		'''
+		'''
+		pass
+
+
+##!!! should this be a view or a container?
+class CONTENT(ErxCONTAINER):
+	'''
+	like a container but matches a part of a container.
+	'''
+		
+
+
+# views...
+class VIEW(ErxCONTAINER):
+	'''
+	'''
+	def __init__(self, pattern, container):
+		'''
+		'''
+		objutils.termsuper(VIEW, self).__init__()
+		self.pattern = pattern
+		self.container = container
+
+	def __getitem__(self, pattern):
+		'''
+		'''
+		try:
+			return self.container[AND(pattern, self.pattern)]
+		except KeyError:
+			raise KeyError, pattern
+	def __setitem__(self, pattern, value):
+		'''
+		'''
+		try:
+			self.container[AND(pattern, self.pattern)] = value
+		except KeyError:
+			raise KeyError, pattern
+	def __delitem__(self, pattern):
+		'''
+		'''
+		del self.container[AND(pattern, self.pattern)]
+	def __iter__(self):
+		'''
+		'''
+		pattern = self.pattern
+		for e in self.container:
+			if pattern == e:
+				yield e
+
+
+# XXX this should match the value or item pattern...
+# XXX need a reliable way to position this at next/prev values... this
+#	  must be as independent of container manipulation as possible...
+# XXX need an efficient way to directly position within a container...
+# 	  the "visited bag" approach is BAD for very large containers!
+# 	  one way to do this is to remember a "current" element. but this
+# 	  will break if it is deleted or modified...
+class ITEM(Pattern):
+	'''
+	'''
+	def __init__(self, pattern, container, visited=()):
+		'''
+		'''
+		objutils.termsuper(ITEM, self).__init__()
+		self.pattern = pattern
+		self.container = container
+		self.visited = visited
+
+	@property
+	# XXX may be a good idea to combine value with assign a-la
+	# 	  jQuery... actually, might even add delete into the mix -- we
+	# 	  do have a NOTHING pattern don't we?
+	# 	  ...still need some more thought.
+	def value(self):
+		'''
+		'''
+		visited = self.visited
+		if len(visited) == 0:
+			return self.container[self.pattern]
+		elif len(visited) == 1:
+			return self.container[AND(NOT(self.visited[0]), self.pattern)]
+		return self.container[AND(NOT(OR(*self.visited)), self.pattern)]
+	##!!! what should happen of we changed the value or updated the container 
+	##!!! so as this does not have a value anymore?
+	def assign(self, value):
+		'''
+		'''
+		try:
+			self.container[self.value] = value
+		except KeyError:
+			# this means we are not looking at a meaningfull
+			# position...
+			# add a new element.
+			##!!! is this correct???
+			self.container[NOTHING] = value
+		return self
+	##!!! revise...
+	def delete(self):
+		'''
+		'''
+		try:
+			del self.container[self.value]
+		except KeyError:
+			pass
+		return self
+
+	@property
+	def next(self):
+		'''
+		'''
+		visited = self.visited + (self.value,)
+		res = self.__class__(self.pattern, self.container, visited)
+		# this is here to break things and to prevent ust to iterate
+		# beyond where we started...
+		res.value
+		return res
+	@property
+	def prev(self):
+		'''
+		'''
+		visited = self.visited
+		# we can't iterate over the beginning...
+		if len(visited) == 0:
+			raise KeyError, self.pattern
+		pattern = self.pattern
+		container = self.container
+		for v in visited[::-1]:
+			if v not in container:
+				# remove the non-existing elements...
+				visited = visited[:-1]
+				# this is to handle the case of we are positioned
+				# somewhere in a chain and all the items we saw before
+				# do not exist any longer...
+				if len(visited) == 0:
+					raise KeyError, self.pattern
+				continue
+		res = self.__class__(pattern, container, visited[:-1])
+		# this is here to break things and to prevent ust to iterate
+		# beyond where we started...
+		res.value
+		return res
+
+
+
+# variable length contents...
+class OF(CONTENT):
+	'''
+	OF(A, N) == X iff A occurs N times in X
+
+	Pythonism for N of A in Eryx.
+	'''
+	def __init__(self, obj, count):
+		super(OF, self).__init__()
+		self.obj, self.count = obj, count
+		
 
 
 
@@ -913,6 +1152,67 @@ if __name__ == '__main__':
 
 	print AT(1, 10) == range(100)
 	print AT(10, 10) == range(100)
+
+
+	e = C((1, 2, 3, 'a', 'b', 'c', CONTENT(C((1.1, 2.2, 3.3)))))
+
+	print e
+
+	print e[ANY]
+	print e[STRING]
+	print e[3]
+	print e[FLOAT]
+	print len(e)
+	##!!! there should be a way to access content items...
+##	print e[CONTENT]
+
+	print e == (1, 2, 3, 'a', 'c', 1.1, 2.2, 3.3, 'b')
+	print ORDERED(e) == (1, 2, 3, 'a', 'c', 1.1, 2.2, 3.3, 'b')
+	print ORDERED(e) == (1, 2, 3, 'a', 'b', 'c', 1.1, 2.2, 3.3)
+	print ORDERED(CONTENT(e)) == (1, 2, 3, 'a', 'b', 'c', 1.1, 2.2, 3.3)
+
+
+	v = VIEW(NUMBER, e)
+	print len(v)
+	v[INT] = 1
+	print len(v)
+
+	print list(v)
+
+	i = ITEM(NUMBER, e)
+	print i.value
+	print i.next.value
+	print i.next.next.value
+	print i.next.next.next.value
+	print i.next.next.next.assign(2)
+	print i.next.next.next.value
+	# this will assign a value that does not match the pattern of
+	# either the item or the view. thus, it will not appear in either
+	# of them.
+	# ...assigning to an item an that item still not having a value may
+	# be counter intuitive.
+	# another similar case would be assigning a value that we already
+	# passed (this depends on the scheme of the positioning algorithm
+	# of the item...)
+	##!!! this makes the item inconsistent... 
+	##!!! ...asigning t a value incompatible to the pattern will make the 
+	##!!! item object inconsistent -- heed to handle this in some obvious way
+##	print i.next.next.next.assign('aaa')
+##	print i.next.next.next
+	print list(v)
+	print list(e)
+
+	print i.value
+	print i.next.value
+	print i.next.next.value
+	print i.next.next.next.value
+	print i.next.next.next.prev.value
+	print i.next.next.next.prev.prev.value
+	print i.next.next.next.prev.prev.prev.value
+
+	##!!! this should be True both ways...
+	print CONTENT((2, 3, 4)) == range(10)
+	print range(10) == CONTENT((2, 3, 4))
 
 
 
