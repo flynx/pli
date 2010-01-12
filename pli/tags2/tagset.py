@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100111024210'''
+__sub_version__ = '''20100111025538'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -773,6 +773,7 @@ class TagSetTagChainMixin(object):
 			else:
 				t += (tag,)
 		return t, c
+	##!!! replace link with something relevant...
 	def _addchains(self, *chains):
 		'''
 		'''
@@ -781,11 +782,13 @@ class TagSetTagChainMixin(object):
 			if c not in self:
 				t = self.chain2tags(c)
 				if self.__chain_tag__ != None:
-					self._tag(c, *(t+(tags.TAG_TAG, self.__chain_tag__)))
+					self._tag(c, *(t+(self.__tag_tag__, self.__chain_tag__)))
 				else:
-					self._tag(c, *(t+(tags.TAG_TAG,)))
+					self._tag(c, *(t+(self.__tag_tag__,)))
 				# links all the tags in a chain...
-				self.__tag_engine__.link(self, c, *t)
+##				self.__tag_engine__.link(self, c, *t)
+				##!!! replace link with something relevant...
+				self.link(self, c, *t)
 	# tag-chain specific methods...
 	@staticmethod
 	def chain2tags(chain):
@@ -827,7 +830,8 @@ class TagSetTagChainMixin(object):
 #-------------------------------------------------StringTagChainMixin---
 # XXX add consistency checking...
 ##!!! need to migrate this to the new interface !!!##
-class StringTagChainMixin(object):
+##class StringTagChainMixin(object):
+class StringTagChainMixin(TagSetTagChainMixin):
 	'''
 	changes tagchain format to the folowing string syntax:
 
