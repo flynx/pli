@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100111025538'''
+__sub_version__ = '''20100113180223'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -786,9 +786,8 @@ class TagSetTagChainMixin(object):
 				else:
 					self._tag(c, *(t+(self.__tag_tag__,)))
 				# links all the tags in a chain...
-##				self.__tag_engine__.link(self, c, *t)
-				##!!! replace link with something relevant...
-				self.link(self, c, *t)
+				##!!! see if this is correct... (was .link(...))
+				self.tag(c, *t)
 	# tag-chain specific methods...
 	@staticmethod
 	def chain2tags(chain):
@@ -806,7 +805,7 @@ class TagSetTagChainMixin(object):
 		'''
 		return all the chains that contain tags.
 
-		NOTE: of chains are given, then all the tags in them will be 
+		NOTE: if chains are given, then all the tags in them will be 
 		      added to the search.
 		'''
 		tags, chains = self._splitchains(tags)
@@ -814,7 +813,7 @@ class TagSetTagChainMixin(object):
 		for chain in chains:
 			tags.update(self.chain2tags(chain))
 		# collect all related chains...
-		res = self.all(self.__chain_tag__, *tags)
+		res = self.all(self.__chain_tag__, *tags).get(self.__chain_tag__, set())
 		return res
 	def chainrelated(self, *tags):
 		'''
@@ -1007,6 +1006,16 @@ if __name__ == '__main__':
 	# test tagchain functionality...
 	pprint(words.tags2chain('a', 'b', 'c'))
 	pprint(words.chain2tags('a:b:c'))
+
+	##!!! this breaks...
+	words.tag('that', 'T:H:A:T')
+	words.tag('this', 'T:H:I:S')
+##	pprint(words.tags('that'))
+##	pprint(words.all('A').objects())
+
+	pprint(words.chains())
+	pprint(words.chains('A'))
+	pprint(words.chains('T:H'))
 
 
 
