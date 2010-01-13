@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100113180223'''
+__sub_version__ = '''20100113181338'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -692,11 +692,11 @@ class TagSetMixin(BasicTagSetMixin, TagSetSelectorMixin, TagSetUtilsMixin):
 
 
 #-----------------------------------------------------------------------
-##!!! tagchian mechanics...
-##!!! move this to a different module...
+# tagchian mechanics...
+# XXX move this to a different module...
 #--------------------------------------------TagSetWithTagChainsMixin---
 # XXX do we need chain-specific select???
-##!!! need to migrate this to the new interface !!!##
+##!!! revise !!!##
 class TagSetTagChainMixin(object):
 	'''
 	a chain is a tuple of tags.
@@ -773,7 +773,7 @@ class TagSetTagChainMixin(object):
 			else:
 				t += (tag,)
 		return t, c
-	##!!! replace link with something relevant...
+	##!!! need to rethink this...
 	def _addchains(self, *chains):
 		'''
 		'''
@@ -787,7 +787,7 @@ class TagSetTagChainMixin(object):
 					self._tag(c, *(t+(self.__tag_tag__,)))
 				# links all the tags in a chain...
 				##!!! see if this is correct... (was .link(...))
-				self.tag(c, *t)
+				self._tag(c, *t)
 	# tag-chain specific methods...
 	@staticmethod
 	def chain2tags(chain):
@@ -815,6 +815,7 @@ class TagSetTagChainMixin(object):
 		# collect all related chains...
 		res = self.all(self.__chain_tag__, *tags).get(self.__chain_tag__, set())
 		return res
+	##!!!
 	def chainrelated(self, *tags):
 		'''
 		return all the tags that are related via chains.
@@ -1004,8 +1005,8 @@ if __name__ == '__main__':
 
 
 	# test tagchain functionality...
-	pprint(words.tags2chain('a', 'b', 'c'))
-	pprint(words.chain2tags('a:b:c'))
+##	pprint(words.tags2chain('a', 'b', 'c'))
+##	pprint(words.chain2tags('a:b:c'))
 
 	##!!! this breaks...
 	words.tag('that', 'T:H:A:T')
@@ -1016,6 +1017,13 @@ if __name__ == '__main__':
 	pprint(words.chains())
 	pprint(words.chains('A'))
 	pprint(words.chains('T:H'))
+
+	##!!! this should not contain the 'a' object...
+	pprint(words.all('T:H:A:T').objects())
+	##!!! the above yields the same result as this...
+##	pprint(words.all('t', 'h', 'a').objects())
+
+	pprint(words.all('T:H:I:S').objects())
 
 
 
