@@ -1,19 +1,23 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20090317151644'''
+__sub_version__ = '''20100125170112'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
 import sys
+import pprint
 
 
 #-----------------------------------------------------------------------
 
 INDENT = 2
 TERM_WIDTH = 80
+
+TEST_FILE_NAME = '<test>'
+REPR_FUNCTION = repr
 
 
 #-----------------------------------------------------------------------
@@ -29,26 +33,33 @@ TERM_WIDTH = 80
 # XXX rewrite...
 def log(*cmd, **kw):
 	depth = kw.pop('depth', 1)
+	rep = kw.pop('repr', REPR_FUNCTION)
+	filename = kw.pop('filename', TEST_FILE_NAME)
 	lcl = sys._getframe(depth).f_locals
 	glbl = sys._getframe(depth).f_globals
 	res = None
 	print ' '*(INDENT-1),
 	if len(cmd) == 1: 
 		print cmd[0].strip(),
-		res = eval(cmd[0].strip(), glbl, lcl)
-		if len(cmd[0].strip()) + INDENT >= 8:
-			print '\n\t->', repr(res)
-		else:
-			print '\t->', repr(res)
+		try:
+			res = eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl)
+			if len(cmd[0].strip()) + INDENT >= 8:
+				print '\n\t->', rep(res)
+			else:
+				print '\t->', rep(res)
+		except SyntaxError:
+			# XXX need a more robust way to do this...
+			eval(compile(cmd[0].strip(), filename, 'exec'), glbl, lcl)
+			print
 	elif len(cmd) > 1:
 		for c in cmd:
 			print c.strip(),
 		print cmd[-1].strip(), 
-		res = eval(cmd[-1].strip(), glbl, lcl)
+		res = eval(compile(cmd[-1].strip(), filename, 'eval'), glbl, lcl)
 		if len(cmd[-1].strip()) + INDENT >= 8:
-			print '\n\t->', repr(res)
+			print '\n\t->', rep(res)
 		else:
-			print '\t->', repr(res)
+			print '\t->', rep(res)
 	else:
 		print
 	return res
@@ -58,9 +69,10 @@ def log(*cmd, **kw):
 def test(*cmd, **kw):
 	expected, cmd = cmd[-1], cmd[:-1]
 	depth = kw.pop('depth', 1)
+	rep = kw.pop('repr', REPR_FUNCTION)
 	res = log(depth=depth+1, *cmd)
 	if res != expected:
-		print '\tError: result did not match the expected: %s' % repr(expected)
+		print '\tError: result did not match the expected: %s' % rep(expected)
 
 
 #------------------------------------------------------------loglines---
@@ -155,6 +167,7 @@ def logstr(str, **kw):
 
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
+	from pprint import pprint
 	logstr('''
 	## comments starting with a double '#' are not shown...
 	# basic comment;
@@ -176,6 +189,16 @@ if __name__ == '__main__':
 
 	# an expression that will fail it's value test...
 	1 * 1 -> 2
+
+	# statements are supported too, but only if no expected value is
+	# passed...
+	print '!!!'
+
+	a = 1
+
+	# now test we can the value...
+	a 
+		-> 1
 
 
 
