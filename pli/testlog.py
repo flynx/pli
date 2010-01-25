@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100125192403'''
+__sub_version__ = '''20100125224116'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -279,7 +279,7 @@ if __name__ == '__main__':
 	# module.
 
 	# comments starting with a double '#' are not shown...
-	## this is an example...
+	## here's is an example...
 
 	# basic comment;
 		# NOTE: indent is ignored...
@@ -312,7 +312,7 @@ if __name__ == '__main__':
 
 	a = 1
 
-	# now test we can the value...
+	# now we can test the value...
 	a 	-> 1
 
 
