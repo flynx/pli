@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100111025220'''
+__sub_version__ = '''20100113182150'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -275,11 +275,13 @@ class TagTreePathProxyMappingMixin(mapping.Mapping):
 class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 	'''
 	'''
+	##!!! need to see of part of the path is a constructor and return that...
 	def __getattrpath__(self, root, path):
 		'''
 		'''
 		res = root
 		for p in path:
+			##!!! need to see of p is a constructor name...
 			res = res[p]
 		return res
 

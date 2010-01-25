@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100113181338'''
+__sub_version__ = '''20100125184927'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -697,6 +697,7 @@ class TagSetMixin(BasicTagSetMixin, TagSetSelectorMixin, TagSetUtilsMixin):
 #--------------------------------------------TagSetWithTagChainsMixin---
 # XXX do we need chain-specific select???
 ##!!! revise !!!##
+##class TagSetTagChainMixin(LinkSetMixin):
 class TagSetTagChainMixin(object):
 	'''
 	a chain is a tuple of tags.
@@ -788,6 +789,8 @@ class TagSetTagChainMixin(object):
 				# links all the tags in a chain...
 				##!!! see if this is correct... (was .link(...))
 				self._tag(c, *t)
+##				##!!! revise...
+##				self.link(c, *t)
 	# tag-chain specific methods...
 	@staticmethod
 	def chain2tags(chain):
@@ -884,53 +887,11 @@ class DictTagSet(StringTagChainMixin, TagSetDictMixin, TagSetMixin, dict):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
-	from pprint import pprint
-	
-	ts = DictTagSet()
+	from pli.testlog import logstr
+	from pli.functional import curry
+	from pli.logictypes import oftype
 
-	ts.tag('X', 'a', 'b', 'c')
-
-	pprint(ts)
-
-	ts = DictTagSet()
-
-	ts.tag('X', 'a')
-	ts.tag('X', 'b')
-	ts.tag('X', 'c')
-
-	pprint(ts)
-
-	ts.tag('Y', 'c', 'd')
-
-
-	pprint(ts)
-
-
-	print '\nunite:'
-	##!!! should yield a tagset only containing X
-	pprint(ts.any('a', 'b'))
-
-	print '\n_intersect:'
-	pprint(ts._all('a'))
-
-	print '\nintersect:'
-	pprint(ts.all('a'))
-
-	print '\nexclude:'
-	pprint(ts.none('a'))
-
-
-
-##	ts.untag('X', 'a')
-
-	print '\n---'
-
-	pprint(ts)
-
-	print ts.istagsconsistent()
-	print tuple(ts.itertaggaps())
-	print tuple(ts.iterorphans())
-
+	from pprint import pprint, pformat
 
 	txt = '''
 	some text that will be tagged.
@@ -942,88 +903,147 @@ if __name__ == '__main__':
 	just in case, a tag can also be an object and vice versa.
 	'''
 
+	
+	logstr('''
+
+	ts = DictTagSet()
+
+	ts.tag('X', 'a', 'b', 'c')
+
+	>>> ts
+
+	ts = DictTagSet()
+
+	! ts.tag('X', 'a')
+	! ts.tag('X', 'b')
+	! ts.tag('X', 'c')
+
+	>>> ts
+
+	! ts.tag('Y', 'c', 'd')
+
+	>>> ts
+
+
+	# unite:
+	##!!! should yield a tagset only containing X
+	ts.any('a', 'b')
+
+	# _intersect:
+	ts._all('a')
+
+	# intersect:
+	ts.all('a')
+
+	# exclude:
+	ts.none('a')
+
+
+##	ts.untag('X', 'a')
+
+
+	---
+
+	>>> ts
+
+
+	ts.istagsconsistent()
+		-> True
+	tuple(ts.itertaggaps())
+		-> ()
+	tuple(ts.iterorphans())
+		-> ()
+
 	words = DictTagSet() 
-	[ words.tag(w, *tuple(w)) for w in txt.split() ]
+	! [ words.tag(w, *tuple(w)) for w in txt.split() ]
 
-##	pprint(words)
-##	pprint(words.__tagset__['t'])
+##	>>> words
+##	words.__tagset__['t']
 
-##	pprint(words.all('t', 'x'))
+##	words.all('t', 'x')
 
 	##!!! Q: sould the resultin tagset be tag complete?
 	##!!!    ...i.e. .tags(obj) should return all the tags in any sub-tagset 
 	##!!!    or only the relevant tags for that subset? (see next couple of lines)
-	pprint(words.any('a', 'x').tags('that'))
-	pprint(words.tags('that'))
+	>>> words.any('a', 'x').tags('that')
+	>>> words.tags('that')
 
-	pprint(words.any('a', 'x').tags('a'))
+	>>> words.any('a', 'x').tags('a')
 
-	pprint(words.tags('a'))
+	>>> words.tags('a')
 
-##	pprint(words.any('t', 'x').none('c'))
+##	>>> words.any('t', 'x').none('c')
 
-	pprint(words.objects())
+	>>> words.objects()
 
-	pprint(words.any('a').objects())
+	>>> words.any('a').objects()
 
-	pprint(words.tags())
+	>>> words.tags()
 
-	pprint(words.tags('that'))
+	>>> words.tags('that')
 
-	pprint(words.tags('t'))
+	>>> words.tags('t')
 
 	##!!! is this correct???
-	pprint(words.all())
+	>>> words.all()
 
-	pprint(words.relatedtags('a', 't'))
+	>>> words.relatedtags('a', 't')
 
-	pprint(words.relatedtags('a', 't', 'e'))
+	>>> words.relatedtags('a', 't', 'e')
 
-	pprint(words.relatedtags('a', 't', 'e', 'g'))
+	>>> words.relatedtags('a', 't', 'e', 'g')
 
-	pprint(words.relatedtags('a', 't', 'e', 'g', 'd'))
-	pprint(words.all('a', 't', 'e', 'g', 'd').tags())
-	pprint(words.all('a', 't', 'e', 'g', 'd').objects())
+	>>> words.relatedtags('a', 't', 'e', 'g', 'd')
+	>>> words.all('a', 't', 'e', 'g', 'd').tags()
+	>>> words.all('a', 't', 'e', 'g', 'd').objects()
 
-	pprint(words.all('a', 't', 'e', 'g', 'd').none('.').objects())
-	pprint(words.all('a', 't', 'e', 'g', 'd').none('.', 'a').objects())
+	>>> words.all('a', 't', 'e', 'g', 'd').none('.').objects()
+	>>> words.all('a', 't', 'e', 'g', 'd').none('.', 'a').objects()
 
 
-	pprint(words.all('t', 'e').tags())
-	pprint(words.all('t', 'e').any('l', 'j').objects())
+	>>> words.all('t', 'e').tags()
+	>>> words.all('t', 'e').any('l', 'j').objects()
 
 	# errors -- tag conflicts...
 	# XXX should these err or just return empty tagsets???
-	pprint(words.all('t', 'e').any('l').any('j').objects())
-	pprint(words.all('t', 'e').all('l').all('j').objects())
-	pprint(words.all('t', 'e').all('l').all('j').tags())
-	pprint(words.all('t', 'e').all('l'))
-	pprint(words.all('t', 'e').all('l').any('j'))
-	pprint(words.all('t', 'e').all('l').any('j').tags())
-	pprint(words.all('t', 'e').all('l').none('j').tags())
-	pprint(words.all('t', 'e').all('l').all('j'))
+	>>> words.all('t', 'e').any('l').any('j').objects()
+	>>> words.all('t', 'e').all('l').all('j').objects()
+	>>> words.all('t', 'e').all('l').all('j').tags()
+	>>> words.all('t', 'e').all('l')
+	>>> words.all('t', 'e').all('l').any('j')
+	>>> words.all('t', 'e').all('l').any('j').tags()
+	>>> words.all('t', 'e').all('l').none('j').tags()
+	>>> words.all('t', 'e').all('l').all('j')
 
+	
+	---
 
 	# test tagchain functionality...
-##	pprint(words.tags2chain('a', 'b', 'c'))
-##	pprint(words.chain2tags('a:b:c'))
+	words.tags2chain('a', 'b', 'c')
+		-> 'a:b:c'
+	words.chain2tags('a:b:c')
+		-> ('a', 'b', 'c')
 
 	##!!! this breaks...
-	words.tag('that', 'T:H:A:T')
-	words.tag('this', 'T:H:I:S')
-##	pprint(words.tags('that'))
-##	pprint(words.all('A').objects())
+	! words.tag('that', 'T:H:A:T')
+	! words.tag('this', 'T:H:I:S')
+##	words.tags('that')
+##	words.all('A').objects()
 
-	pprint(words.chains())
-	pprint(words.chains('A'))
-	pprint(words.chains('T:H'))
+	words.chains()
+	words.chains('A')
+	words.chains('T:H')
 
 	##!!! this should not contain the 'a' object...
-	pprint(words.all('T:H:A:T').objects())
+	words.all('T:H:A:T').objects()
+		-> set(['that'])
 	##!!! the above yields the same result as this...
-##	pprint(words.all('t', 'h', 'a').objects())
+##	>>> words.all('t', 'h', 'a').objects()
 
-	pprint(words.all('T:H:I:S').objects())
+	words.all('T:H:I:S').objects()
+		-> set(['this'])
+
+	''')
 
 
 
