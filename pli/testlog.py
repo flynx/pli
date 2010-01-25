@@ -1,14 +1,14 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100125170112'''
+__sub_version__ = '''20100125184330'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
 import sys
-import pprint
+from pprint import pprint, pformat
 
 
 #-----------------------------------------------------------------------
@@ -26,6 +26,13 @@ REPR_FUNCTION = repr
 # TODO add quiet mode...
 # TODO reporting...
 # TODO exception handling both in testing and in failures....
+# TODO add more clever output handling...
+# 		for things like:
+# 			logstr(''''
+# 				print 123
+# 				pprint(321)
+# 			'')
+# TODO add multiline things like if, for, ...
 #
 #
 #-----------------------------------------------------------------------
@@ -35,31 +42,43 @@ def log(*cmd, **kw):
 	depth = kw.pop('depth', 1)
 	rep = kw.pop('repr', REPR_FUNCTION)
 	filename = kw.pop('filename', TEST_FILE_NAME)
+	mute = kw.pop('mute', False)
 	lcl = sys._getframe(depth).f_locals
 	glbl = sys._getframe(depth).f_globals
 	res = None
 	print ' '*(INDENT-1),
 	if len(cmd) == 1: 
+		if mute:
+			print '!',
 		print cmd[0].strip(),
 		try:
 			res = eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl)
-			if len(cmd[0].strip()) + INDENT >= 8:
-				print '\n\t->', rep(res)
+			if not mute:
+				if len(cmd[0].strip()) + INDENT >= 8:
+					print '\n\t->', rep(res)
+				else:
+					print '\t->', rep(res)
 			else:
-				print '\t->', rep(res)
+				print
+		# we've got a statement...
 		except SyntaxError:
 			# XXX need a more robust way to do this...
 			eval(compile(cmd[0].strip(), filename, 'exec'), glbl, lcl)
-			print
+			print ' '
 	elif len(cmd) > 1:
+		if mute:
+			print '!',
 		for c in cmd:
 			print c.strip(),
 		print cmd[-1].strip(), 
 		res = eval(compile(cmd[-1].strip(), filename, 'eval'), glbl, lcl)
-		if len(cmd[-1].strip()) + INDENT >= 8:
-			print '\n\t->', rep(res)
+		if not mute:
+			if len(cmd[-1].strip()) + INDENT >= 8:
+				print '\n\t->', rep(res)
+			else:
+				print '\t->', rep(res)
 		else:
-			print '\t->', rep(res)
+			print
 	else:
 		print
 	return res
@@ -73,6 +92,28 @@ def test(*cmd, **kw):
 	res = log(depth=depth+1, *cmd)
 	if res != expected:
 		print '\tError: result did not match the expected: %s' % rep(expected)
+
+
+#--------------------------------------------------------pretty_print---
+##!!! revise...
+# XXX this is the same as log but with pretty printing, need to
+#	  redesign this to be more like a mixin to the log...
+def pretty_print(*cmd, **kw):
+	'''
+
+	NOTE: this will print the value in a non-printable comment so as to be 
+		  self-applicamle -- currently multiline structures are not supported.
+	'''
+	code = cmd[0]
+	depth = kw.pop('depth', 1)
+	rep = kw.pop('repr', REPR_FUNCTION)
+	filename = kw.pop('filename', TEST_FILE_NAME)
+	lcl = sys._getframe(depth).f_locals
+	glbl = sys._getframe(depth).f_globals
+
+	print '>>>', code,
+	res = pformat(eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl), width=80-8-3)
+	print '\n##\t->', '\n##\t   '.join(res.split('\n'))
 
 
 #------------------------------------------------------------loglines---
@@ -95,6 +136,14 @@ def loglines(*lines, **kw):
 
 		if line.strip().startswith('==='):
 			print '='*(TERM_WIDTH-1)
+			continue
+
+		if line.strip().startswith('>>>'):
+			pretty_print(line.strip()[3:], depth=depth+1)
+			continue
+
+		if line.strip().startswith('!'):
+			log(line.strip()[1:], depth=depth+1, mute=True, **kw)
 			continue
 
 		if type(line) in (str, unicode):
@@ -134,6 +183,14 @@ def loglines2(*lines, **kw):
 
 		if line.strip().startswith('==='):
 			print '='*(TERM_WIDTH-1)
+			continue
+
+		if line.strip().startswith('>>>'):
+			pretty_print(line.strip()[3:], depth=depth+1)
+			continue
+
+		if line.strip().startswith('!'):
+			log(line.strip()[1:], depth=depth+1, mute=True, **kw)
 			continue
 
 		line = line.split('->')
@@ -197,9 +254,16 @@ if __name__ == '__main__':
 	a = 1
 
 	# now test we can the value...
-	a 
-		-> 1
+	a 	-> 1
 
+
+
+	# pretty printing...
+	>>> {1:range(10), 2:range(10), 3:range(10)}
+
+
+	# it is also possible to mute result output...
+	! {1:range(10), 2:range(10), 3:range(10)}
 
 
 	# now for some basic markup...
