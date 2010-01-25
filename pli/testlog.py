@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100125184330'''
+__sub_version__ = '''20100125185504'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -91,7 +91,7 @@ def test(*cmd, **kw):
 	rep = kw.pop('repr', REPR_FUNCTION)
 	res = log(depth=depth+1, *cmd)
 	if res != expected:
-		print '\tError: result did not match the expected: %s' % rep(expected)
+		print '\t## Error: result did not match the expected: %s' % rep(expected)
 
 
 #--------------------------------------------------------pretty_print---
