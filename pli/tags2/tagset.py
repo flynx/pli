@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100125184927'''
+__sub_version__ = '''20100125194257'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -889,9 +889,6 @@ if __name__ == '__main__':
 
 	from pli.testlog import logstr
 	from pli.functional import curry
-	from pli.logictypes import oftype
-
-	from pprint import pprint, pformat
 
 	txt = '''
 	some text that will be tagged.
@@ -914,6 +911,7 @@ if __name__ == '__main__':
 
 	ts = DictTagSet()
 
+	# these will return a tagset wich will clutter the output...
 	! ts.tag('X', 'a')
 	! ts.tag('X', 'b')
 	! ts.tag('X', 'c')
@@ -1019,6 +1017,7 @@ if __name__ == '__main__':
 	---
 
 	# test tagchain functionality...
+
 	words.tags2chain('a', 'b', 'c')
 		-> 'a:b:c'
 	words.chain2tags('a:b:c')
@@ -1027,8 +1026,8 @@ if __name__ == '__main__':
 	##!!! this breaks...
 	! words.tag('that', 'T:H:A:T')
 	! words.tag('this', 'T:H:I:S')
-##	words.tags('that')
-##	words.all('A').objects()
+	words.tags('that')
+	words.all('A').objects()
 
 	words.chains()
 	words.chains('A')
