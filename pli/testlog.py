@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100125185504'''
+__sub_version__ = '''20100125192403'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -19,9 +19,22 @@ TERM_WIDTH = 80
 TEST_FILE_NAME = '<test>'
 REPR_FUNCTION = repr
 
+MUTE_PREFIX = '!'
+PPRINT_PREFIX = '>>>'
+
 
 #-----------------------------------------------------------------------
 # 
+# XXX the script does not see the imported modules...
+# 		from pprint import pprint
+# 		logstr(''''
+# 			## this will priduce a name error!
+# 			! pprint
+# 		'')
+#
+# 	   there are cases when this works...
+#
+#
 # TODO add error log support...
 # TODO add quiet mode...
 # TODO reporting...
@@ -33,6 +46,10 @@ REPR_FUNCTION = repr
 # 				pprint(321)
 # 			'')
 # TODO add multiline things like if, for, ...
+# TODO error reporting should generate something not only readable but
+#      reproducable, at this poit it will print the actual result
+#      rather than the expected, which will change the semantics of the
+#      output...
 #
 #
 #-----------------------------------------------------------------------
@@ -41,15 +58,19 @@ REPR_FUNCTION = repr
 def log(*cmd, **kw):
 	depth = kw.pop('depth', 1)
 	rep = kw.pop('repr', REPR_FUNCTION)
-	filename = kw.pop('filename', TEST_FILE_NAME)
 	mute = kw.pop('mute', False)
+
+	filename = kw.pop('filename', TEST_FILE_NAME)
+	mute_prefix = kw.pop('mute_prefix', MUTE_PREFIX)
+
 	lcl = sys._getframe(depth).f_locals
 	glbl = sys._getframe(depth).f_globals
 	res = None
+
 	print ' '*(INDENT-1),
 	if len(cmd) == 1: 
 		if mute:
-			print '!',
+			print mute_prefix,
 		print cmd[0].strip(),
 		try:
 			res = eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl)
@@ -67,7 +88,7 @@ def log(*cmd, **kw):
 			print ' '
 	elif len(cmd) > 1:
 		if mute:
-			print '!',
+			print mute_prefix,
 		for c in cmd:
 			print c.strip(),
 		print cmd[-1].strip(), 
@@ -111,7 +132,7 @@ def pretty_print(*cmd, **kw):
 	lcl = sys._getframe(depth).f_locals
 	glbl = sys._getframe(depth).f_globals
 
-	print '>>>', code,
+	print PPRINT_PREFIX, code,
 	res = pformat(eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl), width=80-8-3)
 	print '\n##\t->', '\n##\t   '.join(res.split('\n'))
 
@@ -121,6 +142,9 @@ def loglines(*lines, **kw):
 	'''
 	'''
 	depth = kw.pop('depth', 1)
+	mute_prefix = kw.pop('mute_prefix', MUTE_PREFIX)
+	pprint_prefix = kw.pop('pprint_prefix', PPRINT_PREFIX)
+
 	for line in lines:
 
 		if line.strip().startswith('##'):
@@ -138,12 +162,21 @@ def loglines(*lines, **kw):
 			print '='*(TERM_WIDTH-1)
 			continue
 
-		if line.strip().startswith('>>>'):
-			pretty_print(line.strip()[3:], depth=depth+1)
+		if line.strip().startswith(pprint_prefix):
+			pretty_print(line.strip()[len(pprint_prefix):], 
+							depth=depth+1, 
+							pprint_prefix=pprint_prefix, 
+							mute_prefix=mute_prefix,
+							**kw)
 			continue
 
-		if line.strip().startswith('!'):
-			log(line.strip()[1:], depth=depth+1, mute=True, **kw)
+		if line.strip().startswith(mute_prefix):
+			log(line.strip()[len(mute_prefix):], 
+					depth=depth+1, 
+					mute=True, 
+					pprint_prefix=pprint_prefix, 
+					mute_prefix=mute_prefix,
+					**kw)
 			continue
 
 		if type(line) in (str, unicode):
@@ -168,6 +201,9 @@ def loglines2(*lines, **kw):
 	'''
 	'''
 	depth = kw.pop('depth', 1)
+	mute_prefix = kw.pop('mute_prefix', MUTE_PREFIX)
+	pprint_prefix = kw.pop('pprint_prefix', PPRINT_PREFIX)
+
 	for line in lines:
 
 		if line.strip().startswith('##'):
@@ -185,12 +221,21 @@ def loglines2(*lines, **kw):
 			print '='*(TERM_WIDTH-1)
 			continue
 
-		if line.strip().startswith('>>>'):
-			pretty_print(line.strip()[3:], depth=depth+1)
+		if line.strip().startswith(pprint_prefix):
+			pretty_print(line.strip()[len(pprint_prefix):], 
+							depth=depth+1, 
+							pprint_prefix=pprint_prefix, 
+							mute_prefix=mute_prefix,
+							**kw)
 			continue
 
-		if line.strip().startswith('!'):
-			log(line.strip()[1:], depth=depth+1, mute=True, **kw)
+		if line.strip().startswith(mute_prefix):
+			log(line.strip()[len(mute_prefix):], 
+					depth=depth+1, 
+					mute=True, 
+					pprint_prefix=pprint_prefix, 
+					mute_prefix=mute_prefix,
+					**kw)
 			continue
 
 		line = line.split('->')
@@ -226,11 +271,21 @@ def logstr(str, **kw):
 if __name__ == '__main__':
 	from pprint import pprint
 	logstr('''
-	## comments starting with a double '#' are not shown...
+	# this module will define a special DSL based on python. this
+	# language is designed to facilitate module self-testing.
+	#
+	# this module can be considered as a usage example. below you see
+	# the lines that both demo and test the functionality of the
+	# module.
+
+	# comments starting with a double '#' are not shown...
+	## this is an example...
+
 	# basic comment;
 		# NOTE: indent is ignored...
 		#       ...but this does not concern comment formatting.
-	# next a few empty lines...
+
+	# next, a few empty lines...
 
 
 
@@ -246,9 +301,13 @@ if __name__ == '__main__':
 
 	# an expression that will fail it's value test...
 	1 * 1 -> 2
+		## this will break...
 
-	# statements are supported too, but only if no expected value is
-	# passed...
+
+	# statements are supported too, but only if no expected result is
+	# given...
+	# NOTE: it is best to avoid things that print things, they will
+	#       generate output that is not a valid test script.
 	print '!!!'
 
 	a = 1
@@ -271,11 +330,13 @@ if __name__ == '__main__':
 	---
 	===
 
-	# NOTE: one can have more than tree dashes, but not less...
+	# NOTE: one can have more than tree dashes, but not less... two
+	#		dashes will be passed to python and thus generate a syntax
+	#		error.
 	--------
 
 
-	
+
 	# that's all at this point.
 	''')
 
