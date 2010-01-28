@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100113182150'''
+__sub_version__ = '''20100128170045'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -168,13 +168,13 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		if name.startswith('OID_'):
 			return self._getobject(name)
-##		if ('constructor', name) in self._root:
 		chain = self._root.tags2chain('constructor', name)
 		if chain in self._root:
-			# XXX is this safe??? (constructors should be unique!)
-			##!!! WARNING: here the select also returns "tag".... check this out!
-			return [ o for o in self._root.all(chain, self._root.__object_tag__)
-						if o != self._root.__tag_tag__][0]
+##			return [ o for o in self._root.all(chain, self._root.__object_tag__).objects()
+##						if o != self._root.__tag_tag__][0]
+			# XXX is this safe??? ...can this return anything other
+			#     than the constuctor?
+			return self._root.all(chain, self._root.__object_tag__).objects().pop()
 		return super(TagTreePathProxy, self).__getattr__(name)
 ##	__getitem__ = __getattr__
 	
@@ -304,15 +304,7 @@ class TagTreeMixin(tagset.AbstractTagSet):
 		'''
 		# support pickle...
 		##!!! automate this... (might be a good idea to put this into path.py)
-##		if name in (
-##				'__getstate__',
-##				'__setstate__',
-##				'__reduce__',
-##				'__reduce_ex__',
-##				'__slots__',
-##				'__getnewargs__'):
 		if name.startswith('__') and name.endswith('__'): 
-##			return super(TagTreeMixin, self).__getattr__(name) 
 			return getattr(super(TagTreeMixin, self), name)
 		return getattr(self.__node_path_proxy__(self, ()), name)
 
@@ -396,7 +388,10 @@ class BaseTagTreeHandler(object):
 		else:
 			i_tags = self.__instance_tags__ + instance_tags 
 		# do the call...
-		return self.__node_constructor_wrapper__(self.tree, name, constructor, 
+		return self.__node_constructor_wrapper__(
+								self.tree, 
+								name, 
+								constructor, 
 								common_tags=c_tags, 
 								object_tags=i_tags)
 
