@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100128170045'''
+__sub_version__ = '''20100129235946'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -426,6 +426,8 @@ class TagTreeHandler(BaseTagTreeHandler):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
+	from pli.testlog import logstr
+
 	handler = TagTreeHandler()
 	tree = handler.tree
 	
@@ -438,46 +440,42 @@ if __name__ == '__main__':
 	class B(object):
 		pass
 
-	print 'creating constructors...'
-	print constructor('A', A, 'some_tag')
-	print constructor('B', B, 'some_other_tag')
-	print
+	logstr('''
+	# creating constructors...
+	constructor('A', A, 'some_tag')
+	constructor('B', B, 'some_other_tag')
 
-	print tree.constructor.list()
-	print
-	print tree.some_tag.constructor.list()
-	print
-	print tree.some_tag.relatedtags()
-	print
-	print tree.A
-	##!!! constructor access appears to be broken....
-	print tree.A()
-	print tree.some_tag.A()
-	print tree.some_tag.constructor.A()
-	print tree.B()
-	print tree.some_other_tag.constructor.B()
-	print
-	print tree.instance.list('attr', '__class__')
-	print
-	print tree.some_tag.instance.list()
-	print
-	print tree.some_other_tag.list()
-	print
-	print tree.relatedtags()
-	print tree.some_other_tag.relatedtags()
+	>>> tree.constructor.list()
+	
+	>>> tree.some_tag.constructor.list()
+	
+	>>> tree.some_tag.relatedtags()
+	
+	tree.A
+	tree.A()
+	tree.some_tag.A()
+	tree.some_tag.constructor.A()
+	tree.B()
+	tree.some_other_tag.constructor.B()
+	
+	>>> tree.instance.list('attr', '__class__')
+	
+	>>> tree.some_tag.instance.list()
+	
+	>>> tree.some_other_tag.list()
+	
+	>>> tree.relatedtags()
+	>>> tree.some_other_tag.relatedtags()
 
-	print tree.addtags('xxx', 'yyy')
-	print tree.xxx.keys()
+	tree.addtags('xxx', 'yyy')
+	tree.xxx.keys()
 
 	AA = constructor('X', A, 'fff:ggg')
 	tree.X()
 
-	print tree['fff:ggg']
-	print tree['fff']
+	tree['fff:ggg']
 
-	print 
-	print 
-
+	tree['fff']
 
 
 ##	##!!! pickle does not seem to work with recursive references... (2.5.1-specific?)
@@ -498,9 +496,11 @@ if __name__ == '__main__':
 
 	ss = pickle.dumps(tree.some_tag)
 
-	print AA
+	AA
+
 	sss = pickle.dumps(AA)
 
+	''')
 
 
 #=======================================================================
