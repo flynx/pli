@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100125194257'''
+__sub_version__ = '''20100201031551'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -188,9 +188,11 @@ class AbstractLinkSet(object):
 class AbstractTagSet(AbstractLinkSet):
 	'''
 	'''
-	__reverse_links__ = None
 	__tag_tag__ = 'TAG'
 	__object_tag__ = 'OBJECT'
+
+##	__reverse_links__ = None
+	objutils.createonaccess('__reverse_links__', dict)
 
 
 

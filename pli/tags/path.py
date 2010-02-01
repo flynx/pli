@@ -1,12 +1,14 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080518202337'''
+__sub_version__ = '''20091121223723'''
 __copyright__ = '''(c) Alex A. Naanou 2007-'''
 
 
 #-----------------------------------------------------------------------
 
+
+##!!! move this to someplace logical...
 
 
 #-----------------------------------------------------------------------
@@ -66,17 +68,20 @@ class RecursiveAttrPathProxy(object):
 #-----------------------------------------------------------------------
 if __name__ == "__main__":
 	
+	# NOTE: this can be a method but pickle appears to have a hard time
+	# 		pickling them...
+	def _printpath(root, path, *p, **n):
+		'''
+		'''
+		print path
+
 	class PPO(object):
 		'''
 		'''
 		def __getattr__(self, name):
 			'''
 			'''
-			return getattr(RecursiveAttrPathProxy(self, (), self._printpath), name)
-		def _printpath(self, root, path, *p, **n):
-			'''
-			'''
-			print path
+			return getattr(RecursiveAttrPathProxy(self, (), _printpath), name)
 
 	p = PPO()
 

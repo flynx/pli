@@ -1,15 +1,15 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20080518211107'''
+__sub_version__ = '''20100201014206'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
 #-----------------------------------------------------------------------
 
-import pli.tags.generic as generic
-import pli.tags.tag as tag
+import pli.tags.tagset as tagset
 import pli.tags.path as path
+
 import pli.objutils as objutils
 import pli.pattern.mixin.mapping as mapping
 
@@ -168,14 +168,13 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		if name.startswith('OID_'):
 			return self._getobject(name)
-##		if ('constructor', name) in self._root:
 		chain = self._root.tags2chain('constructor', name)
 		if chain in self._root:
-			# XXX is this safe??? (constructors should be unique!)
-			##!!! WARNING: here the select also returns "tag".... check this out!
-##			return [ o for o in self._root.select(('constructor', name)) if o != generic.TAG_TAG][0]
-			return [ o for o in self._root.select(chain, generic.OBJECT_TAG)\
-						if o != generic.TAG_TAG][0]
+##			return [ o for o in self._root.all(chain, self._root.__object_tag__).objects()
+##						if o != self._root.__tag_tag__][0]
+			# XXX is this safe??? ...can this return anything other
+			#     than the constuctor?
+			return self._root.all(chain, self._root.__object_tag__).objects().pop()
 		return super(TagTreePathProxy, self).__getattr__(name)
 ##	__getitem__ = __getattr__
 	
@@ -204,7 +203,7 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		res = []
 		# XXX make this iterative...
-		objs = self._root.select(generic.OBJECT_TAG, *self._path)
+		objs = self._root.all(self._root.__object_tag__, *self._path)
 		for o in objs:
 			##!!! the id here is a stub !!!##
 ##			data = {'oid': self._root._getoid(o)}
@@ -227,7 +226,7 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		'''
 		##!!! STUB... do a better direct object by oid select !!!##
-		objs = self._root.select(generic.OBJECT_TAG, *self._path)
+		objs = self._root.all(self._root.__object_tag__, *self._path)
 		for o in objs:
 			##!!! the id here is a stub !!!##
 ##			if ('OID_%s' % str(id(o)).replace('-', 'X')) == oid:
@@ -276,12 +275,21 @@ class TagTreePathProxyMappingMixin(mapping.Mapping):
 class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 	'''
 	'''
-	pass
+	##!!! need to see of part of the path is a constructor and return that...
+	def __getattrpath__(self, root, path):
+		'''
+		'''
+		res = root
+		for p in path:
+			##!!! need to see of p is a constructor name...
+			res = res[p]
+		return res
+
 
 
 #--------------------------------------------------------TagTreeMixin---
 ##!!!! not yet very picklable...
-class TagTreeMixin(tag.AbstractTagSet):
+class TagTreeMixin(tagset.AbstractTagSet):
 	'''
 	'''
 	# this is needed here as the attr proxy try and get it othewise...
@@ -296,15 +304,8 @@ class TagTreeMixin(tag.AbstractTagSet):
 		'''
 		# support pickle...
 		##!!! automate this... (might be a good idea to put this into path.py)
-##		if name in (
-##				'__getstate__',
-##				'__setstate__',
-##				'__reduce__',
-##				'__reduce_ex__',
-##				'__slots__',
-##				'__getnewargs__'):
 		if name.startswith('__') and name.endswith('__'): 
-			return super(TagTreeMixin, self).__getattr__(name) 
+			return getattr(super(TagTreeMixin, self), name)
 		return getattr(self.__node_path_proxy__(self, ()), name)
 
 ##	##!!! for type-checking to work need to split the tag method into two:
@@ -327,7 +328,8 @@ class TagTreeMixin(tag.AbstractTagSet):
 
 
 #-------------------------------------------------------------TagTree---
-class TagTree(TagTreeMixin, tag.TagSet):
+##class TagTree(TagTreeMixin, tagset.TagSet):
+class TagTree(TagTreeMixin, tagset.DictTagSet):
 	'''
 	'''
 	__stored_set_constructor__ = set
@@ -368,7 +370,11 @@ class BaseTagTreeHandler(object):
 		self.__instance_tags__ += instance_tags
 
 		self.tree = self.__tree_constructor__()
-	def constructor(self, name, constructor, constructor_tags=(), instance_tags=(), ignore_default_constructor_tags=False, ignore_default_instance_tags=False):
+	def constructor(self, name, constructor, 
+			constructor_tags=(), 
+			instance_tags=(), 
+			ignore_default_constructor_tags=False, 
+			ignore_default_instance_tags=False):
 		'''
 		create a custom constructor.
 		'''
@@ -382,7 +388,10 @@ class BaseTagTreeHandler(object):
 		else:
 			i_tags = self.__instance_tags__ + instance_tags 
 		# do the call...
-		return self.__node_constructor_wrapper__(self.tree, name, constructor, 
+		return self.__node_constructor_wrapper__(
+								self.tree, 
+								name, 
+								constructor, 
 								common_tags=c_tags, 
 								object_tags=i_tags)
 
@@ -417,6 +426,8 @@ class TagTreeHandler(BaseTagTreeHandler):
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 
+	from pli.testlog import logstr
+
 	handler = TagTreeHandler()
 	tree = handler.tree
 	
@@ -428,46 +439,43 @@ if __name__ == '__main__':
 		attr = 123
 	class B(object):
 		pass
+
+	logstr('''
+	# creating constructors...
+	constructor('A', A, 'some_tag')
+	constructor('B', B, 'some_other_tag')
+
+	>>> tree.constructor.list()
 	
-	print 'creating constructors...'
-	print constructor('A', A, 'some_tag')
-	print constructor('B', B, 'some_other_tag')
-	print
+	>>> tree.some_tag.constructor.list()
+	
+	>>> tree.some_tag.relatedtags()
+	
+	tree.A
+	tree.A()
+	tree.some_tag.A()
+	tree.some_tag.constructor.A()
+	tree.B()
+	tree.some_other_tag.constructor.B()
+	
+	>>> tree.instance.list('attr', '__class__')
+	
+	>>> tree.some_tag.instance.list()
+	
+	>>> tree.some_other_tag.list()
+	
+	>>> tree.relatedtags()
+	>>> tree.some_other_tag.relatedtags()
 
-	print tree.constructor.list()
-	print
-	print tree.some_tag.constructor.list()
-	print
-	print tree.some_tag.relatedtags()
-	print
-	print tree.A
-	print tree.A()
-	print tree.some_tag.A()
-	print tree.some_tag.constructor.A()
-	print tree.B()
-	print tree.some_other_tag.constructor.B()
-	print
-	print tree.instance.list('attr', '__class__')
-	print
-	print tree.some_tag.instance.list()
-	print
-	print tree.some_other_tag.list()
-	print
-	print tree.relatedtags()
-	print tree.some_other_tag.relatedtags()
-
-	print tree.addtags('xxx', 'yyy')
-	print tree.xxx.keys()
+	tree.addtags('xxx', 'yyy')
+	tree.xxx.keys()
 
 	AA = constructor('X', A, 'fff:ggg')
 	tree.X()
 
-	print tree['fff:ggg']
-	print tree['fff']
+	tree['fff:ggg']
 
-	print 
-	print 
-
+	tree['fff']
 
 
 ##	##!!! pickle does not seem to work with recursive references... (2.5.1-specific?)
@@ -488,9 +496,11 @@ if __name__ == '__main__':
 
 	ss = pickle.dumps(tree.some_tag)
 
-	print AA
+	AA
+
 	sss = pickle.dumps(AA)
 
+	''')
 
 
 #=======================================================================
