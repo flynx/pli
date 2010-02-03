@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100201014206'''
+__sub_version__ = '''20100203181144'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -30,7 +30,7 @@ import pli.pattern.mixin.mapping as mapping
 def getoid(obj):
 	'''
 	'''
-	return 'OID_%s' % str(id(obj)).replace('-', 'X')
+	return getattr(obj, 'oid', 'OID_%s' % str(id(obj)).replace('-', 'X'))
 
 
 #--------------------------------------------------------------public---
@@ -170,27 +170,38 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 			return self._getobject(name)
 		chain = self._root.tags2chain('constructor', name)
 		if chain in self._root:
-##			return [ o for o in self._root.all(chain, self._root.__object_tag__).objects()
-##						if o != self._root.__tag_tag__][0]
 			# XXX is this safe??? ...can this return anything other
 			#     than the constuctor?
-			return self._root.all(chain, self._root.__object_tag__).objects().pop()
+			#     ...can we get more than one object here?
+			return self._root.all(chain).objects().pop()
 		return super(TagTreePathProxy, self).__getattr__(name)
 ##	__getitem__ = __getattr__
 	
 	# public interface...
 	# in general, this will form the args and call the corresponding
 	# root methods...
+	##!!!
 	@public
 	def relatedtags(self, *tags):
 		'''
 		'''
+		##!!! this will return an empty set if path is empty...
 		return self._root.relatedtags(*self._path + tags)
+	##!!!
 	@public
 	def chains(self, *tags):
 		'''
 		'''
+		##!!! this will return an empty set if path is empty...
 		return self._root.chains(*self._path + tags)
+	##!!!
+	@public
+	def objects(self, *tags):
+		'''
+		docstring for objects
+		'''
+		##!!! this will return an empty set if path is empty...
+		return self._root.all(*self._path + tags).objects()
 	##!!! OID !!!##
 	# XXX add efficient counting...
 	# XXX split this into two levels... one to return objects and
@@ -203,7 +214,10 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 		'''
 		res = []
 		# XXX make this iterative...
-		objs = self._root.all(self._root.__object_tag__, *self._path)
+		if len(self._path) > 1:
+			objs = self._root.all(*self._path).objects()
+		else:
+			objs = self._root.objects()
 		for o in objs:
 			##!!! the id here is a stub !!!##
 ##			data = {'oid': self._root._getoid(o)}
@@ -225,11 +239,12 @@ class TagTreePathProxy(path.RecursiveAttrPathProxy):
 	def _getobject(self, oid):
 		'''
 		'''
-		##!!! STUB... do a better direct object by oid select !!!##
-		objs = self._root.all(self._root.__object_tag__, *self._path)
+		if len(self._path) > 1:
+			# XXX STUB... do a better direct object by oid select !!!##
+			objs = self._root.all(*self._path).objects()
+		else:
+			objs = self._root.objects()
 		for o in objs:
-			##!!! the id here is a stub !!!##
-##			if ('OID_%s' % str(id(o)).replace('-', 'X')) == oid:
 			if getoid(o) == oid:
 				return o
 		raise TypeError, 'non-existant object id: %s' % oid
@@ -279,10 +294,16 @@ class TagTreePathProxyMapping(TagTreePathProxyMappingMixin, TagTreePathProxy):
 	def __getattrpath__(self, root, path):
 		'''
 		'''
+		print '$$$$$$$', path
 		res = root
+##		for p in path[:-1]:
 		for p in path:
-			##!!! need to see of p is a constructor name...
+			print '>>>>>>>', p, type(res)
 			res = res[p]
+##		try:
+##			res = res[path[-1]]
+##		except KeyError:
+##			res = getattr(res, path[-1])
 		return res
 
 
@@ -463,6 +484,7 @@ if __name__ == '__main__':
 	>>> tree.some_tag.instance.list()
 	
 	>>> tree.some_other_tag.list()
+##	>>> tree.some_other_tag.objects()
 	
 	>>> tree.relatedtags()
 	>>> tree.some_other_tag.relatedtags()

@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100201031551'''
+__sub_version__ = '''20100203180544'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -913,7 +913,6 @@ if __name__ == '__main__':
 
 	ts = DictTagSet()
 
-	# these will return a tagset wich will clutter the output...
 	! ts.tag('X', 'a')
 	! ts.tag('X', 'b')
 	! ts.tag('X', 'c')
@@ -921,6 +920,12 @@ if __name__ == '__main__':
 	>>> ts
 
 	! ts.tag('Y', 'c', 'd')
+
+	# test of types that can be used as tags... (sanity check)
+	! ts.tag('Z', 'string', u'unicode', True, False, 1, 1.1)
+	! ts.tag('ZZ', ()) 
+	### NOTE: tags MUST be hashable, so the following will fail.
+	##! ts.tag('ZZ', [], {}) 
 
 	>>> ts
 
@@ -1043,6 +1048,9 @@ if __name__ == '__main__':
 
 	words.all('T:H:I:S').objects()
 		-> set(['this'])
+
+	# NOTE: this will return a tagset and not a list of objects.
+	>>> words.all('T:H:I:S', words.__object_tag__)
 
 	''')
 
