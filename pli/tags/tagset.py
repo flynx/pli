@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100626163925'''
+__sub_version__ = '''20100626165718'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -98,8 +98,10 @@ Selector operations:
 		select all the object in the current tagset.
 
 	tagset.relatedtags(*tags) -> set
-		select the tags related to the given. related tags are those that
-		also tag the seletced objects.
+		select the tags related to the given. 
+		
+		related tags are those that also tag the seletced objects.
+
 		i.e. tags sutable for further specialization via .all(...)
 
 
@@ -1024,15 +1026,19 @@ if __name__ == '__main__':
 	---
 
 	# test tagchain functionality...
+	
+	words = DictTagSet() 
 
 	words.tags2chain('a', 'b', 'c')
 		-> 'a:b:c'
 	words.chain2tags('a:b:c')
 		-> ('a', 'b', 'c')
 
-	##!!! this breaks...
 	! words.tag('that', 'T:H:A:T')
 	! words.tag('this', 'T:H:I:S')
+	! words.tag('that', 't', 'h', 'a', 't')
+	! words.tag('that', 't', 'h', 'i', 's')
+
 	words.tags('that')
 	words.all('A').objects()
 
@@ -1040,11 +1046,10 @@ if __name__ == '__main__':
 	words.chains('A')
 	words.chains('T:H')
 
-	##!!! this should not contain the 'a' object...
 	words.all('T:H:A:T').objects()
 		-> set(['that'])
-	##!!! the above yields the same result as this...
-##	>>> words.all('t', 'h', 'a').objects()
+
+	>>> words.all('t', 'h', 'a').objects()
 
 	words.all('T:H:I:S').objects()
 		-> set(['this'])
