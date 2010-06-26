@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100626170445'''
+__sub_version__ = '''20100626172825'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -1049,6 +1049,7 @@ if __name__ == '__main__':
 	words.chains()
 	words.chains('A')
 	words.chains('T:H')
+	words.all('T', 'H').chains()
 
 	words.all('T:H:A:T').objects()
 		-> set(['that'])
