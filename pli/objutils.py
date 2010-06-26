@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.22'''
-__sub_version__ = '''20090923133544'''
+__sub_version__ = '''20100616203128'''
 __copyright__ = '''(c) Alex A. Naanou 2003-2008'''
 
 
@@ -267,6 +267,78 @@ def createonaccess(name, constructor, doc='', local_attr_tpl='_%s', depth=1):
 					fset=setter,
 					fdel=remover,
 					doc=doc)
+
+
+
+#-----------------------------------------------------------------------
+# TODO attribute analysis for conflicts and collisions...
+# TODO doc formatting...
+# TODO value patterns, pattern checking and extensibility...
+
+DOC_GENERAL_TEMPLATE = '''\
+%(func_doc)s
+
+%(desciption)s:
+%(args)s
+'''
+
+##!!! we need to pad the name with enough spaces to allign the descriptions...
+##!!! we need to normalize and pad the lines of the descriptions...
+DOC_ARG_TEMPLATE = '''\
+	%(name)s - %(description)s (%(source)s)
+'''
+
+DOC_ATTR_NAME = '_declared_args'
+
+
+#----------------------------------------------------------getargspec---
+def getargspec(meth):
+	'''
+
+	NOTE: this will detect only the normally declared arguments, thus, 
+		  most tricks and workarounds are not accounted for, as well as
+		  arguments used but not declared.
+	      
+	'''
+	cls = meth.im_class
+	name = meth.__name__
+	mro = cls.__mro__
+
+	res = []
+
+	for c in mro:
+		if not hasattr(c, name):
+			continue
+		res += [(c, getattr(getattr(c, name), DOC_ATTR_NAME, None))]
+
+	return res
+
+
+#-----------------------------------------------------------------doc---
+##!!! we need to generate the docstring AFTER the class is created and not when the decorator is called...
+##!!! ...this is because we need to traverse the MRO for similar methods...
+def doc(*p, **n):
+	'''
+	Generate documentation for function arguments.
+
+	Usage:
+
+		@doc("argument documentation for function f"
+			arg_a="",
+			arg_b="",
+			arg_c="")
+		def f(**n):
+			a, b, c = n['arg_a'], n['arg_b'], n['arg_c']
+			...
+	'''
+	def _doc(func):
+		# XXX generate the new docstring...
+		# XXX update the function...
+
+		# XXX this might not be safe pickle-wise...
+		setattr(func, DOC_ATTR_NAME, n)
+		return func
+	return _doc
 
 
 

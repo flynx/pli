@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100203180544'''
+__sub_version__ = '''20100626163925'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -86,7 +86,7 @@ Selector operations:
 		of the given tags. 
 
 	tagset.none(*tags) -> tagset
-		select items where each item is NOTE tagged with any of the given
+		select items where each item is NOT tagged with any of the given
 		tags.
 
 	tagset.tags([object]) -> set
