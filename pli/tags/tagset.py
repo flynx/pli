@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100626172825'''
+__sub_version__ = '''20100626174508'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -153,8 +153,6 @@ import pli.objutils as objutils
 
 #-----------------------------------------------------------------------
 #
-# XXX need tagchain support!!! (used by tree)
-#
 #
 #- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #
@@ -168,6 +166,18 @@ import pli.objutils as objutils
 #      ....this may be done as a seporate layer
 # TODO use None instead of an empty set for keys that still have no
 #      relations...
+# TODO add chain pattern/wildcard support...
+# 	   wildcards may include:
+# 	   		*	- any number of chain elements
+# 	   		?	- one chain element
+#
+# 	   Ex:
+# 	   		A:B:*
+# 	   		A:*:C
+# 	   		A:?:?
+#
+# 	   a way to do this would be to select all aplicable chains and
+# 	   then .any(...) select objects via them...
 #
 #
 #-----------------------------------------------------------------------
@@ -701,7 +711,6 @@ class TagSetMixin(BasicTagSetMixin, TagSetSelectorMixin, TagSetUtilsMixin):
 #--------------------------------------------TagSetWithTagChainsMixin---
 # XXX do we need chain-specific select???
 ##!!! revise !!!##
-##!!! TODO select objects via sub-chains...
 ##!!! TODO select objects via chain patterns.
 ##!!!		ex: A:B:*, A:B:*:C, ...etc.
 ##class TagSetTagChainMixin(LinkSetMixin):
