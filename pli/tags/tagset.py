@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100626165718'''
+__sub_version__ = '''20100626170445'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -701,6 +701,9 @@ class TagSetMixin(BasicTagSetMixin, TagSetSelectorMixin, TagSetUtilsMixin):
 #--------------------------------------------TagSetWithTagChainsMixin---
 # XXX do we need chain-specific select???
 ##!!! revise !!!##
+##!!! TODO select objects via sub-chains...
+##!!! TODO select objects via chain patterns.
+##!!!		ex: A:B:*, A:B:*:C, ...etc.
 ##class TagSetTagChainMixin(LinkSetMixin):
 class TagSetTagChainMixin(object):
 	'''
@@ -720,6 +723,7 @@ class TagSetTagChainMixin(object):
 
 	NOTE: this must be mixed with a valid tagset.
 	NOTE: by default the chains are represented as tuples.
+	NOTE: the chain elements do not tag the object.
 	'''
 	# the tag tagging the tagchains...
 	# NOTE: if this is None, do not tag chains
