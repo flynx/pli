@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100203181144'''
+__sub_version__ = '''20100628140352'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -12,6 +12,8 @@ import pli.tags.path as path
 
 import pli.objutils as objutils
 import pli.pattern.mixin.mapping as mapping
+
+import pli.gid as gid
 
 ##import oid
 
@@ -30,7 +32,9 @@ import pli.pattern.mixin.mapping as mapping
 def getoid(obj):
 	'''
 	'''
-	return getattr(obj, 'oid', 'OID_%s' % str(id(obj)).replace('-', 'X'))
+##	return getattr(obj, 'oid', 'OID_%s' % str(id(obj)).replace('-', 'X'))
+	return getattr(obj, 'oid', guid.getstrgid(pattern='OID_%s') + str(id(obj)).replace('-', 'X'))
+
 
 
 #--------------------------------------------------------------public---
