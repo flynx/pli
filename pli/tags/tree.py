@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100628140352'''
+__sub_version__ = '''20100628140944'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -32,8 +32,7 @@ import pli.gid as gid
 def getoid(obj):
 	'''
 	'''
-##	return getattr(obj, 'oid', 'OID_%s' % str(id(obj)).replace('-', 'X'))
-	return getattr(obj, 'oid', guid.getstrgid(pattern='OID_%s') + str(id(obj)).replace('-', 'X'))
+	return getattr(obj, 'oid', gid.getstrgid(pattern='OID_%s') + str(id(obj)).replace('-', 'X'))
 
 
 
