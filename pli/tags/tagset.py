@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100626174508'''
+__sub_version__ = '''20100628234530'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -859,27 +859,30 @@ class StringTagChainMixin(TagSetTagChainMixin):
 
 	NOTE: this must be mixed with a valid tagset with chain support.
 	'''
+	__subchain_separator__ = ':'
+
 	def _ischain(self, tag):
 		'''
 		test if a tag is tagchain compatible.
 		'''
+		sep = self.__subchain_separator__
 		if type(tag) in (str, unicode) \
-				and ':' in tag \
-				and False not in [ len(t) > 0 for t in tag.split(':') ]:
+				and sep in tag \
+				and False not in [ len(t) > 0 for t in tag.split(sep) ]:
 			return True
 		return False
-	@staticmethod
-	def chain2tags(chain):
+	def chain2tags(self, chain):
 		'''
 		return the tags in chain.
 		'''
 		# XXX check if cahin is a chain????
-		return tuple(chain.split(':'))
-	@staticmethod
-	def tags2chain(*tags):
+		sep = self.__subchain_separator__
+		return tuple(chain.split(sep))
+	def tags2chain(self, *tags):
 		'''
 		'''
-		return ':'.join(tags)
+		sep = self.__subchain_separator__
+		return sep.join(tags)
 
 
 
