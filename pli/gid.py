@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20100628140508'''
+__sub_version__ = '''20101118135525'''
 __copyright__ = '''(c) Alex A. Naanou 2010'''
 
 
@@ -9,23 +9,21 @@ __copyright__ = '''(c) Alex A. Naanou 2010'''
 __doc__ = '''\
 This module takes care of unique object id's.
 
-two elements participate in an object id:
-	- gid module import time (approximation of system start time) -- SYSSTART
-	- object/id createion time.
+this is a compatibility module for some legacy code. use uuid instead.
 
 uniqueness is also checked.
 '''
 #-----------------------------------------------------------------------
 
-import time
-
-import pli.functional as func
+##raise Warning, 'use the standard uuid instead of this.'
 
 
 #-----------------------------------------------------------------------
 
-# XXX check if this is safe...
-SYSSTART = time.time()
+import time
+import uuid
+
+import pli.functional as func
 
 
 #-----------------------------------------------------------------------
@@ -43,9 +41,9 @@ def getgid(gids=None, format=None):
 	'''
 	while True:
 		if format != None:
-			gid = format((SYSSTART, time.time()), gids)
+			gid = format(uuid.uuid4(), gids)
 		else:
-			gid = (SYSSTART, time.time())
+			gid = uuid.uuid4()
 		if gids != None:
 			if gid in gids:
 ##				time.sleep(0.1)
@@ -61,8 +59,7 @@ def getstrgid(gids=None, chars='aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxX
 	def fmt_str(gid, gids=None, chars='abcABC'):
 		'''
 		'''
-		l = str(gids != None and len(gids) or '')
-		s = ''.join([ a + b for a, b in zip(str(gid[0]), str(gid[1])[::-1]) ]) + l
+		s = gid.get_hex()
 		res = ''
 		for i, c in enumerate(s):
 			res += chars[(ord(c)+i)%len(chars)]
@@ -74,7 +71,7 @@ def getstrgid(gids=None, chars='aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxX
 #-----------------------------------------------------------------------
 if __name__ == '__main__':
 	def gidtuple2str(gid, gids):
-		return "id_%s_%s_%s" % tuple([ str(f).replace('.', '') for f in gid ] + [len(gids)])
+		return "id_%s" % gid.get_hex()
 
 	OIDS = set()
 

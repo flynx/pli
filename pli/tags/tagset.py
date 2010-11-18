@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.4.07'''
-__sub_version__ = '''20100628234530'''
+__sub_version__ = '''20100629092920'''
 __copyright__ = '''(c) Alex A. Naanou 2009-'''
 
 
@@ -726,6 +726,10 @@ class TagSetTagChainMixin(object):
 			 \			 /
 			  v			v
 			(title, Terminator)
+					|
+					|
+					v
+				  object
 
 	- all the chain elements tag the chain (all-one).
 	- all chain elements are linked (all-all).
