@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20091228013755'''
+__sub_version__ = '''20110112220102'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -145,6 +145,7 @@ class NOT(Pattern):
 # NOTE: this looks odd :)
 class IN(Pattern):
 	'''
+	IN(A) == X iff A in X
 	IN(A, B) == X iff B == X and A in X
 	'''
 	def __init__(self, obj, container=ANY):
@@ -163,11 +164,12 @@ class IN(Pattern):
 #------------------------------------------------------------------AT---
 class AT(Pattern):
 	'''
+	AT(A) == X iff A in X and X[ANY] == A
 	AT(A, B) == X iff A in X and X[B] == A
 
 	NOTE: this works as good as python's containers accept patterns.
 		  this mostly amounts to staying clear of using patterns as 
-		  indexes.
+		  indexes, thus the first case might not work correctly.
 	'''
 	def __init__(self, obj, position=ANY):
 		self.obj = obj
