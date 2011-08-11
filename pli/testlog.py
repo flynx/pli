@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20110811163957'''
+__sub_version__ = '''20110812003340'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -371,7 +371,8 @@ if __name__ == '__main__':
 	#		error.
 	--------
 
-	# and we can print only errors (see below)...
+	# and we can print only errors (same code as up to this point
+	# re-run with errors_only option set)...
 	'''
 
 	logstr(test_code, print_stats=False)
@@ -389,6 +390,9 @@ if __name__ == '__main__':
 	#       generate output that is not a valid test script.
 	print '!!!'
 
+
+	# oh, and did I mention that logstr is self-applicable? 
+	# ...well it is! that is if you avoud mixing the code with prints ;)
 
 
 	# that's all at this point.
