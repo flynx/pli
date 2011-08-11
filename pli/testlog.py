@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20110811161407'''
+__sub_version__ = '''20110811163957'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -216,6 +216,9 @@ def loglines2(*lines, **kw):
 	pprint_prefix = kw.pop('pprint_prefix', PPRINT_PREFIX)
 	only_errors = kw.pop('only_errors', False)
 
+	line_count = 0
+	lines_failed = 0
+
 	for line in lines:
 
 		if line.strip().startswith('##'):
@@ -246,6 +249,7 @@ def loglines2(*lines, **kw):
 			continue
 
 		if line.strip().startswith(mute_prefix):
+			line_count += 1
 			res = log(line.strip()[len(mute_prefix):], 
 					depth=depth+1, 
 					mute=True, 
@@ -263,31 +267,46 @@ def loglines2(*lines, **kw):
 				if not only_errors:
 					yield ''
 				continue
+			line_count += 1
 			res = log(line, depth=depth+1, **kw)[0]
 			if not only_errors:
 				yield res
 		elif len(line) == 2:
+			line_count += 1
 			res, text = test(line[0], eval(line[1]), depth=depth+1, **kw)
+			if not res:
+				lines_failed += 1
 			if not only_errors or not res:
 				yield text
 		else:
 			raise TypeError, 'support only one "->" per line'
 	yield ''
 
+	yield {
+		'lines': line_count, 
+		'fails': lines_failed,
+	}
+
 
 #--------------------------------------------------------------logstr---
-def logstr(str, **kw):
+def logstr(text, **kw):
 	'''
 	'''
 	depth = kw.pop('depth', 1)
+	stats = kw.pop('print_stats', True)
+
 	strs = []
-	for s in str.split('\n'):
+	for s in text.split('\n'):
 		if s.strip().startswith('->'):
 			strs[-1] += s
 		else:
 			strs += [s]
 	for l in loglines2(depth=depth+1, *strs, **kw):
-		print l
+		if type(l) not in (str, unicode):
+			if stats and l['lines'] > 0:
+				print (' '*INDENT) + '## executed %(lines)s lines, of which %(fails)s failed.' % l
+		else:
+			print l
 
 
 
@@ -352,20 +371,18 @@ if __name__ == '__main__':
 	#		error.
 	--------
 
+	# and we can print only errors (see below)...
 	'''
 
-	logstr(test_code)
+	logstr(test_code, print_stats=False)
 
-	logstr('''
-	# and we can print only errors (see below)...
-	''')
-
-	logstr(test_code, only_errors=True)
-
-
+	# enable only error printing...
+	logstr(test_code + '''\n\t# we can also print exec stats...''',
+			print_stats=True, only_errors=True)
 
 	logstr('''
 	---
+
 	# statements are supported too, but only if no expected result is
 	# given...
 	# NOTE: it is best to avoid things that print things, they will
