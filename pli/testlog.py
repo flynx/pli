@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20110811160644'''
+__sub_version__ = '''20110811161407'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -286,7 +286,8 @@ def logstr(str, **kw):
 			strs[-1] += s
 		else:
 			strs += [s]
-	print '\n'.join(l for l in loglines2(depth=depth+1, *strs, **kw))
+	for l in loglines2(depth=depth+1, *strs, **kw):
+		print l
 
 
 
@@ -326,13 +327,6 @@ if __name__ == '__main__':
 	1 * 1 -> 2
 		## this will break...
 
-
-	# statements are supported too, but only if no expected result is
-	# given...
-	# NOTE: it is best to avoid things that print things, they will
-	#       generate output that is not a valid test script.
-	#print '!!!'
-
 	a = 1
 
 	# now we can test the value...
@@ -358,20 +352,30 @@ if __name__ == '__main__':
 	#		error.
 	--------
 
-
-	# that's all at this point.
 	'''
 
 	logstr(test_code)
 
-
 	logstr('''
-	===
 	# and we can print only errors (see below)...
 	''')
 
-
 	logstr(test_code, only_errors=True)
+
+
+
+	logstr('''
+	---
+	# statements are supported too, but only if no expected result is
+	# given...
+	# NOTE: it is best to avoid things that print things, they will
+	#       generate output that is not a valid test script.
+	print '!!!'
+
+
+
+	# that's all at this point.
+	''')
 
 
 
