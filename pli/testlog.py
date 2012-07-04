@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20110812003340'''
+__sub_version__ = '''20110913175458'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -36,8 +36,6 @@ PPRINT_PREFIX = '>>>'
 #
 #
 # TODO add error log support...
-# TODO add quiet mode...
-# TODO reporting...
 # TODO exception handling both in testing and in failures....
 # TODO add more clever output handling...
 # 		for things like:
@@ -56,6 +54,8 @@ PPRINT_PREFIX = '>>>'
 #-----------------------------------------------------------------log---
 # XXX rewrite...
 def log(*cmd, **kw):
+	'''
+	'''
 	depth = kw.pop('depth', 1)
 	rep = kw.pop('repr', REPR_FUNCTION)
 	mute = kw.pop('mute', False)
@@ -66,6 +66,7 @@ def log(*cmd, **kw):
 	lcl = sys._getframe(depth).f_locals
 	glbl = sys._getframe(depth).f_globals
 	res = None
+	err = None
 
 	code = '%(indent)s %(mute_prefix)s%(command)s%(result)s'
 	data = {
@@ -81,6 +82,7 @@ def log(*cmd, **kw):
 			data['mute_prefix'] = mute_prefix
 		data['command'] = cmd[0].strip()
 		try:
+			##!!! add exception handling...
 			res = eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl)
 			if not mute:
 				if len(cmd[0].strip()) + INDENT >= 8:
@@ -92,12 +94,19 @@ def log(*cmd, **kw):
 		# we've got a statement...
 		except SyntaxError:
 			# XXX need a more robust way to do this...
+			##!!! add exception handling...
 			eval(compile(cmd[0].strip(), filename, 'exec'), glbl, lcl)
 			code += ' \n'
+		# we've got an exception...
+		except Exception, e:
+			err = e
+			# XXX figure out a better syntax to represent exceptions...
+			data['result'] = '\n\t-X-> %s\n' % rep(err) 
 	elif len(cmd) > 1:
 		if mute:
 			data['mute_prefix'] = mute_prefix
 		data['command'] = ''.join([c.strip() for c in cmd]) + cmd[-1].strip()
+		##!!! add exception handling...
 		res = eval(compile(cmd[-1].strip(), filename, 'eval'), glbl, lcl)
 		if not mute:
 			if len(cmd[-1].strip()) + INDENT >= 8:
@@ -109,15 +118,27 @@ def log(*cmd, **kw):
 	else:
 		code += '\n'
 
-	return code % data, res
+	return code % data, res, err
 
 
 #----------------------------------------------------------------test---
 def test(*cmd, **kw):
 	expected, cmd = cmd[-1], cmd[:-1]
+	expected_err = kw.pop('expected_err', None)
 	depth = kw.pop('depth', 1)
 	rep = kw.pop('repr', REPR_FUNCTION)
-	code, res = log(depth=depth+1, *cmd)
+	code, res, err = log(depth=depth+1, *cmd)
+
+	##!!! for some reason, if we have an exception, we do not reach this spot...
+
+	if err is not None:
+		if expected_err is None:
+			raise err
+		if expected_err == err:
+			##!!! stub...
+			res = err
+		##!!! stub...
+		res = err
 	text = code
 	if res != expected:
 		text += '\t## Error: result did not match the expected: %s' % rep(expected)
@@ -143,6 +164,7 @@ def pretty_print(*cmd, **kw):
 	glbl = sys._getframe(depth).f_globals
 
 	text = '%s %s' % (PPRINT_PREFIX, code)
+	##!!! add exception handling...
 	res = pformat(eval(compile(cmd[0].strip(), filename, 'eval'), glbl, lcl), width=80-8-3)
 	text += '%s %s' % ('\n##\t->', '\n##\t   '.join(res.split('\n')))
 	return text
@@ -273,6 +295,7 @@ def loglines2(*lines, **kw):
 				yield res
 		elif len(line) == 2:
 			line_count += 1
+			##!!! add exception handling...
 			res, text = test(line[0], eval(line[1]), depth=depth+1, **kw)
 			if not res:
 				lines_failed += 1
@@ -351,6 +374,11 @@ if __name__ == '__main__':
 	# now we can test the value...
 	a 	-> 1
 
+	# we can also test for fails...
+	1/0
+
+	1/0
+##		-X-> ZeroDivisionError
 
 
 	# pretty printing...

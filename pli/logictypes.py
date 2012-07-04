@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.1.21'''
-__sub_version__ = '''20110112220102'''
+__sub_version__ = '''20120704184439'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 __doc__ = '''\
@@ -212,8 +212,11 @@ class ErxCONTAINER(Pattern, mapping.Mapping):
 		- content/containment
 		- bounds
 	'''
+	##!!! we need to pass data arround!
 	def __init__(self, data=()):
-		objutils.termsuper(ErxCONTAINER, self).__init__(data)
+		##!!! we need to pass data arround!
+##		objutils.termsuper(ErxCONTAINER, self).__init__(data)
+		objutils.termsuper(ErxCONTAINER, self).__init__()
 		self._data = data
 	# mapping-like interface...
 	# NOTE: this is mainly needed to bypass pythons dict optimizations
@@ -253,6 +256,7 @@ class ErxCONTAINER(Pattern, mapping.Mapping):
 	def __eq__(self, other):
 		'''
 		'''
+		# NOTE: this will go through content items via .__iter__
 		for e in other:
 			if e not in self:
 				return False
@@ -260,7 +264,8 @@ class ErxCONTAINER(Pattern, mapping.Mapping):
 	def __ne__(self, other):
 		'''
 		'''
-		pass
+		# XXX is there a better way to do this?
+		return not (self == other)
 
 
 C = ErxCONTAINER
@@ -285,6 +290,9 @@ class ORDERED(ErxCONTAINER):
 
 
 ##!!! should this be a view or a container?
+# XXX this should be like OR -- match single elements as well as
+# 		sub-sequences... i.e. '==' and 'in' should be equivalent but
+# 		strictly prioretized...
 class CONTENT(ErxCONTAINER):
 	'''
 	like a container but matches a part of a container.
