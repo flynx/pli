@@ -1,7 +1,7 @@
 #=======================================================================
 
 __version__ = '''0.0.01'''
-__sub_version__ = '''20110913175458'''
+__sub_version__ = '''20121219035042'''
 __copyright__ = '''(c) Alex A. Naanou 2003'''
 
 
@@ -394,7 +394,7 @@ if __name__ == '__main__':
 	---
 	===
 
-	# NOTE: one can have more than tree dashes, but not less... two
+	# NOTE: one can have more than three dashes, but not less... two
 	#		dashes will be passed to python and thus generate a syntax
 	#		error.
 	--------
